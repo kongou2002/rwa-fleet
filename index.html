@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FleetShares: own a share of a rental car</title>
+  <meta name="description" content="Buy shares of rental cars on Avalanche. Rent is split by the contract: 90% to shareholders, 10% to the manager.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ffc629'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%2314201c' stroke-width='3'/%3E%3Cpath d='M16 16V7a9 9 0 0 1 9 9z' fill='%2314201c'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400..600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#cars">Skip to cars</a>
+
+  <header class="top">
+    <div class="wrap top-row">
+      <a class="brand" href="#top" aria-label="FleetShares home">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="var(--plate)"/>
+          <circle cx="16" cy="16" r="9" fill="none" stroke="#14201c" stroke-width="3"/>
+          <path d="M16 16V7a9 9 0 0 1 9 9z" fill="#14201c"/>
+        </svg>
+        <span class="brand-name">FleetShares</span>
+      </a>
+      <nav class="top-nav" aria-label="Sections">
+        <a href="#cars">Cars</a>
+        <a href="#how">How it works</a>
+        <a href="#trust">Safeguards</a>
+        <a href="#activity">Activity</a>
+      </nav>
+      <div class="top-actions">
+        <span class="net" title="Avalanche Fuji testnet, chain 43113"><i class="dot"></i>Fuji testnet</span>
+        <button class="icon-btn" id="theme" type="button" aria-label="Switch between light and dark">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor"/></svg>
+        </button>
+        <div id="wallet"></div>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Rental cars, owned in shares</p>
+          <h1>Own part of a rental car. Collect your part of the rent.</h1>
+          <p class="lede">Each car is split into shares at a fixed price. When it sells out, the rental operator buys the car and puts it to work. Every rent payment is split on-chain: 90% to shareholders, 10% to the manager.</p>
+          <div class="hero-cta">
+            <a class="btn btn-primary" href="#cars">See the cars</a>
+            <a class="btn btn-ghost" href="#how">How the money moves</a>
+          </div>
+        </div>
+        <dl class="stats" id="stats" aria-live="polite">
+          <div class="stat"><dt>Cars listed</dt><dd><span class="skel">00</span></dd></div>
+          <div class="stat"><dt>Put in by investors</dt><dd><span class="skel">0,000</span></dd></div>
+          <div class="stat"><dt>Rent paid in</dt><dd><span class="skel">000</span></dd></div>
+          <div class="stat"><dt>Paid to shareholders</dt><dd><span class="skel">000</span></dd></div>
+        </dl>
+      </div>
+      <div class="lane" aria-hidden="true"></div>
+    </section>
+
+    <div class="wrap">
+      <div id="notice" role="status"></div>
+      <div id="role"></div>
+
+      <section id="cars" class="section" aria-labelledby="cars-h">
+        <div class="section-head">
+          <h2 id="cars-h">Cars</h2>
+          <p>Prices are in test USDC. Connect a wallet to buy, or just look around.</p>
+        </div>
+        <div id="car-list">
+          <div class="car car-skel" aria-hidden="true"><div class="car-media skel-block"></div><div class="car-body"><span class="skel">Loading car from Avalanche</span><span class="skel">0000000000</span><div class="skel-block" style="height:120px"></div></div></div>
+        </div>
+      </section>
+
+      <section id="how" class="section" aria-labelledby="how-h">
+        <div class="section-head">
+          <h2 id="how-h">How the money moves</h2>
+          <p>Four steps. The contract runs each one, not a person.</p>
+        </div>
+        <ol class="flow">
+          <li>
+            <span class="flow-n">1</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v10H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 7V5h8v2M9 12h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <h3>A car is listed</h3>
+            <p>The manager lists a car as a fixed number of shares at a fixed USDC price, with a funding deadline.</p>
+          </li>
+          <li>
+            <span class="flow-n">2</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 12V4a8 8 0 0 1 8 8z" fill="currentColor"/></svg>
+            <h3>Investors buy shares</h3>
+            <p>Your USDC waits inside the contract. If the car does not sell out by the deadline, you take all of it back.</p>
+          </li>
+          <li>
+            <span class="flow-n">3</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 15l2-6h14l2 6v3H3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="7.5" cy="18" r="1.8" fill="currentColor"/><circle cx="16.5" cy="18" r="1.8" fill="currentColor"/></svg>
+            <h3>Sold out: operator is paid</h3>
+            <p>The last share sold sends the full amount to the rental operator, who buys the car and rents it out.</p>
+          </li>
+          <li>
+            <span class="flow-n">4</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 20h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <h3>Rent comes back</h3>
+            <p>The operator pays rent in per car. 90% is shared by holders in proportion to their shares, 10% goes to the manager.</p>
+          </li>
+        </ol>
+      </section>
+
+      <section id="trust" class="section" aria-labelledby="trust-h">
+        <div class="section-head">
+          <h2 id="trust-h">Safeguards, stated plainly</h2>
+          <p>These rules are in the contract code. Nobody can change them after deployment.</p>
+        </div>
+        <div class="trust-grid">
+          <ul class="trust">
+            <li>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <div><h3>The manager never holds investor money</h3><p>The manager lists cars and earns a fee on rent. It has no function that can move your purchase money.</p></div>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <div><h3>The operator is paid only at sell-out</h3><p>Purchase money stays in the contract until the last share is sold. Then it goes to the operator in the same transaction.</p></div>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <div><h3>Missed deadline means a full refund</h3><p>If a car is not fully funded in time, anyone can close the sale and every buyer takes back exactly what they paid.</p></div>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <div><h3>The 10% fee is fixed by the contract</h3><p>Every rent payment is split 90 / 10 at the moment it arrives. The manager cannot raise its fee.</p></div>
+            </li>
+          </ul>
+          <aside class="limits" aria-labelledby="limits-h">
+            <h3 id="limits-h">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l9 16H3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v4m0 3v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              Limits
+            </h3>
+            <p>This is a testnet demo. The USDC here is a test token with no value.</p>
+            <p>The chain cannot see the real car or its real income. It records who reported what, and it enforces how the money is split. Whether the operator buys the car and reports rent honestly depends on the operator and on the legal agreement behind the documents hash.</p>
+            <p class="contracts" id="contracts"></p>
+          </aside>
+        </div>
+      </section>
+
+      <section id="activity" class="section" aria-labelledby="act-h">
+        <div class="section-head">
+          <h2 id="act-h">Recent activity</h2>
+          <p>Read from contract events. Every line links to its transaction.</p>
+        </div>
+        <div id="feed" class="feed"><p class="muted"><span class="skel">Reading events from Avalanche Fuji</span></p></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot-row">
+      <p><strong>FleetShares</strong> · Hackathon demo on Avalanche Fuji. Not an offer of securities or investment advice.</p>
+      <p class="credit">Photos: <a href="https://commons.wikimedia.org/wiki/File:2022_Mazda_CX-5_2.0_front.jpg" target="_blank" rel="noopener">2022 Mazda CX-5 2.0 front.jpg</a> and <a href="https://commons.wikimedia.org/wiki/File:VinFast_VF_8_IAA_2023_1X7A0681.jpg" target="_blank" rel="noopener">VinFast VF 8 IAA 2023 1X7A0681.jpg</a> by Alexander-93, <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>, via Wikimedia Commons.</p>
+    </div>
+  </footer>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <noscript><p class="noscript">FleetShares needs JavaScript to read the contract.</p></noscript>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

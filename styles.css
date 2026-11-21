@@ -233,6 +233,11 @@ details[open] > summary.panel-h .muted { display: none; }
 .tiles span { display: block; font-size: .76rem; color: var(--muted); }
 .tiles b { font: 750 1.2rem/1.3 var(--display); overflow-wrap: anywhere; }
 .tiles b.pos { color: var(--green); }
+.tiles + .counts { margin-top: -4px; }
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: .92rem !important; padding: 3px 9px; border-radius: 999px; margin-top: 3px; }
+.pill small { color: inherit; }
+.pill-ok { background: var(--green-soft); color: var(--green); }
+.pill-warn { background: var(--amber-soft); color: var(--amber-ink); }
 
 .split { display: flex; gap: 3px; height: 14px; }
 .split i { display: block; border-radius: 4px; }

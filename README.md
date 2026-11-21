@@ -1,6 +1,6 @@
 # FleetShares: own a share of a rental car, get paid a share of its rent
 
-Live app: https://kongou2002.github.io/rwa-fleet/ · Slides: https://canva.link/3kubb6g3zn898er ([pptx](docs/FleetShares-pitch.pptx)) · Video (2:50): https://kongou2002.github.io/rwa-fleet/demo.html ([flows and script](docs/DEMO_FLOWS.md))
+Live app: https://kongou2002.github.io/rwa-fleet/ · Slides: https://canva.link/3kubb6g3zn898er ([pptx](docs/FleetShares-pitch.pptx)) · Video (2:57, silent with captions): https://kongou2002.github.io/rwa-fleet/demo.html ([flows and script](docs/DEMO_FLOWS.md))
 
 A rental company in Vietnam earns roughly 10 to 15 % a year on a car, but only people who can buy a whole car get that income. FleetShares splits one car (say a Mazda CX-5) into shares. Investors buy shares with USDC; when the car is sold out the money goes to the rental operator, who buys it and rents it out. Rent comes back on chain per car: **10 % to the manager, 90 % to the shareholders**, and shares can be resold in a built-in offer book.
 

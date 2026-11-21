@@ -43,10 +43,21 @@ function stat(s, value, label, x, y, w, color = YELLOW, size = 72) {
   t(s, value, { x, y, w, h: 1.25, fontSize: size, bold: true, color, valign: "bottom" });
   t(s, label, { x, y: y + 1.35, w, h: 0.9, fontSize: 16, color: MUTED });
 }
+// A framed screenshot: the frame is w wide, the image sits inside with even padding.
 function shot(s, name, x, y, w, ratio) {
-  const h = w / ratio;
-  s.addShape(pres.ShapeType.roundRect, { x: x - 0.06, y: y - 0.06, w: w + 0.12, h: h + 0.12, rectRadius: 0.08, fill: { color: CARD }, line: { color: LINE, width: 1 } });
-  s.addImage({ path: IMG(name), x, y, w, h });
+  const P = 0.22, iw = w - 2 * P, ih = iw / ratio;
+  s.addShape(pres.ShapeType.roundRect, { x, y, w, h: ih + 2 * P, rectRadius: 0.1, fill: { color: CARD }, line: { color: LINE, width: 1 } });
+  s.addImage({ path: IMG(name), x: x + P, y: y + P, w: iw, h: ih });
+}
+// One step of a chain diagram: tag pill, heading, body, with generous inner padding.
+function step(s, x, y, w, h, tag, tagFill, tagColor, head, body) {
+  const P = 0.35;
+  s.addShape(pres.ShapeType.roundRect, { x, y, w, h, rectRadius: 0.1, fill: { color: CARD }, line: { color: LINE, width: 1 } });
+  const tw = Math.min(w - 2 * P, 0.14 * tag.length + 0.35);
+  s.addShape(pres.ShapeType.roundRect, { x: x + P, y: y + P, w: tw, h: 0.34, rectRadius: 0.06, fill: { color: tagFill }, line: { color: tagFill, width: 0 } });
+  t(s, tag, { x: x + P, y: y + P, w: tw, h: 0.34, fontSize: 11, bold: true, color: tagColor, align: "center", valign: "middle", fontFace: "Courier New" });
+  t(s, head, { x: x + P, y: y + P + 0.6, w: w - 2 * P, h: 0.4, fontSize: 17, bold: true });
+  t(s, body, { x: x + P, y: y + P + 1.1, w: w - 2 * P, h: h - 2 * P - 1.1, fontSize: 14, color: MUTED });
 }
 function card(s, x, y, w, h, head, lines, tag) {
   s.addShape(pres.ShapeType.roundRect, { x, y, w, h, rectRadius: 0.08, fill: { color: CARD }, line: { color: LINE, width: 1 } });
@@ -148,10 +159,17 @@ function card(s, x, y, w, h, head, lines, tag) {
 {
   const s = slide();
   title(s, "Two chains, joined by Avalanche ICM");
-  shot(s, "chains", M, 1.6, 9.4, 1700 / 535);
+  const cw = 3.2, ch = 2.8, gap = (W - 2 * M - 3 * cw) / 2, y0 = 1.7;
+  step(s, M, y0, cw, ch, "DISPATCH L1 · 779672", "F3F2EC", BG, "Rentals are logged", "Every rental of a car is written to RentalLog on the operator's Avalanche L1: days rented and income.");
+  step(s, M + cw + gap, y0, cw, ch, "AVALANCHE ICM", YELLOW, BG, "Totals cross over", "At the end of a period the contract sends its own totals as an Interchain Message through Teleporter.");
+  step(s, M + 2 * (cw + gap), y0, cw, ch, "FUJI C-CHAIN · 43113", "F3F2EC", BG, "Holders compare", "IncomeMirror stores the reported income next to the rent FleetShares received. Any gap shows on the car.");
+  [["ICM message", M + cw], ["delivered", M + 2 * cw + gap]].forEach(([label, ax]) => {
+    s.addShape(pres.ShapeType.line, { x: ax + 0.18, y: y0 + ch / 2, w: gap - 0.36, h: 0, line: { color: YELLOW, width: 1.5, dashType: "dash", endArrowType: "triangle" } });
+    t(s, label, { x: ax, y: y0 + ch / 2 + 0.12, w: gap, h: 0.3, fontSize: 10, color: MUTED, align: "center", fontFace: "Courier New" });
+  });
   [["350", "USDC reported on the L1", YELLOW], ["350", "USDC rent paid on Fuji", GREEN], ["0", "USDC reported but unpaid", TEXT]].forEach(([v, l, c], i) => {
-    t(s, v, { x: M + i * 3.9, y: 4.8, w: 3.5, h: 0.85, fontSize: 48, bold: true, color: c, valign: "bottom" });
-    t(s, l, { x: M + i * 3.9, y: 5.75, w: 3.5, h: 0.4, fontSize: 16, color: MUTED });
+    t(s, v, { x: M + i * (cw + gap), y: 4.8, w: cw, h: 0.9, fontSize: 54, bold: true, color: c, valign: "bottom" });
+    t(s, l, { x: M + i * (cw + gap), y: 5.8, w: cw, h: 0.4, fontSize: 16, color: MUTED });
   });
   foot(s, "Period 1: reported on Dispatch 0x3cd79091…7588b6, delivered on Fuji 0x6d89cb71…b96831. The L1 here is Dispatch, Avalanche's public test L1.");
 }
@@ -166,7 +184,7 @@ function card(s, x, y, w, h, head, lines, tag) {
     ["Locked while funding.", "Shares cannot move until the car is fully funded, so refunds always add up."],
   ], M, 1.75, 5.9, 1.3, 18);
   shot(s, "offers", 7.2, 1.9, 5.4, 1700 / 510);
-  t(s, "On Fuji: 10 CX-5 shares offered at 27 USDC, 6 of them taken by two buyers.", { x: 7.2, y: 3.9, w: 5.4, h: 0.8, fontSize: 16, color: MUTED });
+  t(s, "On Fuji: 10 CX-5 shares offered at 27 USDC, 6 of them taken by two buyers.", { x: 7.2, y: 4.1, w: 5.4, h: 0.8, fontSize: 16, color: MUTED });
   foot(s, "Offers do not escrow shares: an offer whose seller moved the shares cannot be taken.");
 }
 

@@ -44,6 +44,7 @@ export const TERMS = { operator: 'Company A', country: 'Vietnam', gross: [12, 15
 export const CAR_META = {
   1: { city: 'Hanoi', type: 'SUV', term: 5, resale: 55 },
   2: { city: 'Ho Chi Minh City', type: 'Electric SUV', term: 5, gross: [13, 15], resale: 50 },
+  3: { city: 'Da Nang', type: 'Sedan', term: 4, resale: 60 },
 };
 // Chart series colours, fixed order by car id (car 1 -> SERIES[0]).
 export const SERIES = ['#c8102e', '#2a78d6', '#eda100'];

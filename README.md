@@ -77,3 +77,14 @@ cd web && python3 -m http.server 8080
 ## Photo credits
 
 Car photos are loaded from Wikimedia Commons under CC BY-SA 4.0: [2022 Mazda CX-5 2.0 front.jpg](https://commons.wikimedia.org/wiki/File:2022_Mazda_CX-5_2.0_front.jpg) by ShangTW, and [VinFast VF 8 IAA 2023 1X7A0681.jpg](https://commons.wikimedia.org/wiki/File:VinFast_VF_8_IAA_2023_1X7A0681.jpg) by Alexander-93.
+
+## Add-ons
+
+Two contracts that sit next to the deployed `FleetShares` and leave it unchanged.
+
+- `CarExit` pays out a car's resale money. When the car is sold after its 4–5 rental years, the operator calls `settle(carId, proceeds)` once. Each holder then calls `redeem(carId, shares)` (after `setApprovalForAll` on FleetShares) and gets `proceeds × shares / totalShares` USDC. There is no fee on resale. Rent earned before redeeming stays claimable in FleetShares, and the holder who redeems the last share also gets the rounding dust.
+- `AuditRegistry` stores the auditor's quarterly reports: `publish(carId, period, scope, exceptions, reportHash)`, where `carId` 0 means the whole fleet. Only the auditor key set at deployment can publish, and reports can't be edited or deleted.
+
+Limits: FleetShares has no "sold" state, so a settled car stays Active there. Its shares still trade, and any rent paid after the sale on shares already redeemed goes to `CarExit` and stays there unclaimed. The registry holds report hashes only, so it shows what the auditor signed, not that the audit was done properly.
+
+Deploy: `./scripts/fuji-deploy-addons.sh` (needs `DEPLOYER_KEY` in `.env`; `AUDITOR_ADDRESS` is optional and defaults to the deployer). It prints the `CarExit`, `AuditRegistry` and `auditor` keys to add to `web/fuji.json` and `docs/fuji.json`. ABIs are in `web/abi/`.

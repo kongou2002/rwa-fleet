@@ -12,6 +12,8 @@ Live on Avalanche Fuji (testnet only):
 | MockUSDC (public faucet) | [`0xc5c5…9CF4`](https://testnet.snowtrace.io/address/0xc5c54112194CdC7221677A8da4b5D33Fd5EB9CF4) |
 | IncomeMirror (Fuji, receives ICM) | [`0x649c…9067`](https://testnet.snowtrace.io/address/0x649cF4eF58B8D35063b8B3D8D474aB906D989067) |
 | RentalLog (Dispatch L1, chain 779672) | [`0x0A3d…8988`](https://subnets-test.avax.network/dispatch/address/0x0A3dDE751a009ab4454a2E244a76574F442f8988) |
+| CarExit (resale payout to holders) | [`0x3927…85F6`](https://testnet.snowtrace.io/address/0x3927Cab3907e65f2891970A3E57468C43c3785F6) |
+| AuditRegistry (published audit report hashes) | [`0x26D7…402e`](https://testnet.snowtrace.io/address/0x26D7De9Cd1E8D5274e3C0Ff2B571B192a766402e) |
 
 | Proof | Transaction |
 |---|---|
@@ -61,7 +63,7 @@ The L1 in this deployment is Dispatch, Avalanche's public test L1. We tried thre
 
 ```sh
 git submodule update --init --recursive
-forge test                      # 17 tests
+forge test                      # 50 tests
 ./scripts/fuji-deploy-seed.sh   # deploy to Fuji and replay the demo story (needs .env with DEPLOYER_KEY)
 cd web && python3 -m http.server 8080
 ```
@@ -77,3 +79,14 @@ cd web && python3 -m http.server 8080
 ## Photo credits
 
 Car photos are loaded from Wikimedia Commons under CC BY-SA 4.0: [2022 Mazda CX-5 2.0 front.jpg](https://commons.wikimedia.org/wiki/File:2022_Mazda_CX-5_2.0_front.jpg) by ShangTW, and [VinFast VF 8 IAA 2023 1X7A0681.jpg](https://commons.wikimedia.org/wiki/File:VinFast_VF_8_IAA_2023_1X7A0681.jpg) by Alexander-93.
+
+## Add-ons
+
+Two contracts that sit next to the deployed `FleetShares` and leave it unchanged.
+
+- `CarExit` pays out a car's resale money. When the car is sold after its 4–5 rental years, the operator calls `settle(carId, proceeds)` once. Each holder then calls `redeem(carId, shares)` (after `setApprovalForAll` on FleetShares) and gets `proceeds × shares / totalShares` USDC. There is no fee on resale. Rent earned before redeeming stays claimable in FleetShares, and the holder who redeems the last share also gets the rounding dust.
+- `AuditRegistry` stores the auditor's quarterly reports: `publish(carId, period, scope, exceptions, reportHash)`, where `carId` 0 means the whole fleet. Only the auditor key set at deployment can publish, and reports can't be edited or deleted.
+
+Limits: FleetShares has no "sold" state, so a settled car stays Active there. Its shares still trade, and any rent paid after the sale on shares already redeemed goes to `CarExit` and stays there unclaimed. The registry holds report hashes only, so it shows what the auditor signed, not that the audit was done properly.
+
+Deploy: `./scripts/fuji-deploy-addons.sh` (needs `DEPLOYER_KEY` in `.env`; `AUDITOR_ADDRESS` is optional and defaults to the deployer). It prints the `CarExit`, `AuditRegistry` and `auditor` keys to add to `web/fuji.json` and `docs/fuji.json`. ABIs are in `web/abi/`.

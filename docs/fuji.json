@@ -19,6 +19,9 @@
     "icmDeliveredOnFuji": "0x6d89cb713770ccf7d251d7fb1cd9a43ae5905fbb330bc7cc6b29e95532b96831"
   },
   "IncomeMirror": "0x649cF4eF58B8D35063b8B3D8D474aB906D989067",
+  "CarExit": "0x3927Cab3907e65f2891970A3E57468C43c3785F6",
+  "AuditRegistry": "0x26D7De9Cd1E8D5274e3C0Ff2B571B192a766402e",
+  "auditor": "0x7855c958eC2e104D358aBAd285b50e7C759547F9",
   "l1": {
     "name": "Dispatch L1 (Fuji)",
     "chainId": 779672,

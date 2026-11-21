@@ -12,6 +12,8 @@ Live on Avalanche Fuji (testnet only):
 | MockUSDC (public faucet) | [`0xc5c5…9CF4`](https://testnet.snowtrace.io/address/0xc5c54112194CdC7221677A8da4b5D33Fd5EB9CF4) |
 | IncomeMirror (Fuji, receives ICM) | [`0x649c…9067`](https://testnet.snowtrace.io/address/0x649cF4eF58B8D35063b8B3D8D474aB906D989067) |
 | RentalLog (Dispatch L1, chain 779672) | [`0x0A3d…8988`](https://subnets-test.avax.network/dispatch/address/0x0A3dDE751a009ab4454a2E244a76574F442f8988) |
+| CarExit (resale payout to holders) | [`0x3927…85F6`](https://testnet.snowtrace.io/address/0x3927Cab3907e65f2891970A3E57468C43c3785F6) |
+| AuditRegistry (published audit report hashes) | [`0x26D7…402e`](https://testnet.snowtrace.io/address/0x26D7De9Cd1E8D5274e3C0Ff2B571B192a766402e) |
 
 | Proof | Transaction |
 |---|---|
@@ -61,7 +63,7 @@ The L1 in this deployment is Dispatch, Avalanche's public test L1. We tried thre
 
 ```sh
 git submodule update --init --recursive
-forge test                      # 17 tests
+forge test                      # 50 tests
 ./scripts/fuji-deploy-seed.sh   # deploy to Fuji and replay the demo story (needs .env with DEPLOYER_KEY)
 cd web && python3 -m http.server 8080
 ```

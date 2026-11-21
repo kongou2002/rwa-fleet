@@ -10,6 +10,8 @@ Live on Avalanche Fuji (testnet only):
 |---|---|
 | FleetShares | [`0x75F0…a2B1`](https://testnet.snowtrace.io/address/0x75F02c6F7E44b26637E4396170BE1B65E67dA2B1) |
 | MockUSDC (public faucet) | [`0xc5c5…9CF4`](https://testnet.snowtrace.io/address/0xc5c54112194CdC7221677A8da4b5D33Fd5EB9CF4) |
+| IncomeMirror (Fuji, receives ICM) | [`0x649c…9067`](https://testnet.snowtrace.io/address/0x649cF4eF58B8D35063b8B3D8D474aB906D989067) |
+| RentalLog (Dispatch L1, chain 779672) | [`0x0A3d…8988`](https://subnets-test.avax.network/dispatch/address/0x0A3dDE751a009ab4454a2E244a76574F442f8988) |
 
 | Proof | Transaction |
 |---|---|
@@ -20,10 +22,20 @@ Live on Avalanche Fuji (testnet only):
 | Manager withdraws its 25 USDC fee | [0xdbcf…dfec](https://testnet.snowtrace.io/tx/0xdbcf04c19c3cfaca849fc3803a0fc84fd9c9016b7345e2497784241aaba5dfec) |
 | Holder offers 10 shares at 27 USDC | [0xe527…8387](https://testnet.snowtrace.io/tx/0xe5271d070c2b2873ccd57cf4c99e875d118e772c6663b25c89086540ffe38387) |
 | Another investor takes 5 of them | [0x4909…9475](https://testnet.snowtrace.io/tx/0x4909abde3aec65b403b4b93c075505f4388b3379403e4f9ebd484f7e58a39475) |
+| Operator closes a period on the Dispatch L1: 2 rentals, 8 days, 250 USDC, sent over ICM | [0x3cd7…88b6](https://subnets-test.avax.network/dispatch/tx/0x3cd790914bc6c1bc3eba7371091ddfddf5ef3672cfd8dbc982084267ba7588b6) |
+| The ICM message arrives on Fuji: reported 250, paid 250, unpaid 0 | [0x6d89…6831](https://testnet.snowtrace.io/tx/0x6d89cb713770ccf7d251d7fb1cd9a43ae5905fbb330bc7cc6b29e95532b96831) |
 
 All addresses and hashes: [docs/fuji.json](docs/fuji.json).
 
-Keywords: RWA · fractional ownership · rental income · ERC-1155 · Avalanche · Foundry
+Keywords: RWA · fractional ownership · rental income · ERC-1155 · Avalanche L1 · ICM / Teleporter · Foundry
+
+## Two chains, joined by Avalanche ICM
+
+- **Fuji C-Chain** holds the money: `FleetShares` (shares, rent, offers) and `IncomeMirror`.
+- **An Avalanche L1** holds the operator's day-to-day ledger: `RentalLog`, one cheap transaction per rental. Anyone can close a car's period; the contract sends its own totals to Fuji through Teleporter, once per period.
+- `IncomeMirror.ledger(carId)` then shows, on Fuji, the income the operator **reported** next to the rent it **paid** into FleetShares, and the gap. Shareholders see at once if the operator is keeping income back. The mirror accepts a message only from Teleporter, only from that L1 and only from that RentalLog.
+
+The L1 in this deployment is Dispatch, Avalanche's public test L1. We tried three times to launch our own L1 from Builder Hub's one-click flow and it failed each time at step 6 of 8 ("Insufficient funds" on a P-Chain address the console manages), so `RentalLog` runs on Dispatch; nothing in it depends on which L1 it is.
 
 ## Who doesn't trust whom, and what the contract enforces
 
@@ -43,11 +55,13 @@ Keywords: RWA · fractional ownership · rental income · ERC-1155 · Avalanche 
 - `payRent` (that car's operator) · `claim` · `claimable` · `withdrawFees`
 - `makeOffer` · `takeOffer` · `cancelOffer`
 
+`RentalLog` (L1): `setOperator` (manager) · `logRental` (operator, each rental once) · `report` (anyone). `IncomeMirror` (Fuji): `ledger` · `reported`.
+
 ## Run
 
 ```sh
 git submodule update --init --recursive
-forge test                      # 13 tests
+forge test                      # 17 tests
 ./scripts/fuji-deploy-seed.sh   # deploy to Fuji and replay the demo story (needs .env with DEPLOYER_KEY)
 cd web && python3 -m http.server 8080
 ```

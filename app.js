@@ -183,10 +183,30 @@ function explain(err) {
 
 // ---------- wallet ----------
 
-const discovered = [];
-window.addEventListener('eip6963:announceProvider', (e) => { if (e.detail?.provider) discovered.push(e.detail.provider); });
-window.dispatchEvent(new Event('eip6963:requestProvider'));
-const getProvider = () => window.ethereum || discovered[0] || null;
+// Wallets announce themselves over EIP-6963; some (Core) also inject window.ethereum a moment after load.
+const discovered = []; // { provider, rdns }
+window.addEventListener('eip6963:announceProvider', (e) => {
+  const provider = e.detail?.provider;
+  if (provider && !discovered.some((d) => d.provider === provider)) discovered.push({ provider, rdns: e.detail.info?.rdns || '' });
+});
+const askProviders = () => window.dispatchEvent(new Event('eip6963:requestProvider'));
+askProviders();
+
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) { /* private mode */ } },
+};
+
+/** Providers to try, best first: the wallet used last time, Core, other announced wallets, window.ethereum. */
+function providers() {
+  const last = store.get('fs-wallet');
+  const rank = (d) => (last && d.rdns === last ? 0 : /core/i.test(d.rdns) ? 1 : 2);
+  const list = [...discovered].sort((x, y) => rank(x) - rank(y)).map((d) => d.provider);
+  if (window.ethereum && !list.includes(window.ethereum)) list.push(window.ethereum);
+  return list;
+}
+const rdnsOf = (p) => discovered.find((d) => d.provider === p)?.rdns || '';
 
 async function ensureChain() {
   const p = S.provider;
@@ -229,7 +249,7 @@ function watchProvider(p) {
   p.__fleetWatched = true;
   p.on('accountsChanged', (accs) => {
     S.account = accs && accs[0] ? V.getAddress(accs[0]) : null;
-    if (!S.account) try { localStorage.removeItem('fs-connected'); } catch (e) { /* private mode */ }
+    if (S.provider !== p) return; // another wallet in the same browser
     if (S.data) S.data.me = null;
     render();
     refresh();
@@ -237,37 +257,70 @@ function watchProvider(p) {
   p.on('chainChanged', (id) => { S.walletChain = parseInt(id, 16); renderNotice(); refresh(); });
 }
 
-async function connect(silent = false) {
-  const p = getProvider();
+/** Takes a provider and account as the connected wallet and remembers it for the next load. */
+function adopt(p, account) {
+  S.provider = p;
+  S.account = V.getAddress(account);
+  watchProvider(p);
+  store.set('fs-connected', '1');
+  store.set('fs-wallet', rdnsOf(p));
+  store.del('fs-off');
+  render();
+}
+
+async function connect() {
+  askProviders();
+  const p = providers()[0];
   if (!p) {
-    if (!silent) {
-      toast('No wallet found', 'Install <a href="https://core.app/" target="_blank" rel="noopener">Core</a> or <a href="https://metamask.io/download/" target="_blank" rel="noopener">MetaMask</a>, then reload. On a phone, open this page inside the wallet app’s browser.', 'err').update({ html: true });
-    }
+    toast('No wallet found', 'Install <a href="https://core.app/" target="_blank" rel="noopener">Core</a> or <a href="https://metamask.io/download/" target="_blank" rel="noopener">MetaMask</a>, then reload. On a phone, open this page inside the wallet app’s browser.', 'err').update({ html: true });
     return false;
   }
   try {
-    const accs = await p.request({ method: silent ? 'eth_accounts' : 'eth_requestAccounts' });
+    const accs = await p.request({ method: 'eth_requestAccounts' });
     if (!accs || !accs[0]) return false;
-    S.provider = p;
-    S.account = V.getAddress(accs[0]);
-    watchProvider(p);
-    try { localStorage.setItem('fs-connected', '1'); } catch (e) { /* private mode */ }
-    render();
-    if (silent) p.request({ method: 'eth_chainId' }).then((id) => { S.walletChain = parseInt(id, 16); renderNotice(); }).catch(() => {});
-    else await ensureChain().catch((e) => toast('Your wallet is not on Avalanche Fuji yet', `${explain(e)} You can switch from the banner at the top of the page.`, 'err'));
+    adopt(p, accs[0]);
+    await ensureChain().catch((e) => toast('Your wallet is not on Avalanche Fuji yet', `${explain(e)} You can switch from the banner at the top of the page.`, 'err'));
     await refresh();
     return true;
   } catch (e) {
-    if (!silent) toast('Could not connect', explain(e), 'err');
+    toast('Could not connect', explain(e), 'err');
     return false;
+  }
+}
+
+/**
+ * On load: re-attach a wallet that already trusts this site, without any prompt (eth_accounts only).
+ * Wallets can inject late, so keep asking for a couple of seconds. Skipped after an explicit Disconnect.
+ */
+async function restore() {
+  if (store.get('fs-off') === '1') return false;
+  const until = Date.now() + 2500;
+  for (;;) {
+    askProviders();
+    for (const p of providers()) {
+      try {
+        const accs = await p.request({ method: 'eth_accounts' });
+        if (accs && accs[0]) {
+          if (S.account) return true; // the user connected by hand meanwhile
+          adopt(p, accs[0]);
+          p.request({ method: 'eth_chainId' }).then((id) => { S.walletChain = parseInt(id, 16); renderNotice(); }).catch(() => {});
+          refresh();
+          return true;
+        }
+      } catch (e) { /* this provider is not ready or refuses: try the next */ }
+    }
+    if (Date.now() > until || S.account) return false;
+    await sleep(250);
   }
 }
 
 function disconnect() {
   S.account = null;
+  S.walletChain = null;
   if (S.data) S.data.me = null;
   ui.walletOpen = false;
-  try { localStorage.removeItem('fs-connected'); } catch (e) { /* private mode */ }
+  store.del('fs-connected');
+  store.set('fs-off', '1'); // stay disconnected across reloads until the user connects again
   render();
 }
 
@@ -1036,9 +1089,8 @@ async function boot() {
   renderIcm();
   renderWallet();
 
-  let wasConnected = false;
-  try { wasConnected = localStorage.getItem('fs-connected') === '1'; } catch (e) { /* private mode */ }
-  await Promise.all([refresh(), wasConnected ? connect(true) : null]);
+  restore(); // silent; never blocks the first render
+  await refresh();
   loadFeed();
 
   setInterval(tick, 1000);

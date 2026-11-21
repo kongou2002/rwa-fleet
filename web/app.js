@@ -21,6 +21,7 @@ const S = {
   provider: null,
   busy: null, // key of the action in flight
   loadError: null,
+  ledger: {}, // carId -> { reportedIncome, rentPaid, unpaid, periods, rentals, daysRented } from IncomeMirror
 };
 const ui = { buy: {}, offer: {}, take: {}, rent: {}, list: { name: '', image: '', docs: '', operator: '', shares: '100', price: '25', days: '30' }, feedAll: false, walletOpen: false, listOpen: false };
 
@@ -683,8 +684,61 @@ function carView(c) {
       <p class="muted">${c.totalShares} shares · ${usdc(c.sharePrice)} each · ${usdc(total)} total</p>
     </header>
     <div class="funding">${funding}</div>
-    ${action}${mine}${rent}${market}`;
+    ${action}${mine}${rent}${ledgerView(c)}${market}`;
   return { media, facts, body };
+}
+
+/** What the operator reported on its own L1, next to what it actually paid here. */
+function ledgerView(c) {
+  const L = S.ledger[c.id];
+  if (!cfg.IncomeMirror || !L || (c.statusName !== 'Active' && L.reportedIncome === 0n)) return '';
+  const l1 = cfg.l1 || {};
+  const link = (href, text) => `<a href="${href}" target="_blank" rel="noopener">${text}</a>`;
+  const links = [
+    l1.RentalLog && l1.explorer ? link(`${l1.explorer}/address/${l1.RentalLog}`, 'RentalLog on Dispatch') : '',
+    l1.tx?.report && l1.explorer ? link(`${l1.explorer}/tx/${l1.tx.report}`, 'report sent') : '',
+    cfg.tx?.icmDeliveredOnFuji ? link(txUrl(cfg.tx.icmDeliveredOnFuji), 'delivered on Fuji') : '',
+    link(addrUrl(cfg.IncomeMirror), 'IncomeMirror'),
+  ].filter(Boolean).join(' · ');
+  const body = L.reportedIncome === 0n
+    ? '<p class="empty">No period reported yet.</p>'
+    : `<div class="tiles">
+        <div><span>Income reported on L1</span><b>${usd(L.reportedIncome)} <small>USDC</small></b></div>
+        <div><span>Rent paid on chain</span><b>${usd(L.rentPaid)} <small>USDC</small></b></div>
+        <div><span>Unpaid gap</span>${L.unpaid === 0n
+          ? `<b class="pill pill-ok">${ICON.check}Paid in full</b>`
+          : `<b class="pill pill-warn">${usd(L.unpaid)} <small>USDC</small> unpaid</b>`}</div>
+      </div>
+      <p class="fine counts">${plural(L.rentals, 'rental')} · ${plural(L.daysRented, 'day')} rented · ${plural(L.periods, 'period')} reported</p>`;
+  return `<div class="panel">
+    <div class="panel-h"><h4>Operator ledger</h4><span class="muted">Avalanche L1 → C-Chain over ICM</span></div>
+    ${body}
+    <p class="fine">The operator logs each rental on the Dispatch L1 (chain ${l1.chainId ?? 779672}). Totals arrive here by Avalanche ICM, so holders can compare reported income with rent paid. ${links}</p>
+  </div>`;
+}
+
+let mirrorAbi = null;
+async function loadLedger() {
+  if (!cfg.IncomeMirror || !S.data?.cars.length) return;
+  try {
+    mirrorAbi ||= await fetch('abi/IncomeMirror.json').then((r) => r.json()).then((x) => (Array.isArray(x) ? x : x.abi));
+    const mirror = { address: cfg.IncomeMirror, abi: mirrorAbi };
+    const ids = S.data.cars.map((c) => c.id);
+    const res = await pub.multicall({
+      allowFailure: true,
+      contracts: ids.flatMap((id) => [{ ...mirror, functionName: 'ledger', args: [id] }, { ...mirror, functionName: 'reported', args: [id] }]),
+    });
+    ids.forEach((id, i) => {
+      const a = res[2 * i], b = res[2 * i + 1];
+      if (a.status !== 'success' || b.status !== 'success') return;
+      const [reportedIncome, rentPaid, unpaid] = a.result;
+      const [periods, rentals, daysRented] = b.result;
+      S.ledger[id] = { reportedIncome, rentPaid, unpaid, periods, rentals, daysRented };
+    });
+    renderCars();
+  } catch (e) {
+    console.warn('Operator ledger unavailable', e); // optional panel: the page works without it
+  }
 }
 
 function renderCars() {
@@ -793,6 +847,7 @@ async function refresh() {
         if (account !== S.account) { data.me = null; stale = true; } // account switched while loading
         S.data = data;
         S.loadError = null;
+        loadLedger();
       } catch (e) {
         console.error(e);
         S.loadError = explain(e);

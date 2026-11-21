@@ -1,0 +1,93 @@
+/* Vault view (vt-) */
+.vt-intro { display: flex; flex-direction: column; gap: 8px; max-width: 640px; }
+
+.vt-kpis .t-kpi { white-space: nowrap; }
+
+.vt-two { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
+.vt-chart { flex: 2 1 560px; min-width: 0; }
+.vt-split-card { flex: 1 1 320px; min-width: 0; }
+.vt-skel { display: block; width: 100%; height: 200px; margin-top: 8px; }
+.vt-chart .empty { min-height: 200px; display: grid; place-content: center; justify-items: center; gap: 8px; text-align: center; }
+
+.vt-split { display: flex; gap: 2px; height: 40px; margin: 16px 0 20px; }
+.vt-split > div { display: flex; align-items: center; border-radius: 3px; font: 500 13px/1 var(--sans); white-space: nowrap; overflow: hidden; }
+.vt-split-h { padding: 0 12px; background: var(--yield-soft); color: var(--yield); }
+.vt-split-f { min-width: max-content; padding: 0 8px; justify-content: center; background: var(--surface-2); color: var(--ink-2); }
+
+.vt-sec-head { margin: 48px 0 16px; align-items: center; }
+
+/* car cards */
+.vt-car { display: flex; flex-direction: column; }
+.vt-img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: var(--surface-2); }
+.vt-car .car-b { flex: 1; }
+.vt-car-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.vt-car-name { min-width: 0; }
+.vt-car-name .t-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vt-sub-row, .vt-row-y { display: none; }
+.vt-car .stats3 dd { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vt-prog { display: grid; gap: 8px; margin-top: auto; }
+
+/* three-up as in the design; with fewer cars the cards share the row so the photos stay large */
+@media (min-width: 1101px) { .vt-cars { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 721px) {
+  .vt-cars:has(> .vt-car:nth-child(2):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vt-cars:has(> .vt-car:only-child) { grid-template-columns: minmax(0, 1fr); }
+  .vt-car:only-child { flex-direction: row; }
+  .vt-car:only-child .vt-img { width: 58%; flex: none; }
+  .vt-car:only-child .car-b { padding: 24px; align-content: start; }
+}
+
+.vt-register { margin-top: 48px; }
+.vt-register .carcell { color: var(--ink); }
+.vt-register .carcell:hover { color: var(--brand); text-decoration: none; }
+
+/* role tools */
+.vt-role { margin-top: 48px; }
+.vt-role-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 32px; }
+.vt-fees { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.vt-fees .btn { margin-top: 8px; }
+.vt-list { display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+.vt-list-h { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; }
+.vt-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; width: 100%; }
+.vt-op { margin-top: 16px; }
+.vt-op a { font-weight: 500; }
+
+@media (max-width: 720px) {
+  .vt-intro .t-display { font-size: 28px; line-height: 36px; }
+  .vt-intro .t-body { font-size: 13px; line-height: 20px; }
+  .vt-head .row { display: none; }
+
+  /* KPIs as a 2 × 2 grid */
+  .vt-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vt-kpis > div { padding: 14px 16px; border-left: 0; margin-left: 0; border-top: 0; margin-top: 0; }
+  .vt-kpis > div:nth-child(odd) { border-right: 1px solid var(--line); }
+  .vt-kpis > div:nth-child(-n + 2) { border-bottom: 1px solid var(--line); }
+  .vt-kpis .t-kpi { font: 500 20px/28px var(--sans); margin-top: 4px; }
+  .vt-kpis .t-kpi .unit { font-size: 12px; }
+  .vt-kpis .t-sm { display: none; }
+
+  .vt-chart, .vt-split-card { flex-basis: 100%; }
+  .vt-chart .card-h { flex-direction: column; }
+
+  .vt-sec-head { margin-top: 32px; flex-direction: column; align-items: flex-start; gap: 12px; }
+  .vt-sec-head .t-h2 { font: 500 16px/24px var(--sans); letter-spacing: 0; }
+  .vt-cars { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+
+  /* funding cards: shorter image */
+  .vt-car .vt-img { aspect-ratio: 16 / 8; }
+  .vt-car .car-b { padding: 14px 16px; gap: 12px; }
+
+  /* earning cars: compact row, same markup */
+  .vt-car--row { flex-direction: row; align-items: center; gap: 12px; padding: 10px; }
+  .vt-car--row .vt-img { width: 88px; aspect-ratio: 16 / 10; border-radius: 4px; flex: none; }
+  .vt-car--row .car-b { padding: 0; gap: 0; min-width: 0; }
+  .vt-car--row .vt-car-top { align-items: center; }
+  .vt-car--row .t-title { font-size: 15px; }
+  .vt-car--row .vt-sub, .vt-car--row .vt-pill, .vt-car--row .stats3, .vt-car--row .vt-prog { display: none; }
+  .vt-car--row .vt-sub-row, .vt-car--row .vt-row-y { display: block; }
+  .vt-car--row .vt-row-y .t-title { font-size: 15px; }
+
+  .vt-register { margin-top: 32px; }
+  .vt-role { margin-top: 32px; }
+  .vt-role-grid, .vt-form { grid-template-columns: minmax(0, 1fr); }
+}

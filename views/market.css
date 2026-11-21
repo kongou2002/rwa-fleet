@@ -1,0 +1,39 @@
+/* Market view (mk-) */
+.mk-intro { display: flex; flex-direction: column; gap: 8px; max-width: 640px; }
+.mk-grid { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.mk-book { flex: 1.8 1 600px; min-width: 0; }
+.mk-sell { flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.mk-ch { align-items: center; }
+.mk-seg { align-self: flex-start; flex-wrap: wrap; }
+.mk-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.mk-of { font-weight: 400; }
+.mk-foot { margin-top: 16px; }
+.mk-take { display: inline-flex; align-items: center; gap: 6px; }
+.mk-qty { width: 56px; height: 32px; padding: 0 8px; font-size: 13px; text-align: right; }
+.mk-mine { display: grid; gap: 8px; padding-top: 16px; border-top: 1px solid var(--line); }
+.mk-mine ul { display: grid; }
+.mk-mine li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); }
+.mk-mine li:first-child { border-top: 0; padding-top: 0; }
+.mk-mine b { font-weight: 500; }
+
+@media (max-width: 720px) {
+  .mk-book, .mk-sell { flex-basis: 100%; }
+  .mk-ch { align-items: flex-start; }
+  .mk-ch .seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .mk-qty { height: 44px; width: 64px; }
+
+  /* offers as stacked rows: car on top, figures as label/value pairs, buy controls full width */
+  .mk-tbl thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .mk-tbl, .mk-tbl tbody, .mk-tbl tr, .mk-tbl td { display: block; }
+  .mk-tbl tr { padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .mk-tbl tr:first-child { padding-top: 0; }
+  .mk-tbl tr:last-child { border-bottom: 0; }
+  .mk-tbl td, .mk-tbl tr:last-child td { padding: 4px 0; border: 0; white-space: normal; }
+  .mk-tbl td:first-child { padding-bottom: 8px; }
+  .mk-tbl td[data-l] { display: flex; justify-content: space-between; gap: 16px; font-size: 14px; }
+  .mk-tbl td[data-l]::before { content: attr(data-l); color: var(--ink-3); font: 400 14px/20px var(--sans); }
+  .mk-tbl td.mk-act { padding-top: 8px; }
+  .mk-tbl .mk-take { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 8px; width: 100%; }
+  .mk-tbl .mk-qty { width: 100%; }
+  .mk-tbl td.mk-act > .btn { width: 100%; }
+}

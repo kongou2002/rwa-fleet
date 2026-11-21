@@ -1,0 +1,66 @@
+/* How it works view (hw-) */
+.hw-hero { display: flex; flex-wrap: wrap; gap: 40px; align-items: center; margin-bottom: 56px; }
+.hw-hero-t { flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.hw-hero-t .t-body { max-width: 560px; }
+.hw-cta { margin-top: 8px; }
+.hw-hero-img { flex: 1 1 400px; min-width: 0; display: block; }
+.hw-photo { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 8px; background: var(--surface-2); }
+
+.hw-sec { margin-bottom: 56px; }
+.hw-sec:last-child { margin-bottom: 0; }
+.hw-sub { margin-bottom: 20px; }
+.hw-gap { margin-top: 16px; }
+
+.hw-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.hw-steps li { padding: 24px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+.hw-steps li.hw-last { border-right: 0; }
+.hw-no { font: 500 13px/1 var(--sans); color: var(--brand); }
+.hw-when { margin-top: auto; padding-top: 12px; }
+
+.hw-who { display: flex; align-items: stretch; gap: 12px; }
+.hw-who > .card { flex: 1 1 0; min-width: 0; }
+.hw-who .t-title { margin-top: 6px; }
+.hw-who .t-sm { margin-top: 4px; }
+.hw-arrow { display: flex; align-items: center; color: var(--ink-3); }
+.hw-vault { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+.hw-vault .t-label, .hw-vault .t-sm { color: var(--brand-ink); }
+.hw-audit { display: flex; gap: 14px; align-items: center; margin-top: 12px; padding: 16px 20px; border: 1px dashed var(--line-strong); border-radius: 8px; }
+.hw-audit svg.i { width: 22px; height: 22px; color: var(--yield); }
+.hw-audit b { font-weight: 500; color: var(--ink); }
+
+.hw-ex { display: flex; flex-wrap: wrap; gap: 40px; }
+.hw-ex-l { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.hw-ex-l > .t-title { margin-bottom: 8px; }
+.hw-ex-c { flex: 1.4 1 420px; min-width: 0; }
+.hw-ex-c .card-h { margin-bottom: 8px; }
+.hw-res { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 8px; margin-top: 16px; }
+.hw-res > div { padding: 14px 16px; border-right: 1px solid var(--line); }
+.hw-res > div:last-child { border-right: 0; }
+.hw-res .t-fig { margin-top: 4px; }
+.t td.hw-base { background: var(--surface-2); padding-left: 12px; padding-right: 12px; }
+
+.hw-fleet svg { color: var(--line-strong); }
+.legend i.hw-sw-plan { background: var(--line-strong); }
+
+.hw-rules { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.hw-rules li { display: flex; gap: 12px; padding: 20px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.hw-rules li > svg.i { color: var(--yield); margin-top: 3px; }
+.hw-rules .t-sm { margin-top: 4px; }
+
+@media (max-width: 720px) {
+  .hw-hero { gap: 24px; margin-bottom: 40px; }
+  .hw-hero-t, .hw-hero-img { flex-basis: 100%; }
+  .hw-hero-t .t-display { font-size: 30px; line-height: 38px; }
+  .hw-sec { margin-bottom: 40px; }
+  .hw-steps { grid-template-columns: 1fr; }
+  .hw-steps li { border-right: 0; border-bottom: 1px solid var(--line); padding: 20px; }
+  .hw-steps li.hw-last { border-bottom: 0; }
+  .hw-who { flex-direction: column; gap: 8px; }
+  .hw-who > .card { flex: none; }
+  .hw-arrow { justify-content: center; transform: rotate(90deg); }
+  .hw-audit { align-items: flex-start; padding: 14px 16px; }
+  .hw-ex { gap: 24px; }
+  .hw-ex-l, .hw-ex-c { flex-basis: 100%; }
+  .hw-res > div { padding: 12px; }
+  .hw-rules { grid-template-columns: 1fr; }
+}

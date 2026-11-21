@@ -92,6 +92,7 @@ export function chunkRanges(from, to, size, max = 60) {
   return out;
 }
 
+const logTime = (l) => (l.timeStamp ? hexNum(l.timeStamp) : l.blockTimestamp ? hexNum(l.blockTimestamp) : undefined);
 const hexNum = (h) => (typeof h === 'string' ? parseInt(h, 16) || 0 : Number(h ?? 0));
 
 /** Raw logs (RPC, receipt or indexer shaped) to feed items. Unknown and non-feed events are dropped. */
@@ -109,7 +110,7 @@ export function decodeLogs(raw, cfg, abis, decodeEventLog) {
         block: BigInt(hexNum(l.blockNumber)),
         index: hexNum(l.logIndex),
         tx: l.transactionHash,
-        time: l.timeStamp ? hexNum(l.timeStamp) : undefined,
+        time: logTime(l),
       });
     } catch (e) { /* not one of ours */ }
   }
@@ -128,7 +129,7 @@ export function sortEvents(list) {
   return uniq.sort((a, b) => (a.block === b.block ? b.index - a.index : a.block < b.block ? 1 : -1));
 }
 
-async function scan(client, cfg, from, to, size, max) {
+async function scan(client, address, from, to, size, max) {
   const ranges = chunkRanges(from, to, size, max);
   const raw = [];
   let next = 0;
@@ -137,7 +138,7 @@ async function scan(client, cfg, from, to, size, max) {
       const [fromBlock, toBlock] = ranges[next++];
       const logs = await client.request({
         method: 'eth_getLogs',
-        params: [{ address: cfg.FleetShares, fromBlock: '0x' + fromBlock.toString(16), toBlock: '0x' + toBlock.toString(16) }],
+        params: [{ address, fromBlock: '0x' + fromBlock.toString(16), toBlock: '0x' + toBlock.toString(16) }],
       });
       raw.push(...logs);
     }
@@ -146,79 +147,81 @@ async function scan(client, cfg, from, to, size, max) {
   return raw;
 }
 
+/** Block where the first car was listed: nothing the feed shows can be older. */
+let deployCache = null;
+export async function deployBlock(client, cfg) {
+  if (deployCache === null) deployCache = (await client.getTransactionReceipt({ hash: cfg.tx.listCar1 })).blockNumber;
+  return deployCache;
+}
+
+/**
+ * All raw logs of `address` from `from` to the chain head.
+ *  1. The Routescan logs API gives history in one request, with timestamps. It can trail the head
+ *     (and returns at most one page), so
+ *  2. a wide-range RPC (`logsClient`) tops up every block after the indexer's last one, or scans the
+ *     whole range in 40,000-block chunks when the indexer gave nothing.
+ * Throws only when both sources fail. Returns { raw, source }: 'indexer+rpc', 'indexer' or 'rpc'.
+ */
+export async function fetchLogs({ logsClient, address, from, fetchFn = fetch }) {
+  let raw = [];
+  let next = from;
+  let indexed = false;
+  try {
+    const url = `${LOGS_API}?module=logs&action=getLogs&address=${address}&fromBlock=${from}&toBlock=latest`;
+    const body = await (await fetchFn(url, { cache: 'no-store' })).json();
+    if (!Array.isArray(body.result)) throw new Error(body.message || 'bad response');
+    raw = body.result;
+    indexed = true;
+    for (const l of raw) {
+      const b = BigInt(hexNum(l.blockNumber)) + 1n;
+      if (b > next) next = b;
+    }
+  } catch (e) { /* the RPC scan below covers the whole range */ }
+  try {
+    const to = await logsClient.getBlockNumber();
+    if (to >= next) raw = raw.concat(await scan(logsClient, address, next, to, WIDE_CHUNK, 60));
+    return { raw, source: indexed ? 'indexer+rpc' : 'rpc' };
+  } catch (e) {
+    if (indexed) return { raw, source: 'indexer' };
+    throw e;
+  }
+}
+
+/**
+ * FleetShares events since deploy, newest first. Uses fetchLogs; if both of its sources fail, falls back to
+ * the demo transactions' receipts plus the last 1,000 blocks on the main RPC in 100-block chunks.
+ * Returns { events, source }.
+ */
+export async function loadEvents({ client, logsClient, cfg, abis, decodeEventLog, fetchFn = fetch }) {
+  const from = await deployBlock(client, cfg);
+  try {
+    const { raw, source } = await fetchLogs({ logsClient, address: cfg.FleetShares, from, fetchFn });
+    return { events: sortEvents(decodeLogs(raw, cfg, abis, decodeEventLog)), source };
+  } catch (e) { /* fall through */ }
+
+  const to = await client.getBlockNumber();
+  const [receipts, recent] = await Promise.all([
+    Promise.all(Object.values(cfg.tx).map((hash) => client.getTransactionReceipt({ hash }).catch(() => null))),
+    scan(client, cfg.FleetShares, to - 999n > from ? to - 999n : from, to, NARROW_CHUNK, 10).catch(() => []),
+  ]);
+  const raw = [...receipts.filter(Boolean).flatMap((r) => r.logs), ...recent];
+  return { events: sortEvents(decodeLogs(raw, cfg, abis, decodeEventLog)), source: 'receipts' };
+}
+
 /**
  * IncomeReported deliveries on IncomeMirror (period totals that arrived from the operator's L1 by ICM),
- * newest first. Indexer first, wide-range RPC second. Throws when both fail: callers keep what they had.
+ * newest first, from deploy to head. Throws when no log source works: callers keep what they had.
  */
 export async function loadReports({ client, logsClient, cfg, mirrorAbi, decodeEventLog, fetchFn = fetch }) {
   const from = await deployBlock(client, cfg);
-  let raw;
-  try {
-    const url = `${LOGS_API}?module=logs&action=getLogs&address=${cfg.IncomeMirror}&fromBlock=${from}&toBlock=latest`;
-    const body = await (await fetchFn(url)).json();
-    if (!Array.isArray(body.result)) throw new Error(body.message || 'bad response');
-    raw = body.result;
-  } catch (e) {
-    const to = await logsClient.getBlockNumber();
-    raw = await scan(logsClient, { FleetShares: cfg.IncomeMirror }, from, to, WIDE_CHUNK, 60);
-  }
+  const { raw } = await fetchLogs({ logsClient, address: cfg.IncomeMirror, from, fetchFn });
   const out = [];
   for (const l of raw) {
     try {
       const d = decodeEventLog({ abi: mirrorAbi, data: l.data, topics: l.topics });
       if (d.eventName !== 'IncomeReported') continue;
-      out.push({
-        name: 'IncomeReported',
-        args: d.args,
-        block: BigInt(hexNum(l.blockNumber)),
-        index: hexNum(l.logIndex),
-        tx: l.transactionHash,
-        time: l.timeStamp ? hexNum(l.timeStamp) : undefined,
-      });
+      out.push({ name: 'IncomeReported', args: d.args, block: BigInt(hexNum(l.blockNumber)), index: hexNum(l.logIndex), tx: l.transactionHash, time: logTime(l) });
     } catch (e) { /* another event */ }
   }
   return sortEvents(out);
-}
-
-/** Block where the first car was listed: nothing the feed shows can be older. */
-export async function deployBlock(client, cfg) {
-  const r = await client.getTransactionReceipt({ hash: cfg.tx.listCar1 });
-  return r.blockNumber;
-}
-
-/**
- * Contract events since deploy, newest first. Tries, in order:
- *  1. the Routescan logs API (one request, includes timestamps),
- *  2. a wide-range RPC (`logsClient`) in 40,000-block chunks,
- *  3. the demo transactions' receipts plus the last 1,000 blocks on the main RPC in 100-block chunks.
- * `only` forces one path (for checks). Returns { events, source }.
- */
-export async function loadEvents({ client, logsClient, cfg, abis, decodeEventLog, fetchFn = fetch, only }) {
-  const from = await deployBlock(client, cfg);
-
-  if (!only || only === 'indexer') {
-    try {
-      const url = `${LOGS_API}?module=logs&action=getLogs&address=${cfg.FleetShares}&fromBlock=${from}&toBlock=latest`;
-      const body = await (await fetchFn(url)).json();
-      if (!Array.isArray(body.result)) throw new Error(body.message || 'bad response');
-      const events = decodeLogs(body.result, cfg, abis, decodeEventLog);
-      if (events.length || only) return { events: sortEvents(events), source: 'indexer' };
-    } catch (e) { if (only) throw e; }
-  }
-
-  if (!only || only === 'rpc') {
-    try {
-      const to = await logsClient.getBlockNumber();
-      const raw = await scan(logsClient, cfg, from, to, WIDE_CHUNK, 60);
-      return { events: sortEvents(decodeLogs(raw, cfg, abis, decodeEventLog)), source: 'rpc' };
-    } catch (e) { if (only) throw e; }
-  }
-
-  const to = await client.getBlockNumber();
-  const [receipts, recent] = await Promise.all([
-    Promise.all(Object.values(cfg.tx).map((hash) => client.getTransactionReceipt({ hash }).catch(() => null))),
-    scan(client, cfg, to - 999n > from ? to - 999n : from, to, NARROW_CHUNK, 10).catch(() => []),
-  ]);
-  const raw = [...receipts.filter(Boolean).flatMap((r) => r.logs), ...recent];
-  return { events: sortEvents(decodeLogs(raw, cfg, abis, decodeEventLog)), source: 'receipts' };
 }

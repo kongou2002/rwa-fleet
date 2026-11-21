@@ -783,7 +783,7 @@ function ledgerView(c) {
   const w = (v) => (max > 0n ? Math.max(2, Number((v * 1000n) / max) / 10) : 0);
   const mine = S.reports.filter((r) => r.args.carId === c.id);
   const deliveries = mine.length
-    ? `<ul class="icm-rows">${mine.slice(0, 4).map((r) => `<li><span><b>Period ${r.args.period}</b> · ${plural(r.args.rentals, 'rental')} · ${plural(r.args.daysRented, 'day')} · ${usdc(r.args.income)}</span>
+    ? `<ul class="icm-rows">${mine.map((r) => `<li><span><b>Period ${r.args.period}</b> · ${plural(r.args.rentals, 'rental')} · ${plural(r.args.daysRented, 'day')} · ${usdc(r.args.income)}</span>
         <a href="${txUrl(r.tx)}" target="_blank" rel="noopener">${r.time ? ago(r.time) : 'delivery'} ${ICON.ext}</a></li>`).join('')}</ul>`
     : '';
   const body = L.reportedIncome === 0n
@@ -837,9 +837,10 @@ async function loadReports() {
   if (reportsLoading || !cfg.IncomeMirror || !mirrorAbi) return;
   reportsLoading = true;
   try {
-    S.reports = await chain.loadReports({ client: pub, logsClient, cfg, mirrorAbi, decodeEventLog: V.decodeEventLog });
+    S.reports = withTimes(await chain.loadReports({ client: pub, logsClient, cfg, mirrorAbi, decodeEventLog: V.decodeEventLog }));
     renderCars();
     renderFeed();
+    fillTimes().catch(() => {});
   } catch (e) {
     console.warn('ICM deliveries unavailable', e);
   } finally {
@@ -968,6 +969,9 @@ async function refresh() {
         S.data = data;
         S.loadError = null;
         loadLedger();
+        const mark = markOf(data);
+        if (chainMark && mark !== chainMark) loadFeed(); // something happened on chain: the feed is behind
+        chainMark = mark;
       } catch (e) {
         console.error(e);
         S.loadError = explain(e);
@@ -980,23 +984,52 @@ async function refresh() {
   return loading;
 }
 
-async function loadFeed() {
-  try {
-    const { events, source } = await chain.loadEvents({ client: pub, logsClient, cfg, abis, decodeEventLog: V.decodeEventLog });
-    S.events = events;
-    renderFeed();
-    if (source !== 'indexer') {
-      // RPC logs carry no timestamps: fetch them for the rows on screen.
-      const blocks = [...new Set(events.slice(0, 12).map((e) => e.block))];
-      const times = await Promise.all(blocks.map((b) => pub.getBlock({ blockNumber: b }).then((x) => Number(x.timestamp)).catch(() => undefined)));
-      events.forEach((e) => { const i = blocks.indexOf(e.block); if (i >= 0) e.time = times[i]; });
-      htmlCache.delete($('#feed'));
-      renderFeed();
-    }
-  } catch (e) {
-    console.error(e);
-    if (!S.events) setHTML($('#feed'), `<p class="empty">Could not load activity right now. <a href="${addrUrl(cfg.FleetShares)}" target="_blank" rel="noopener">See the contract on Snowtrace</a>.</p>`);
-  }
+/** Rows near the top that came from an RPC (no timestamp): look their block times up. */
+async function fillTimes() {
+  const all = chain.sortEvents([...(S.events || []), ...S.reports]);
+  const need = all.slice(0, 16).filter((e) => !e.time);
+  if (!need.length) return;
+  const blocks = [...new Set(need.map((e) => e.block))];
+  const times = await Promise.all(blocks.map((b) => pub.getBlock({ blockNumber: b }).then((x) => Number(x.timestamp)).catch(() => undefined)));
+  need.forEach((e) => { e.time = times[blocks.indexOf(e.block)]; });
+  blockTimes = { ...blockTimes, ...Object.fromEntries(blocks.map((b, i) => [b, times[i]])) };
+  htmlCache.delete($('#feed'));
+  S.data?.cars.forEach((c) => htmlCache.delete($(`#car-${c.id} .car-body`)));
+  renderFeed();
+  renderCars();
+}
+let blockTimes = {}; // block number -> timestamp, so a reload of the feed does not lose them
+const withTimes = (list) => { list.forEach((e) => { if (!e.time && blockTimes[e.block]) e.time = blockTimes[e.block]; }); return list; };
+
+let feedLoading = null;
+let feedStale = false;
+function loadFeed() {
+  if (feedLoading) { feedStale = true; return feedLoading; }
+  feedLoading = (async () => {
+    do {
+      feedStale = false;
+      try {
+        const { events } = await chain.loadEvents({ client: pub, logsClient, cfg, abis, decodeEventLog: V.decodeEventLog });
+        S.events = withTimes(events);
+        // Our own receipts are now in the loaded set (or will be next time): keep only the ones still missing.
+        const have = new Set(events.map((e) => `${e.tx}:${e.index}`));
+        S.localEvents = S.localEvents.filter((e) => !have.has(`${e.tx}:${e.index}`));
+        renderFeed();
+        await fillTimes();
+      } catch (e) {
+        console.error(e);
+        if (!S.events) setHTML($('#feed'), `<p class="empty">Could not load activity right now. <a href="${addrUrl(cfg.FleetShares)}" target="_blank" rel="noopener">See the contract on Snowtrace</a>.</p>`);
+      }
+    } while (feedStale);
+    feedLoading = null;
+  })();
+  return feedLoading;
+}
+
+/** Changes whenever anything that emits an event happened on chain: a cheap trigger to reload the feed. */
+let chainMark = '';
+function markOf(d) {
+  return JSON.stringify([d.offerCount, d.feesOwed, d.cars.map((c) => [c.sold, c.status, c.rentPaid]), d.offers.map((o) => o.amount)], (k, v) => (typeof v === 'bigint' ? v.toString() : v));
 }
 
 // ---------- events ----------
@@ -1095,8 +1128,8 @@ async function boot() {
 
   setInterval(tick, 1000);
   setInterval(() => { if (!document.hidden && !S.busy) refresh(); }, 15000);
-  setInterval(() => { if (!document.hidden) loadFeed(); }, 60000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+  setInterval(() => { if (!document.hidden) { loadFeed(); loadReports(); } }, 30000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { refresh(); loadFeed(); loadReports(); } });
 }
 
 boot();

@@ -1,0 +1,38 @@
+{
+  "chainId": 43113,
+  "MockUSDC": "0xc5c54112194CdC7221677A8da4b5D33Fd5EB9CF4",
+  "FleetShares": "0x75F02c6F7E44b26637E4396170BE1B65E67dA2B1",
+  "manager": "0x7CBd323e619541b9A921503c216Ff1E8134F1ca4",
+  "operator": "0x8e91F39Ee4422B4bc1a2E5b6063C108DDf31c23D",
+  "tx": {
+    "listCar1": "0x9db0e8560729f091c68bb5178ce62d587a783097263554fee426caf9e76363b7",
+    "listCar2": "0x780fde55445a34378af0b733e5c9249158d82c60a6f7111af031ea8a80d01692",
+    "buyAlice": "0xd1e69e505308dfb3d7d0f839ea5cbc3495055a88f3a037bf8c49c60a4c2385da",
+    "buyBob": "0xb89404cad968f4c566860d8bd703c9cdb88d57e18f0bbb5b1442d2efa9c2e478",
+    "soldOutPaysOperator": "0x947ab73ff6343521148c8fa2fdd7466bd3faa532ad0b52f09937bf71d752798d",
+    "payRent": "0xa54b1e5f97cd8c7109bf13f31240322b2bdcfeb22650a608d0eacefae660f25c",
+    "claimRent": "0x673238e858b39c23f99fd6c397bbf001a8cabc6efec2758d016ba02967f08e7e",
+    "withdrawFees": "0xdbcf04c19c3cfaca849fc3803a0fc84fd9c9016b7345e2497784241aaba5dfec",
+    "makeOffer": "0xe5271d070c2b2873ccd57cf4c99e875d118e772c6663b25c89086540ffe38387",
+    "takeOffer": "0x4909abde3aec65b403b4b93c075505f4388b3379403e4f9ebd484f7e58a39475",
+    "buyCar2": "0xb5badf6a37ab8c15f73327ac1ca61a0d0985ab7e8436ecb60a9fe6d25b2ed754",
+    "icmDeliveredOnFuji": "0x6d89cb713770ccf7d251d7fb1cd9a43ae5905fbb330bc7cc6b29e95532b96831"
+  },
+  "IncomeMirror": "0x649cF4eF58B8D35063b8B3D8D474aB906D989067",
+  "CarExit": "0x3927Cab3907e65f2891970A3E57468C43c3785F6",
+  "AuditRegistry": "0x26D7De9Cd1E8D5274e3C0Ff2B571B192a766402e",
+  "auditor": "0x7855c958eC2e104D358aBAd285b50e7C759547F9",
+  "l1": {
+    "name": "Dispatch L1 (Fuji)",
+    "chainId": 779672,
+    "rpc": "https://subnets.avax.network/dispatch/testnet/rpc",
+    "explorer": "https://subnets-test.avax.network/dispatch",
+    "RentalLog": "0x0A3dDE751a009ab4454a2E244a76574F442f8988",
+    "tx": {
+      "setOperator": "0x6519c644bc12624359bf20248cc437434b7c698db00305f49697574f7bd6ec36",
+      "logRental1": "0x1bc1119d35eb461beeb8e03797f0955341e43acf5af26b12310a662bd58ede1c",
+      "logRental2": "0xb3fd4609f20ab91c3f5743bc1ad6889e3f19a69675f6e375d5c4e60c032fef1c",
+      "report": "0x3cd790914bc6c1bc3eba7371091ddfddf5ef3672cfd8dbc982084267ba7588b6"
+    }
+  }
+}

@@ -1,8 +1,9 @@
 /* Market view (mk-) */
 .mk-intro { display: flex; flex-direction: column; gap: 8px; max-width: 640px; }
 .mk-grid { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
-.mk-book { flex: 1.8 1 600px; min-width: 0; }
-.mk-sell { flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+/* the offer table needs the room: a quantity box and a buy button sit in its last column */
+.mk-book { flex: 1 1 720px; min-width: 0; }
+.mk-sell { flex: 0 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
 .mk-ch { align-items: center; }
 .mk-seg { align-self: flex-start; flex-wrap: wrap; }
 .mk-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -17,7 +18,7 @@
 .mk-mine b { font-weight: 500; }
 
 @media (max-width: 720px) {
-  .mk-book, .mk-sell { flex-basis: 100%; }
+  .mk-book, .mk-sell { flex: 1 1 100%; }
   .mk-ch { align-items: flex-start; }
   .mk-ch .seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
   .mk-qty { height: 44px; width: 64px; }

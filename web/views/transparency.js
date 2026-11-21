@@ -16,6 +16,10 @@ const FEED_ROWS = 12;
 const ext = (href, text, cls = '') => `<a${cls ? ` class="${cls}"` : ''} href="${esc(href)}" target="_blank" rel="noopener">${text} ${ICON.ext}</a>`;
 const copyBtn = (v, what) => `<button class="tr-copy" type="button" data-act="copy" data-v="${esc(v)}" aria-label="Copy ${esc(what)}">${ICON.copy}</button>`;
 const l1Url = (kind, v) => (cfg.l1?.explorer ? `${cfg.l1.explorer}/${kind}/${v}` : '');
+// Link to the L1 explorer, or the short hash with a copy button when the L1 has no public explorer.
+const l1Ref = (kind, v, text) => (cfg.l1?.explorer ? ext(l1Url(kind, v), text)
+  : `<span class="tr-hash">${text} <span class="t-addr">${esc(short(v))}</span>${copyBtn(v, text)}</span>`);
+const l1Label = () => esc(cfg.l1?.name || 'Operator L1');
 const empty = (text) => `<div class="empty"><p class="t-sm ink-3">${text}</p></div>`;
 const sumOf = (cars, f) => cars.reduce((a, c) => a + f(c), 0n);
 const sameId = (a, b) => a != null && b != null && BigInt(a) === BigInt(b);
@@ -41,7 +45,7 @@ registerView('transparency', (r) => {
 function income() {
   const l1 = cfg.l1 || {};
   const steps = `<div class="tr-steps">
-    <div class="card pad"><p class="t-label">Step 1 · Dispatch L1${l1.chainId ? ` · chain ${esc(l1.chainId)}` : ''}</p><h2 class="t-title">${esc(TERMS.operator)} logs each rental</h2><p class="t-sm ink-3">Days rented and income, on its own Avalanche L1.</p></div>
+    <div class="card pad"><p class="t-label">Step 1 · ${l1Label()}</p><h2 class="t-title">${esc(TERMS.operator)} logs each rental</h2><p class="t-sm ink-3">Days rented and income, on its own Avalanche L1.</p></div>
     <div class="card pad"><p class="t-label">Step 2 · Avalanche ICM</p><h2 class="t-title">Monthly totals cross over</h2><p class="t-sm ink-3">Signed by the L1's validators, checked on Fuji.</p></div>
     <div class="card pad"><p class="t-label">Step 3 · Fuji C-Chain · chain ${esc(cfg.chainId)}</p><h2 class="t-title">Compared with rent paid</h2><p class="t-sm ink-3">Any gap shows here and on the car.</p></div>
   </div>`;
@@ -70,8 +74,8 @@ function income() {
     : empty('No car is earning yet. Reports from the operator start once a car is funded and rented out.');
 
   const links = [
-    l1.RentalLog && l1.explorer ? ext(l1Url('address', l1.RentalLog), `RentalLog on Dispatch ${short(l1.RentalLog)}`) : '',
-    l1.tx?.report && l1.explorer ? ext(l1Url('tx', l1.tx.report), 'Report sent from Dispatch') : '',
+    l1.RentalLog ? (l1.explorer ? ext(l1Url('address', l1.RentalLog), `RentalLog on ${l1Label()} ${short(l1.RentalLog)}`) : l1Ref('address', l1.RentalLog, `RentalLog on ${l1Label()}`)) : '',
+    l1.tx?.report ? l1Ref('tx', l1.tx.report, `Report sent from ${l1Label()}`) : '',
     cfg.tx?.icmDeliveredOnFuji ? ext(txUrl(cfg.tx.icmDeliveredOnFuji), 'Delivered on Fuji by ICM') : '',
     cfg.IncomeMirror ? ext(addrUrl(cfg.IncomeMirror), `IncomeMirror on Fuji ${short(cfg.IncomeMirror)}`) : '',
   ].filter(Boolean);
@@ -93,7 +97,7 @@ function income() {
       ${table}
     </section>
     <section class="card pad tr-gap">
-      <div class="card-h"><div><h2 class="t-title">Deliveries by ICM</h2><p class="t-sm ink-3">Each period total from Dispatch, as it arrived on Fuji</p></div></div>
+      <div class="card-h"><div><h2 class="t-title">Deliveries by ICM</h2><p class="t-sm ink-3">Each period total from ${l1Label()}, as it arrived on Fuji</p></div></div>
       ${deliveries}
       ${links.length ? `<p class="tr-links t-sm">${links.join('')}</p>` : ''}
     </section>
@@ -147,7 +151,7 @@ function auditReports() {
   }
   const by = S.auditor || cfg.auditor;
   return `<section class="card pad">
-      <div class="card-h"><div><h2 class="t-title">Audit reports</h2><p class="t-sm ink-3">Published on chain by the independent auditor${by ? ` ${ext(addrUrl(by), `<span class="t-addr">${esc(short(by))}</span>`)}` : ''}. Reports cannot be edited or deleted. Each holds the hash of the signed report, so anyone with the file can check it.</p></div></div>
+      <div class="card-h"><div><h2 class="t-title">Audit reports</h2><p class="t-sm ink-3">Published on chain by the auditor wallet${by ? ` ${ext(addrUrl(by), `<span class="t-addr">${esc(short(by))}</span>`)}` : ''}. On this testnet demo that wallet belongs to the team. Reports cannot be edited or deleted. Each holds the hash of the signed report, so anyone with the file can check it.</p></div></div>
       ${body}
     </section>
     ${auditForm()}`;
@@ -268,6 +272,7 @@ const TX_LABELS = {
   listCar1: 'First car listed', listCar2: 'Second car listed', buyAlice: 'Shares bought (first buyer)', buyBob: 'Shares bought (second buyer)',
   soldOutPaysOperator: 'Sell-out pays the operator', payRent: 'Rent paid', claimRent: 'Rent collected', withdrawFees: 'Fees withdrawn',
   makeOffer: 'Offer made', takeOffer: 'Offer taken', buyCar2: 'Shares of the second car bought', icmDeliveredOnFuji: 'ICM report delivered on Fuji',
+  listCar3: 'Third car listed', soldOutCar3: 'Third car sells out, pays the operator',
   setOperator: 'Operator set on RentalLog', logRental1: 'First rental logged', logRental2: 'Second rental logged', report: 'Period report sent by ICM',
 };
 const readable = (k) => TX_LABELS[k] || k.replace(/([a-z])([A-Z0-9])/g, '$1 $2').replace(/^./, (s) => s.toUpperCase());
@@ -278,10 +283,11 @@ function contracts() {
     ? `<div><dt>${label}<span class="t-sm ink-3">${sub}</span></dt><dd><span class="tr-hash">${href ? ext(href, `<span class="t-addr">${esc(short(addr))}</span>`) : `<span class="t-addr">${esc(short(addr))}</span>`}${copyBtn(addr, `${label} address`)}</span></dd></div>`
     : '');
   const fuji = `Fuji C-Chain · ${esc(cfg.chainId)}`;
-  const l1Name = `Dispatch L1${l1.chainId ? ` · ${esc(l1.chainId)}` : ''}`;
-  const txRows = (txs, sub, url) => Object.entries(txs || {}).map(([k, h]) => (url(h)
-    ? `<div><dt>${esc(readable(k))}<span class="t-sm ink-3">${sub}</span></dt><dd><span class="tr-hash">${ext(url(h), `<span class="t-addr">${esc(short(h))}</span>`)}${copyBtn(h, `${readable(k)} transaction hash`)}</span></dd></div>`
-    : '')).join('');
+  const l1Name = l1Label();
+  const txRows = (txs, sub, url) => Object.entries(txs || {}).map(([k, h]) => {
+    const hash = `<span class="t-addr">${esc(short(h))}</span>`;
+    return `<div><dt>${esc(readable(k))}<span class="t-sm ink-3">${sub}</span></dt><dd><span class="tr-hash">${url(h) ? ext(url(h), hash) : hash}${copyBtn(h, `${readable(k)} transaction hash`)}</span></dd></div>`;
+  }).join('');
   return `<div class="tr-pair">
     <section class="card pad"><h2 class="t-title tr-kv-h">Contracts and roles</h2>
       <dl class="kv tr-kv">
@@ -299,7 +305,7 @@ function contracts() {
     <section class="card pad"><h2 class="t-title tr-kv-h">Reference transactions</h2>
       <dl class="kv tr-kv">
         ${txRows(cfg.tx, 'Fuji', txUrl)}
-        ${txRows(l1.tx, 'Dispatch L1', (h) => l1Url('tx', h))}
+        ${txRows(l1.tx, l1Name, (h) => l1Url('tx', h))}
       </dl>
     </section>
   </div>`;

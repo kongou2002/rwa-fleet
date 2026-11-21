@@ -37,7 +37,7 @@ function lifeCard(c, st) {
     ['Funding', fundLine],
     ['Sell-out', funded ? `${usd(toOperator)} USDC paid to the operator` : `${esc(TERMS.operator)} buys the car`],
     [m.term ? `Years 1–${m.term}` : 'Rental years', ex ? `${usd(c.rentPaid)} USDC rent paid in` : funded ? `${usd(c.rentPaid)} USDC rent so far` : 'Rent paid monthly'],
-    ['Resale', ex ? `Sold · ${usd(ex.proceeds)} USDC<br><span class="ink-3">${day(ex.soldAt)}</span>` : resale !== null ? `Sold · est. ${usd(resale)} USDC` : 'Sold at the end of the term'],
+    ['Resale', ex ? `Sold · ${usd(ex.proceeds)} USDC<br><span class="ink-3">${day(ex.soldAt)}</span>` : resale !== null ? `Est. ${usd(resale)} USDC at the end of the term` : 'Sold at the end of the term'],
   ];
   const sub = ex
     ? `Sold on ${day(ex.soldAt)}. Every USDC of the sale goes to holders, with no fee.`
@@ -78,9 +78,12 @@ function reportsCard(c, st) {
   const mine = (S.reports || []).filter((r) => r.args.carId?.toString() === c.id.toString());
   const intro = `<h2 class="t-title">Income reports</h2>
     <p class="t-sm ink-3">${esc(TERMS.operator)} logs each rental on its own chain${l1.name ? `, ${esc(l1.name)}` : ''}. Monthly totals arrive here by Avalanche ICM and sit next to the rent it paid.</p>`;
+  // The operator chain may have no public explorer: then show the short hash with a copy button instead of a link.
+  const l1Ref = (kind, v, text) => (l1.explorer ? ext(`${l1.explorer}/${kind}/${v}`, text)
+    : `<span>${text} <button class="cd-copy" type="button" data-act="copy" data-v="${esc(v)}" aria-label="Copy ${esc(text)} ${esc(v)}" title="${esc(v)}"><span class="t-addr">${esc(v.slice(0, 6))}…${esc(v.slice(-4))}</span>${ICON.copy}</button></span>`);
   const links = [
-    l1.RentalLog && l1.explorer ? ext(`${l1.explorer}/address/${l1.RentalLog}`, 'Rental log on the operator chain') : '',
-    l1.tx?.report && l1.explorer ? ext(`${l1.explorer}/tx/${l1.tx.report}`, 'Report sent') : '',
+    l1.RentalLog ? l1Ref('address', l1.RentalLog, 'Rental log on the operator chain') : '',
+    l1.tx?.report ? l1Ref('tx', l1.tx.report, 'Report sent') : '',
     cfg.tx?.icmDeliveredOnFuji ? ext(txUrl(cfg.tx.icmDeliveredOnFuji), 'Delivered on Fuji') : '',
     cfg.IncomeMirror ? ext(addrUrl(cfg.IncomeMirror), 'IncomeMirror') : '',
   ].filter(Boolean);

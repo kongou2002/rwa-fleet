@@ -1,63 +1,73 @@
-# FleetShares demo flows
+# FleetShares demo video
 
-All money and ERC-1155 shares are on Avalanche Fuji C-Chain (43113). Rental entries are on Dispatch L1 (779672). Contract names below match [docs/fuji.json](fuji.json).
+[`web/demo.mp4`](../web/demo.mp4) · 2:57 · 1440×900 · silent, one caption per step. Recorded on 22 Nov 2026 (21 Nov UTC) against the live deployment in [`web/fuji.json`](../web/fuji.json) on Avalanche Fuji. Every screen is the app in a browser and every transaction below is a real Fuji transaction. Waits for confirmations are played at 8× and the page loads after each wallet switch are cut.
 
-## Investor
+Roles: **Investor** `0x135c…9171` (fresh wallet with 2,000 test USDC), **Operator** `0x6970…a392`, **Manager** `0xE436…07AA`, **Auditor** `0x8F3b…4921` (the team's own test wallet on this demo), **Alice** `0xD367…4319` (seeded holder). Wallets are switched on screen with Disconnect / Connect. There is no wallet popup: the recorder signs outside the page, so the app's "Confirm in your wallet" step passes on its own.
 
-1. **Connect and fund.** Click **Connect wallet**, select Fuji and check the wallet address and AVAX balance. **Get 1,000 test USDC** calls `MockUSDC.faucet()`; the wallet balance increases by 1,000. **Flag:** the faucet supplies USDC only, costs Fuji AVAX, and has a five-minute per-address cooldown. Fund gas ahead of time and mint once before recording the timed purchase.
-2. **Buy.** On **Cars → VinFast VF 8 2024**, choose **1**, then **Buy 1 share**. The UI calls `MockUSDC.approve(FleetShares, cost)` if needed, then `FleetShares.buyShares(2, 1)`. Watch the two prompts, funding progress and **Your position → Your shares**. **Flag:** the chain rejects purchases after the deadline or if available shares run out. Recheck the card before recording. A failed purchase can leave its separate approval in place.
-3. **Follow funding or exit after failure.** `getCar` shows funding progress and then **Sold out**. The last `buyShares` sends all purchase funds to the operator in that transaction. If the deadline passes before sell-out, **Close sale and open refunds** calls `cancelFunding` (any wallet), then **Refund [amount]** calls `refund` (each buyer, burning their shares). **Flag:** refunds require these two explicit steps and gas. Show the expired-state path only when a suitable sale exists. Shares cannot transfer before a car is active.
-4. **Collect or resell after funding.** On CX-5, `claimable` feeds **Rent to collect** and **Collect [amount]** calls `claim`. The balance goes to the holder and the claimable amount drops. In **Shares for sale**, **Post offer** calls `makeOffer` and the seller sees a new row; **Cancel offer** calls `cancelOffer`. **Flag:** use a seeded holder with positive claimable rent. The fresh VF 8 buyer has no CX-5 claim, and a wallet cannot claim a second time without additional accrued rent.
+## Beats and captions
 
-## Rental operator
+| Time | Screen | Caption |
+|---|---|---|
+| 0:00 | Vault | FleetShares on Avalanche Fuji: rental cars in Vietnam, owned in shares, read live from the chain. |
+| 0:03 | Vault figures, rent chart, split card | Rent paid to holders so far, and the fixed split: 90 to holders, 10 to the manager. |
+| 0:06 | Car cards | Three cars: two funded and earning rent, one still selling shares. |
+| 0:12 | Connect | Connect an investor wallet that holds 2,000 test USDC and no shares. |
+| 0:18 | VinFast VF 8 Eco | Open the VinFast VF 8 Eco and pick 2 shares at 250 USDC. |
+| 0:23 | Buy | Buy: approve 500 USDC, then purchase. The USDC waits in escrow until the car sells out. |
+| 0:29 | Progress, Your position | Shares sold move from 96 to 98 of 160, and the position shows 2 shares in escrow. |
+| 0:36 | Market | Market: buy 2 Mazda CX-5 shares from a holder's offer at 275 USDC. The seller is paid at once. |
+| 0:43 | Sell shares | Post an offer of your own: 1 share at 285 USDC. It keeps earning rent until someone buys it. |
+| 0:54 | Portfolio | Portfolio: holdings, ownership, allocation and this wallet's own transactions. |
+| 1:04 | Switch to operator, CX-5 page | Switch to the operator, the rental company that runs the cars. |
+| 1:10 | Income reports | Rentals are logged on the team's own L1. Period totals arrive here over Avalanche ICM. |
+| 1:14 | Reported vs paid | It reported 945 USDC of income but paid in only 630, so 315 USDC shows as due. |
+| 1:19 | Pay rent | The operator pays the 315 USDC. The contract splits it on arrival: 90% to holders, 10% fee. |
+| 1:27 | Income reports | Reported income and rent paid now match, and the car shows Paid in full. |
+| 1:30 | Toyota Vios 1.5 G, Record the sale | Skip ahead to the end of the Toyota Vios 1.5 G's term: the operator records its sale for 10,800 USDC. |
+| 1:42 | Switch to manager, Transparency | Switch to the manager. Transparency compares reported income with rent paid for each car. |
+| 1:51 | Fees | The manager withdraws its 135 USDC of fees. The contract can only send them to the manager address. |
+| 1:57 | Activity, Contracts | Every event links to its transaction. The contracts sit on Fuji and on the team's L1. |
+| 2:07 | Switch to auditor, Audit | Switch to the auditor wallet. In this demo it is the team's own test wallet. |
+| 2:13 | Publish a report | It publishes the hash of a short check written from chain reads: reported vs paid for the CX-5. |
+| 2:24 | Audit reports | The report hash is on chain and listed. It cannot be edited or deleted. |
+| 2:29 | Switch to Alice, Portfolio | Switch to Alice, a holder since the start. She collects her rent from both earning cars. |
+| 2:40 | Redeem | Then she hands in her 20 Toyota Vios shares for her part of the sale: 1,800 USDC, no fee. |
+| 2:48 | How it works | How it works: fund a car, rent it out for 4 to 5 years, sell it, and grow the fleet. |
 
-1. **Receive funding.** The last `FleetShares.buyShares` triggers `CarFunded` and transfers the proceeds to the configured operator. The CX-5 card shows **Sold out**; the [sell-out receipt][sellout] shows the transfer. **Flag:** buying and renting out the physical car happens off-chain. Use the receipt to demonstrate the transfer.
-2. **Log and report on Dispatch.** After the manager registers the operator, call `RentalLog.logRental(carId, rentalRef, daysRented, income)` for each rental. The operator sees `RentalLogged` in the receipt; anyone can call `report(carId)` on a nonempty open period and see `PeriodReported` with the ICM message ID. The contract sends its totals and starts a fresh period. **Flag:** current UI has no Dispatch write controls. For recording, use the [existing Dispatch report][dispatch] and [Fuji delivery][delivery]. Live writes require the Dispatch network and its gas. Reusing a rental reference reverts, and a successful dispatch does not guarantee immediate relay delivery.
-3. **Pay on Fuji.** Switch back to Fuji as the car's operator. Under **Rent**, enter **Rent to pay (USDC)**, then **Pay rent**. Confirm `MockUSDC.approve` if prompted, then `FleetShares.payRent`. The card shows gross paid, 90% allocated to holders and 10% accrued as manager fees. **Flag:** the car must be active. Use the seeded [rent receipt][rent] for the video so the demonstrated ledger totals stay at 250 reported and 250 paid.
+## Transactions made during the take
 
-## Manager
+| Time | Role | Action | Transaction |
+|---|---|---|---|
+| 0:27 | Investor | Approve 500 USDC | [0xd6a3…6554](https://testnet.snowtrace.io/tx/0xd6a3b009291c17775fdfec886af4f5246eda2b738c63c4f58919d59775556554) |
+| 0:27 | Investor | Buy 2 VF 8 Eco shares | [0x17b8…1f22](https://testnet.snowtrace.io/tx/0x17b89756aed562f7118b272e3da0d9586a7c88e8008ec3f78d31b7fcde771f22) |
+| 0:41 | Investor | Approve 550 USDC | [0xb97c…1000](https://testnet.snowtrace.io/tx/0xb97ce1bf6324ad44baf3dc72ae912cbbeffe54b00f7e6ca9017e9d12023e1000) |
+| 0:42 | Investor | Take 2 CX-5 shares from offer #1 at 275 | [0x8188…d82c](https://testnet.snowtrace.io/tx/0x81882f2b51e1959bb52ed19dc26e0d6d3d7acf1881b0f7dc63104455d72ed82c) |
+| 0:49 | Investor | Offer 1 CX-5 share at 285 | [0x2b1b…139b](https://testnet.snowtrace.io/tx/0x2b1b31f6cf674cbb39192983e7a789e67ec7baaf8886e9c0e04dddc1acb8139b) |
+| 1:24 | Operator | Pay 315 USDC rent on the CX-5 (283.50 to holders, 31.50 fee) | [0xc22c…1225](https://testnet.snowtrace.io/tx/0xc22cb50338fba686fde525c8c7af6424b93ef83c0d6cc6eb6d6e960799141225) |
+| 1:37 | Operator | Approve 10,800 USDC to CarExit | [0x6748…9714](https://testnet.snowtrace.io/tx/0x6748249c5ed5a97bf3c78eb4a42b208bbbbf727d6d7011477fc949e4bcb29714) |
+| 1:37 | Operator | Record the Vios resale, 10,800 USDC | [0xdcf9…999a](https://testnet.snowtrace.io/tx/0xdcf9676e1e09b75a008a624e170e7905a1b2b2fbe5b8bc772c09266e8923999a) |
+| 1:53 | Manager | Withdraw 135 USDC of fees | [0x2a15…4982](https://testnet.snowtrace.io/tx/0x2a159bf5e22f103b0253dd37a8075f0bcda6750fb558ab178252fbc993cb4982) |
+| 2:23 | Auditor | Publish report #1 (hash `0xa0fa…0e17`) | [0x4c0a…d4f5](https://testnet.snowtrace.io/tx/0x4c0ae04dd1e82baa26eeb77c34e6f5ce1f64b8f130698bbb50cbf28effebd4f5) |
+| 2:38 | Alice | Collect CX-5 rent | [0xc794…0448](https://testnet.snowtrace.io/tx/0xc794a6205c4afb462b83b8d92a516de06fed9e7be723469ff7f8ef70dfda0448) |
+| 2:38 | Alice | Collect Vios rent | [0x2b6e…dfce](https://testnet.snowtrace.io/tx/0x2b6ee06d13316d999c79aec7025ae44cd0976bac7ddd29e8d98b13cf03a9dfce) |
+| 2:43 | Alice | Allow CarExit to take her shares | [0x6e5a…4d20](https://testnet.snowtrace.io/tx/0x6e5a92b912abcaf3daff2a65afd0e27730ec4d6556dd66a8d26e56bf6a914d20) |
+| 2:44 | Alice | Redeem 20 Vios shares for 1,800 USDC | [0xb1ea…08fb](https://testnet.snowtrace.io/tx/0xb1eada4298b9211019d06bf409d6e710c281eb9455dbc21cecdf6dc2785e08fb) |
 
-1. **List the car.** Connect the manager wallet and open **Your tools → List a new car**. Enter car name, photo URL, documents hash or text to hash, operator, share count, price and funding days. **List car** calls `FleetShares.listCar`; the new card shows its deadline and **Documents hash**. **Flag:** the hash is a commitment to supplied data; it does not verify title or authenticity. Use the existing listings for the video.
-2. **Register the Dispatch operator.** Manager calls `RentalLog.setOperator(carId, operator)` on Dispatch and sees `OperatorSet` in the receipt. **Flag:** listing on Fuji does not register the operator on Dispatch. The dApp has no button for this call. Use the existing CX-5 registration in `docs/fuji.json`.
-3. **Collect accrued fees.** Under **Fees ready to withdraw**, click **Withdraw fees** to call `FleetShares.withdrawFees` and see the balance reset. **Flag:** the UI shows this control to the manager, but the contract lets anyone trigger it and always sends the USDC to the immutable manager address. The seeded fee has already been withdrawn. Open its [receipt][fees] if the balance is zero.
+The published report is [`docs/audit/2026-11-21-car1-reported-vs-paid.md`](audit/2026-11-21-car1-reported-vs-paid.md): a reported-vs-paid read of car 1, generated from chain reads seconds before publishing. Its keccak256 is the hash stored on chain (`cast keccak 0x$(xxd -p -c0 docs/audit/2026-11-21-car1-reported-vs-paid.md)`). It says it is a demo check by the team's own wallet and not an independent audit. The period shows the UTC date (21 Nov) while the app shows the publish date in local time (22 Nov).
 
-## Secondary buyer
+## Not shown live, and why
 
-1. **Inspect inventory.** On CX-5, open **Shares for sale**. `FleetShares.getOffer` supplies the price and remaining quantity; `balanceOf` on the seller caps the fillable quantity. **Flag:** listings do not escrow shares and another buyer can fill them first. Check the row just before capture and buy only one share to preserve inventory for retakes.
-2. **Fill the offer.** On a different wallet from the seller, enter **1** and click **Buy for 27** at the seeded price. Confirm `MockUSDC.approve` if needed and then `FleetShares.takeOffer`. The remaining quantity drops, USDC goes directly to the seller and **Your shares** increases in the same transaction. Rent already earned stays with the seller. **Flag:** use the [recorded seeded fill][fill] if the row is gone or a signature fails. Identify it on camera as an earlier transaction.
-3. **Compare income.** `IncomeMirror.reported(1)` shows rental count and days, and `ledger(1)` shows reported income, rent paid and `max(reported − paid, 0)`. **Flag:** the HTML and JS reviewed for this script have no L1 ledger panel. If it lands, show it on CX-5; otherwise show the read-only ledger panel prepared from the live contract read alongside both explorer receipts. Label the fallback as a contract read so it is clear where the numbers came from. The comparison is cumulative and cannot prove all real rentals were logged.
+- **Listing a car and the funding sell-out.** These happened during seeding (see `tx` in `fuji.json`). A new listing would add a fourth car that nobody funds.
+- **Rental logging on the L1 and the ICM report.** These are on the team's L1 (chain 510103, no explorer) and were sent before the take. The video shows their result on Fuji (the deliveries in Income reports and the 945 reported).
+- **Faucet.** The investor started with 2,000 test USDC, so the faucet button is not used in the video.
+- **Refunds for a car that misses its deadline.** No car is past its deadline.
+- **The resale is not at the end of a real term.** The Vios was recorded as sold minutes after its rent, and the caption says it skips ahead.
 
-## Demo video · 2:45
+## Pre-record checklist
 
-Plan one recording wallet **A** with zero prior FleetShares positions and one seeded CX-5 holder **B** with unclaimed rent. Use A for the primary and secondary buys, B for the claim. Cut confirmation waits while keeping the actual wallet prompts and resulting state visible. Narration assumes live reads still match the seeded values below.
-
-| Time | On screen and click | Narration (Vietnamese) |
-| --- | --- | --- |
-| 0:00–0:20 | Open **Cars** with both vehicles visible. Pause on Mazda CX-5 and VinFast VF 8. | Muốn hưởng tiền cho thuê xe, nhà đầu tư nhỏ thường phải bỏ vốn mua cả chiếc. Với FleetShares, mỗi xe có nhiều share, và ai giữ share thì được chia phần tiền thuê mà đơn vị vận hành nộp lên Avalanche. Mỗi share là một đơn vị ERC-1155 gắn với đúng chiếc xe đó. |
-| 0:20–0:48 | Connect fresh A on Fuji, with faucet funds already in the wallet. VF 8 → **1** → **Buy 1 share**. Show approval and purchase confirmations, then **Your shares** changing from zero to one. | Đây là ví mới trên Fuji, đã lấy USDC thử nghiệm từ faucet. Chiếc VinFast VF 8 có hai trăm share, mỗi share giá mười USDC. Mình chọn mua một share. Ví hỏi cấp quyền chi đúng số tiền, rồi xác nhận giao dịch mua. Khi giao dịch xong, mục này hiện một share. Tiền nằm trong hợp đồng cho đến khi bán hết. |
-| 0:48–1:18 | CX-5 → **Sold out** and **Rent**. Point to 250 paid, 225 holders, 25 fee. Switch to B → **Your position** → **Collect [amount]**. Show confirmed claim and zero remaining. Missing B access: show the [existing claim receipt][claim], label it as prior proof, and say “Đây là giao dịch một ví giữ bốn mươi share đã nhận chín mươi USDC.” in place of the last two sentences. | Chiếc Mazda CX-5 đã bán hết. Giao dịch mua share cuối chuyển hai nghìn năm trăm USDC cho bên vận hành. Khi họ nộp hai trăm năm mươi USDC tiền thuê, hợp đồng dành hai mươi lăm cho bên quản lý và hai trăm hai mươi lăm cho các holder. Tức là mười phần trăm phí, chín mươi phần trăm tiền thuê cho người giữ share. Ví này có bốn mươi share. Mình bấm nhận chín mươi USDC tiền thuê. |
-| 1:18–1:45 | Switch back to A. CX-5 → **Shares for sale** → enter **1** in the seeded offer → **Buy for 27**. Confirm approval and fill; show one fewer share on the row and one CX-5 share in A. If using the [seeded fill][fill], say “Trong giao dịch đã ghi, người mua lấy năm share với giá hai mươi bảy USDC mỗi share.” in place of the second sentence. | Nếu muốn bán lại, holder có thể đăng giá ngay trong sổ lệnh. Mình dùng ví mua lúc nãy để lấy một share Mazda với giá hai mươi bảy USDC. Tiền đi thẳng tới người bán và share sang ví mua trong cùng giao dịch. Tiền thuê đã tích lũy trước lúc bán vẫn thuộc về người bán. |
-| 1:45–2:18 | CX-5 → L1 ledger panel if shipped, otherwise show the live RPC read panel marked **IncomeMirror · Fuji · Car 1**. Point to 250 / 250 / 0. Open [Dispatch report][dispatch], highlight `PeriodReported`; open [Fuji delivery][delivery], highlight `IncomeReported`. | Bên vận hành ghi từng lượt thuê lên Dispatch, một Avalanche L1. Kỳ này có hai lượt, tổng cộng tám ngày, doanh thu báo cáo hai trăm năm mươi USDC. Đây là giao dịch chốt kỳ trên Dispatch. Còn đây là giao dịch nhận báo cáo qua ICM trên Fuji. Trên bảng đối chiếu, số báo cáo và số thực nộp đều là hai trăm năm mươi, nên phần báo cáo còn thiếu bằng không. |
-| 2:18–2:45 | Return to CX-5, with ledger and **Rent** numbers visible if possible. End on the dApp and testnet label. | Hợp đồng giữ tiền đến lúc bán hết, cho người mua lấy lại tiền nếu quá hạn và đợt bán đã đóng, rồi chia tiền thuê theo tỷ lệ cố định. Bảng đối chiếu cho thấy bên vận hành báo bao nhiêu và đã nộp bao nhiêu. Bản thử nghiệm chưa xác minh doanh thu ngoài đời hay buộc bên vận hành trả tiền. |
-
-## Pre-recording checklist
-
-- [ ] Serve `web/` over local HTTP and check wallet injection, the **Cars** view, images and **Recent activity**. Prepare separate browser profiles or confirm clean account switching. Set Fuji C-Chain (43113) in both wallets before capture and fund each with Fuji AVAX for its prompts. Dispatch is for the proof tabs, so the recording wallets can stay on Fuji.
-- [ ] Use a fresh wallet A with no positions and get 1,000 MockUSDC via **Get 1,000 test USDC** in advance. Allow five minutes before any repeat faucet call on that address. Budget four signatures from A for the two purchases, including separate approvals if needed. Keep enough USDC for both (37 USDC at the seeded prices).
-- [ ] Recheck VF 8 has at least one share for sale and has time left. Read-only snapshot during drafting showed 20 of 200 sold at 10 USDC, deadline **2026-12-21 18:32:58 UTC**. If VF 8 has closed, show the [seeded VF 8 purchase][vf8] as historical and source a new active listing for any promised live purchase. Never describe a seeded receipt as a live fill.
-- [ ] Confirm access to B, the seeded buyer at `0x15e414d8B8b67d70eB775a8333528d7a96E36F74`. Read-only `claimable(1, B)` returned 90 USDC during drafting. Rehearse the wallet switch without consuming the claim, and confirm offer #1 still has fillable shares at 27 USDC. The read-only snapshot showed five remaining and 35 CX-5 shares in the seller wallet. Preserve the first successful claim take for editing.
-- [ ] Rehearse comparing the two chains without live writes. Open the [Dispatch report][dispatch], [Fuji delivery][delivery], [sell-out][sellout], [rent][rent], [claim][claim] and [prior fill][fill] tabs before recording. Both ICM-related receipts returned success over RPC during drafting. If an explorer fails to render on the recording network, use the matching RPC receipt and show the transaction hash. Prepare this read-only fallback for the panel, formatted in six-decimal USDC units (250 / 250 / 0 at drafting time):
-  ```sh
-  cast call --rpc-url https://api.avax-test.network/ext/bc/C/rpc \
-    0x649cF4eF58B8D35063b8B3D8D474aB906D989067 'ledger(uint256)(uint256,uint256,uint256)' 1
-  ```
-- [ ] Dry-run the Vietnamese narration against the 2:45 timeline, especially numbers and wallet switches. Record each transaction through confirmed state and trim idle time. Reserve the last 27 seconds for safeguards and limits.
-
-[sellout]: https://testnet.snowtrace.io/tx/0x947ab73ff6343521148c8fa2fdd7466bd3faa532ad0b52f09937bf71d752798d
-[rent]: https://testnet.snowtrace.io/tx/0xa54b1e5f97cd8c7109bf13f31240322b2bdcfeb22650a608d0eacefae660f25c
-[fees]: https://testnet.snowtrace.io/tx/0xdbcf04c19c3cfaca849fc3803a0fc84fd9c9016b7345e2497784241aaba5dfec
-[claim]: https://testnet.snowtrace.io/tx/0x673238e858b39c23f99fd6c397bbf001a8cabc6efec2758d016ba02967f08e7e
-[fill]: https://testnet.snowtrace.io/tx/0x4909abde3aec65b403b4b93c075505f4388b3379403e4f9ebd484f7e58a39475
-[vf8]: https://testnet.snowtrace.io/tx/0xb5badf6a37ab8c15f73327ac1ca61a0d0985ab7e8436ecb60a9fe6d25b2ed754
-[dispatch]: https://subnets-test.avax.network/dispatch/tx/0x3cd790914bc6c1bc3eba7371091ddfddf5ef3672cfd8dbc982084267ba7588b6
-[delivery]: https://testnet.snowtrace.io/tx/0x6d89cb713770ccf7d251d7fb1cd9a43ae5905fbb330bc7cc6b29e95532b96831
+- [ ] `web/fuji.json` points at the deployment you mean to record, and the role keys match its `manager`, `operator` and `auditor`.
+- [ ] Read live state: VF 8 has shares left and a deadline in the future; the cheapest CX-5 offer still has at least 2 fillable shares; the CX-5 ledger shows an unpaid amount if you want the "due → Paid in full" beat; no resale is recorded for the car you will sell; feesOwed > 0.
+- [ ] Balances: every role has gas; investor ≥ 1,100 USDC; operator ≥ rent + resale USDC.
+- [ ] Rehearse the whole path on `anvil --fork-url https://avalanche-fuji-c-chain-rpc.publicnode.com` before the real take. Each real take uses up state (offers, resale, unpaid rent), so a second take needs a re-plan, not a replay.
+- [ ] Serve `web/` locally (`python3 -m http.server`). `api.avax-test.network` can rate-limit; route reads to publicnode.
+- [ ] After cutting: total under 3:00, one frame per caption checked (caption matches the screen, no skeletons, no error toasts).

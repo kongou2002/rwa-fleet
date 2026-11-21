@@ -28,6 +28,7 @@
       <nav class="top-nav" aria-label="Sections">
         <a href="#cars">Cars</a>
         <a href="#how">How it works</a>
+        <a href="#icm">Two chains</a>
         <a href="#trust">Safeguards</a>
         <a href="#activity">Activity</a>
       </nav>
@@ -108,6 +109,39 @@
             <p>The operator pays rent in per car. 90% is shared by holders in proportion to their shares, 10% goes to the manager.</p>
           </li>
         </ol>
+      </section>
+
+      <section id="icm" class="section" aria-labelledby="icm-h">
+        <div class="section-head">
+          <h2 id="icm-h">Two chains, joined by Avalanche ICM</h2>
+          <p>What the operator says it earned, next to what it paid.</p>
+        </div>
+        <div class="chains">
+          <div class="chain-card">
+            <span class="chain-tag">Dispatch L1 · chain 779672</span>
+            <h3>The operator logs rentals</h3>
+            <p>Every rental of a car is written to the RentalLog contract on the operator's own Avalanche L1: days rented and income.</p>
+          </div>
+          <div class="chain-link" aria-hidden="true">
+            <svg viewBox="0 0 64 24"><path d="M2 12h52m0 0l-7-7m7 7l-7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 6"/></svg>
+            <span>ICM message</span>
+          </div>
+          <div class="chain-card">
+            <span class="chain-tag">Avalanche ICM</span>
+            <h3>Period totals cross over</h3>
+            <p>At the end of a period the totals are sent as an Avalanche Interchain Message. It is signed by the L1's validators and checked on Fuji before it is accepted.</p>
+          </div>
+          <div class="chain-link" aria-hidden="true">
+            <svg viewBox="0 0 64 24"><path d="M2 12h52m0 0l-7-7m7 7l-7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 6"/></svg>
+            <span>delivered</span>
+          </div>
+          <div class="chain-card">
+            <span class="chain-tag">Fuji C-Chain · chain 43113</span>
+            <h3>Holders compare</h3>
+            <p>IncomeMirror stores the reported income next to the rent FleetShares actually received. Any gap is shown on the car.</p>
+          </div>
+        </div>
+        <p class="chain-links" id="icm-links"></p>
       </section>
 
       <section id="trust" class="section" aria-labelledby="trust-h">

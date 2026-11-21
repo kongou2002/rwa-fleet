@@ -21,6 +21,8 @@ const S = {
   provider: null,
   busy: null, // key of the action in flight
   loadError: null,
+  reports: [], // IncomeReported deliveries on IncomeMirror, newest first
+  walletChain: null, // chain id the wallet is on
   ledger: {}, // carId -> { reportedIncome, rentPaid, unpaid, periods, rentals, daysRented } from IncomeMirror
 };
 const ui = { buy: {}, offer: {}, take: {}, rent: {}, list: { name: '', image: '', docs: '', operator: '', shares: '100', price: '25', days: '30' }, feedAll: false, walletOpen: false, listOpen: false };
@@ -189,7 +191,22 @@ const getProvider = () => window.ethereum || discovered[0] || null;
 async function ensureChain() {
   const p = S.provider;
   const id = await p.request({ method: 'eth_chainId' });
-  if (parseInt(id, 16) === cfg.chainId) return;
+  S.walletChain = parseInt(id, 16);
+  if (S.walletChain === cfg.chainId) return false;
+  const note = toast('Switching your wallet to Avalanche Fuji', `Your wallet is on chain ${S.walletChain}. FleetShares runs on Fuji (43113). Confirm the switch in your wallet.`);
+  try {
+    await switchChain(p);
+    S.walletChain = cfg.chainId;
+    note.update({ state: 'ok', title: 'Wallet switched to Avalanche Fuji', body: 'You are on the right network now.' });
+    renderNotice();
+    return true;
+  } catch (e) {
+    note.close();
+    throw e;
+  }
+}
+
+async function switchChain(p) {
   try {
     await p.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: FUJI_HEX }] });
   } catch (e) {
@@ -217,7 +234,7 @@ function watchProvider(p) {
     render();
     refresh();
   });
-  p.on('chainChanged', () => refresh());
+  p.on('chainChanged', (id) => { S.walletChain = parseInt(id, 16); renderNotice(); refresh(); });
 }
 
 async function connect(silent = false) {
@@ -236,7 +253,8 @@ async function connect(silent = false) {
     watchProvider(p);
     try { localStorage.setItem('fs-connected', '1'); } catch (e) { /* private mode */ }
     render();
-    if (!silent) await ensureChain().catch((e) => toast('Switch to Avalanche Fuji', explain(e), 'err'));
+    if (silent) p.request({ method: 'eth_chainId' }).then((id) => { S.walletChain = parseInt(id, 16); renderNotice(); }).catch(() => {});
+    else await ensureChain().catch((e) => toast('Your wallet is not on Avalanche Fuji yet', `${explain(e)} You can switch from the banner at the top of the page.`, 'err'));
     await refresh();
     return true;
   } catch (e) {
@@ -326,6 +344,7 @@ async function send(key, title, build, doneText) {
 const ACTIONS = {
   connect: () => connect(),
   disconnect,
+  switchNet: () => ensureChain().catch((e) => toast('Could not switch network', explain(e), 'err')),
   faucet: () => send('faucet', 'Get test USDC', async () => [{ label: 'Take 1,000 test USDC from the faucet', call: usdcCall('faucet') }], '1,000 test USDC added to your wallet.'),
   step(d) {
     const car = carById(d.car);
@@ -468,7 +487,9 @@ function renderNotice() {
     return;
   }
   const me = S.data?.me;
-  if (me && me.avax === 0n) {
+  if (S.account && S.walletChain && S.walletChain !== cfg.chainId) {
+    setHTML(el, `<div class="note">${ICON.x}<div><strong>Your wallet is on another network (chain ${S.walletChain}).</strong> FleetShares runs on Avalanche Fuji. Any action here switches your wallet first.</div><button class="btn btn-secondary btn-sm" type="button" data-act="switchNet">Switch to Fuji</button></div>`);
+  } else if (me && me.avax === 0n) {
     setHTML(el, `<div class="note">${ICON.drop}<div><strong>You need a little test AVAX for gas.</strong> It is free from the Fuji faucet. <a href="${AVAX_FAUCET}" target="_blank" rel="noopener">Open the faucet ${ICON.ext}</a></div></div>`);
   } else if (me && me.usdc === 0n) {
     setHTML(el, `<div class="note">${ICON.drop}<div><strong>You have no test USDC yet.</strong> The faucet gives 1,000 every 5 minutes, free.</div>${faucetBtn()}</div>`);
@@ -691,7 +712,12 @@ function carView(c) {
 /** What the operator reported on its own L1, next to what it actually paid here. */
 function ledgerView(c) {
   const L = S.ledger[c.id];
-  if (!cfg.IncomeMirror || !L || (c.statusName !== 'Active' && L.reportedIncome === 0n)) return '';
+  if (!cfg.IncomeMirror || !L) return '';
+  if (c.statusName !== 'Active' && L.reportedIncome === 0n) {
+    return c.statusName === 'Funding'
+      ? `<div class="panel panel-flat icm-mini"><div class="panel-h"><h4>Operator ledger</h4><span class="muted">Dispatch L1 → Fuji over ICM</span></div><p class="fine">No period reported yet. Once the car is funded and rented, the operator’s rental log on its own Avalanche L1 is compared here with the rent it pays.</p></div>`
+      : '';
+  }
   const l1 = cfg.l1 || {};
   const link = (href, text) => `<a href="${href}" target="_blank" rel="noopener">${text}</a>`;
   const links = [
@@ -700,20 +726,29 @@ function ledgerView(c) {
     cfg.tx?.icmDeliveredOnFuji ? link(txUrl(cfg.tx.icmDeliveredOnFuji), 'delivered on Fuji') : '',
     link(addrUrl(cfg.IncomeMirror), 'IncomeMirror'),
   ].filter(Boolean).join(' · ');
+  const max = L.reportedIncome > L.rentPaid ? L.reportedIncome : L.rentPaid;
+  const w = (v) => (max > 0n ? Math.max(2, Number((v * 1000n) / max) / 10) : 0);
+  const mine = S.reports.filter((r) => r.args.carId === c.id);
+  const deliveries = mine.length
+    ? `<ul class="icm-rows">${mine.slice(0, 4).map((r) => `<li><span><b>Period ${r.args.period}</b> · ${plural(r.args.rentals, 'rental')} · ${plural(r.args.daysRented, 'day')} · ${usdc(r.args.income)}</span>
+        <a href="${txUrl(r.tx)}" target="_blank" rel="noopener">${r.time ? ago(r.time) : 'delivery'} ${ICON.ext}</a></li>`).join('')}</ul>`
+    : '';
   const body = L.reportedIncome === 0n
-    ? '<p class="empty">No period reported yet.</p>'
-    : `<div class="tiles">
-        <div><span>Income reported on L1</span><b>${usd(L.reportedIncome)} <small>USDC</small></b></div>
-        <div><span>Rent paid on chain</span><b>${usd(L.rentPaid)} <small>USDC</small></b></div>
-        <div><span>Unpaid gap</span>${L.unpaid === 0n
-          ? `<b class="pill pill-ok">${ICON.check}Paid in full</b>`
-          : `<b class="pill pill-warn">${usd(L.unpaid)} <small>USDC</small> unpaid</b>`}</div>
+    ? '<p class="empty">No period reported yet. The first report from the operator’s L1 will show here.</p>'
+    : `<div class="icm-bars">
+        <div class="icm-bar"><div class="icm-bar-h"><span>Reported on the operator’s L1</span><b>${usd(L.reportedIncome)} <small>USDC</small></b></div><div class="meter"><i class="m-l1" style="width:${w(L.reportedIncome)}%"></i></div></div>
+        <div class="icm-bar"><div class="icm-bar-h"><span>Rent paid on Fuji</span><b>${usd(L.rentPaid)} <small>USDC</small></b></div><div class="meter"><i class="m-paid" style="width:${w(L.rentPaid)}%"></i></div></div>
       </div>
-      <p class="fine counts">${plural(L.rentals, 'rental')} · ${plural(L.daysRented, 'day')} rented · ${plural(L.periods, 'period')} reported</p>`;
-  return `<div class="panel">
-    <div class="panel-h"><h4>Operator ledger</h4><span class="muted">Avalanche L1 → C-Chain over ICM</span></div>
+      ${L.unpaid === 0n
+        ? `<p class="verdict verdict-ok">${ICON.check}<span><b>Paid in full.</b> Rent paid covers everything the operator reported.</span></p>`
+        : `<p class="verdict verdict-warn">${ICON.clock}<span><b>${usdc(L.unpaid)} reported but not yet paid.</b> The operator logged more income on its L1 than it has paid in here.</span></p>`}
+      <div class="icm-counts"><div><b>${L.rentals}</b><span>${Number(L.rentals) === 1 ? 'rental' : 'rentals'}</span></div><div><b>${L.daysRented}</b><span>${Number(L.daysRented) === 1 ? 'day rented' : 'days rented'}</span></div><div><b>${L.periods}</b><span>${Number(L.periods) === 1 ? 'period reported' : 'periods reported'}</span></div></div>
+      ${deliveries}`;
+  return `<div class="panel icm">
+    <div class="panel-h"><h4>Operator ledger</h4>
+      <span class="route" aria-label="Dispatch L1 to Fuji C-Chain over Avalanche ICM"><em>Dispatch L1</em><i>ICM</i><em>Fuji C-Chain</em></span></div>
     ${body}
-    <p class="fine">The operator logs each rental on the Dispatch L1 (chain ${l1.chainId ?? 779672}). Totals arrive here by Avalanche ICM, so holders can compare reported income with rent paid. ${links}</p>
+    <p class="fine">The operator logs each rental on the Dispatch L1 (chain ${l1.chainId ?? 779672}). Period totals arrive here by Avalanche ICM, so holders can compare reported income with rent actually paid. ${links}</p>
   </div>`;
 }
 
@@ -736,9 +771,40 @@ async function loadLedger() {
       S.ledger[id] = { reportedIncome, rentPaid, unpaid, periods, rentals, daysRented };
     });
     renderCars();
+    // A new period on chain that the delivery list has not seen yet: fetch the deliveries again.
+    const periods = Object.values(S.ledger).reduce((n, l) => n + Number(l.periods), 0);
+    if (periods !== S.reports.length) loadReports();
   } catch (e) {
     console.warn('Operator ledger unavailable', e); // optional panel: the page works without it
   }
+}
+
+let reportsLoading = false;
+async function loadReports() {
+  if (reportsLoading || !cfg.IncomeMirror || !mirrorAbi) return;
+  reportsLoading = true;
+  try {
+    S.reports = await chain.loadReports({ client: pub, logsClient, cfg, mirrorAbi, decodeEventLog: V.decodeEventLog });
+    renderCars();
+    renderFeed();
+  } catch (e) {
+    console.warn('ICM deliveries unavailable', e);
+  } finally {
+    reportsLoading = false;
+  }
+}
+
+function renderIcm() {
+  const el = $('#icm-links');
+  if (!el || !cfg.IncomeMirror) return;
+  const l1 = cfg.l1 || {};
+  const a = (href, text) => `<a href="${href}" target="_blank" rel="noopener">${text} ${ICON.ext}</a>`;
+  setHTML(el, [
+    l1.RentalLog && l1.explorer ? a(`${l1.explorer}/address/${l1.RentalLog}`, `RentalLog on Dispatch ${short(l1.RentalLog)}`) : '',
+    l1.tx?.report && l1.explorer ? a(`${l1.explorer}/tx/${l1.tx.report}`, 'Report sent from Dispatch') : '',
+    cfg.tx?.icmDeliveredOnFuji ? a(txUrl(cfg.tx.icmDeliveredOnFuji), 'Delivered on Fuji by ICM') : '',
+    a(addrUrl(cfg.IncomeMirror), `IncomeMirror on Fuji ${short(cfg.IncomeMirror)}`),
+  ].filter(Boolean).join(''));
 }
 
 function renderCars() {
@@ -776,6 +842,7 @@ const FEED = {
   FeesWithdrawn: (a) => ['Fee', `Manager withdrew ${usdc(a.amount)} in fees`],
   OfferMade: (a) => ['Market', `${who(a.seller)} offered ${plural(a.amount, 'share')} of ${carName(a.carId)} at ${usdc(a.pricePerShare)} each (offer #${a.offerId})`],
   OfferTaken: (a) => ['Market', `${who(a.buyer)} bought ${plural(a.amount, 'share')}${offerCar(a.offerId)} from offer #${a.offerId} for ${usdc(a.paid)}`],
+  IncomeReported: (a) => ['L1 → ICM', `Operator’s L1 report for ${carName(a.carId)} arrived by ICM: period ${a.period}, ${plural(a.rentals, 'rental')}, ${plural(a.daysRented, 'day')}, ${usdc(a.income)} income`],
   OfferCancelled: (a) => ['Market', `Offer #${a.offerId}${offerCar(a.offerId)} was cancelled`],
 };
 const carName = (id) => `<b>${esc(S.data?.cars.find((c) => c.id === BigInt(id))?.name ?? `car ${id}`)}</b>`;
@@ -787,13 +854,13 @@ function offerCar(offerId) {
 function renderFeed() {
   const el = $('#feed');
   if (!S.events || !S.data) return;
-  const all = chain.sortEvents([...S.events, ...S.localEvents]);
+  const all = chain.sortEvents([...S.events, ...S.localEvents, ...S.reports]);
   if (!all.length) return setHTML(el, '<p class="empty">No activity yet.</p>');
   const shown = ui.feedAll ? all : all.slice(0, 8);
   const rows = shown.map((e) => {
     const [tag, text] = FEED[e.name] ? FEED[e.name](e.args) : [e.name, e.name];
     const when = e.time ? `<time datetime="${new Date(e.time * 1000).toISOString()}" title="${dateStr(e.time)}">${ago(e.time)}</time>` : `block ${e.block}`;
-    return `<li class="ev ev-${tag.toLowerCase()}"><span class="ev-tag">${tag}</span><span class="ev-text">${text}</span>
+    return `<li class="ev ev-${tag.toLowerCase().replace(/[^a-z0-9]+/g, '-')}"><span class="ev-tag">${tag}</span><span class="ev-text">${text}</span>
       <a class="ev-tx" href="${txUrl(e.tx)}" target="_blank" rel="noopener" aria-label="Transaction ${e.tx} on Snowtrace"><span>${when}</span>${ICON.ext}</a></li>`;
   }).join('');
   setHTML(el, `<ol class="ev-list">${rows}</ol>${all.length > 8 ? `<button class="btn btn-quiet btn-sm" type="button" data-act="feedAll">${ui.feedAll ? 'Show fewer' : `Show all ${all.length}`}</button>` : ''}`);
@@ -966,6 +1033,7 @@ async function boot() {
   });
   logsClient = V.createPublicClient({ chain: FUJI, transport: V.http(chain.LOGS_RPC_URL) });
   renderContracts();
+  renderIcm();
   renderWallet();
 
   let wasConnected = false;

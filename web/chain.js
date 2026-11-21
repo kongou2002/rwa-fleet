@@ -146,6 +146,40 @@ async function scan(client, cfg, from, to, size, max) {
   return raw;
 }
 
+/**
+ * IncomeReported deliveries on IncomeMirror (period totals that arrived from the operator's L1 by ICM),
+ * newest first. Indexer first, wide-range RPC second. Throws when both fail: callers keep what they had.
+ */
+export async function loadReports({ client, logsClient, cfg, mirrorAbi, decodeEventLog, fetchFn = fetch }) {
+  const from = await deployBlock(client, cfg);
+  let raw;
+  try {
+    const url = `${LOGS_API}?module=logs&action=getLogs&address=${cfg.IncomeMirror}&fromBlock=${from}&toBlock=latest`;
+    const body = await (await fetchFn(url)).json();
+    if (!Array.isArray(body.result)) throw new Error(body.message || 'bad response');
+    raw = body.result;
+  } catch (e) {
+    const to = await logsClient.getBlockNumber();
+    raw = await scan(logsClient, { FleetShares: cfg.IncomeMirror }, from, to, WIDE_CHUNK, 60);
+  }
+  const out = [];
+  for (const l of raw) {
+    try {
+      const d = decodeEventLog({ abi: mirrorAbi, data: l.data, topics: l.topics });
+      if (d.eventName !== 'IncomeReported') continue;
+      out.push({
+        name: 'IncomeReported',
+        args: d.args,
+        block: BigInt(hexNum(l.blockNumber)),
+        index: hexNum(l.logIndex),
+        tx: l.transactionHash,
+        time: l.timeStamp ? hexNum(l.timeStamp) : undefined,
+      });
+    } catch (e) { /* another event */ }
+  }
+  return sortEvents(out);
+}
+
 /** Block where the first car was listed: nothing the feed shows can be older. */
 export async function deployBlock(client, cfg) {
   const r = await client.getTransactionReceipt({ hash: cfg.tx.listCar1 });

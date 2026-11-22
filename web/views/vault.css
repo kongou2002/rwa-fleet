@@ -7,18 +7,23 @@
 .vt-red { color: var(--brand); }
 
 /* ---------- hero ---------- */
-.vt-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: center; overflow-x: clip; overflow-clip-margin: 0; }
+.vt-hero { position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: center; }
+/* One soft pink band across the whole hero, edge to edge of the window, fading out above and below. */
+.vt-hero::before { content: ""; position: absolute; z-index: -3; left: 50%; width: 100vw; transform: translateX(-50%); top: -96px; bottom: -40px; pointer-events: none;
+  background:
+    radial-gradient(ellipse 32% 70% at 74% 52%, rgba(244, 150, 162, .35), rgba(244, 150, 162, 0) 100%),
+    linear-gradient(90deg, #fdf3f4 0%, #fdeff1 45%, #fce7ea 100%);
+  -webkit-mask-image: linear-gradient(transparent 0%, #000 22%, #000 78%, transparent 100%); mask-image: linear-gradient(transparent 0%, #000 22%, #000 78%, transparent 100%); }
+body:has(.vt-hero) { overflow-x: clip; }
 .vt-hero-l { display: flex; flex-direction: column; gap: 24px; padding-left: 0; }
 .vt-hero-l .vt-lead { margin-top: 6px; }
 .vt-ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
 .vt-ctas .btn-lg { border-radius: var(--radius-btn); }
 
-.vt-art { position: relative; aspect-ratio: 640 / 450; isolation: isolate; }
+.vt-art { position: relative; aspect-ratio: 640 / 450; isolation: isolate; overflow-x: clip; overflow-clip-margin: 0; }
 /* Soft pink field with no edges: deepest behind the logo, fading to the page white on every side. */
-.vt-art::before { content: ""; position: absolute; inset: -10% 0 -12% -16%; z-index: -2; pointer-events: none;
-  background:
-    radial-gradient(ellipse 30% 28% at 56% 52%, rgba(240, 120, 136, .30), rgba(240, 120, 136, 0) 100%),
-    radial-gradient(ellipse 45% 48% at 56% 50%, #fbdde2 0%, #fce8eb 40%, #fef4f5 66%, rgba(255, 255, 255, 0) 100%); }
+.vt-art::before { content: ""; position: absolute; inset: 0; z-index: -2; pointer-events: none;
+  background: radial-gradient(ellipse 34% 34% at 52% 48%, rgba(240, 110, 128, .22), rgba(240, 110, 128, 0) 100%); }
 .vt-grid { position: absolute; left: 0; right: 0; bottom: -4%; height: 55%; transform: perspective(420px) rotateX(58deg); transform-origin: 50% 100%;
   background-image: linear-gradient(rgba(224, 16, 47, .10) 1px, transparent 1px), linear-gradient(90deg, rgba(224, 16, 47, .10) 1px, transparent 1px);
   background-size: 56px 56px; -webkit-mask-image: radial-gradient(ellipse 42% 80% at 50% 20%, #000 20%, transparent 70%); mask-image: radial-gradient(ellipse 42% 80% at 50% 20%, #000 20%, transparent 70%); }
@@ -160,7 +165,6 @@
   .vt-hero-l { gap: 16px; }
   .vt-ctas .btn-lg { flex: 1 1 0; height: 52px; padding: 0 16px; font-size: 16px; }
   .vt-art { aspect-ratio: 1 / 0.86; }
-  .vt-art::before { inset: -4% -4% -6% -4%; }
   .vt-logo { width: 28%; }
   .vt-orbit, .vt-sat { left: 8%; right: 8%; }
   .vt-tile { width: 42px; height: 42px; margin: -21px 0 0 -21px; border-radius: 12px; }

@@ -36,18 +36,23 @@ body:has(.vt-hero) { overflow-x: clip; }
   display: grid; place-items: center; z-index: 2; }
 .vt-logo svg { width: 58%; height: 58%; filter: drop-shadow(0 2px 2px rgba(90, 0, 14, .25)); }
 
-/* four tiles travelling round the dashed ellipse: X and Y eased separately trace the ellipse */
-.vt-sat { position: absolute; left: 14%; right: 14%; top: 31%; height: 30%; pointer-events: none; z-index: 3;
-  /* back half of the orbit (upper arc) passes behind the logo, front half in front of it */
-  animation: vt-z 24s ease-in-out infinite alternate; animation-delay: calc(var(--d) * -12s - 6s); }
-.vt-sat-y { position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  animation: vt-x 24s ease-in-out infinite alternate; animation-delay: calc(var(--d) * -12s - 18s); }
-.vt-tile { position: absolute; left: 0; top: 0; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 16px; background: #fff; display: grid; place-items: center;
+/* Four tiles on the dashed ellipse. A square ring is squashed to the ellipse (scaleY --k) and each arm turns by --a;
+   the tile undoes both so it stays upright and round. Upper (back) arc: behind the logo, smaller; lower (front) arc: in front. */
+@property --a { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
+@property --s { syntax: '<number>'; inherits: true; initial-value: 1; }
+.vt-sat { --k: .293; position: absolute; left: 14%; right: 14%; top: 46%; aspect-ratio: 1; transform: translateY(-50%) scaleY(var(--k)); pointer-events: none; z-index: 3;
+  animation: vt-orbit 28s linear infinite; animation-delay: calc(var(--d) * -7s); }
+.vt-sat-y { position: absolute; left: 0; right: 0; top: 50%; height: 0; transform: rotate(var(--a)); }
+.vt-tile { position: absolute; left: 100%; top: 0; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 16px; background: #fff; display: grid; place-items: center;
   box-shadow: 0 10px 24px rgba(160, 10, 34, .12), 0 1px 2px rgba(10, 10, 10, .06);
-  animation: vt-y 24s ease-in-out infinite alternate; animation-delay: calc(var(--d) * -12s - 6s); }
-@keyframes vt-x { from { transform: translateX(0); } to { transform: translateX(100%); } }
-@keyframes vt-y { from { top: 0; transform: scale(.78); filter: saturate(.85) brightness(.97); } to { top: 100%; transform: scale(1.06); filter: none; } }
-@keyframes vt-z { 0%, 50% { z-index: 1; } 50.01%, 100% { z-index: 3; } }
+  transform: rotate(calc(-1 * var(--a))) scaleY(calc(1 / var(--k))) scale(var(--s)); opacity: calc(.55 + .45 * var(--s)); }
+@keyframes vt-orbit {
+  0%      { --a: 0deg;   --s: .92; z-index: 3; }
+  25%     { --a: 90deg;  --s: 1.06; }
+  49.99%  { z-index: 3; }
+  50%     { --a: 180deg; --s: .92; z-index: 1; }
+  75%     { --a: 270deg; --s: .78; }
+  100%    { --a: 360deg; --s: .92; z-index: 1; } }
 .vt-ico { width: 30px; height: 30px; fill: none; stroke: var(--brand); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .vt-ico .fill-g { fill: var(--yield); stroke: none; }
 .vt-ico .st-w { stroke: #fff; stroke-width: 1.4; }
@@ -66,7 +71,7 @@ body:has(.vt-hero) { overflow-x: clip; }
 .vt-ft-ico.green .vt-ico { stroke: var(--yield); stroke-width: 2; }
 
 @media (prefers-reduced-motion: reduce) {
-  .vt-sat, .vt-sat-y, .vt-tile { animation-play-state: paused; }
+  .vt-sat { animation-play-state: paused; }
 }
 
 /* ---------- KPI strip ---------- */
@@ -170,6 +175,7 @@ body:has(.vt-hero) { overflow-x: clip; }
   .vt-art { aspect-ratio: 1 / 0.86; }
   .vt-logo { width: 28%; }
   .vt-orbit, .vt-sat { left: 8%; right: 8%; }
+  .vt-sat { --k: .307; }
   .vt-tile { width: 42px; height: 42px; margin: -21px 0 0 -21px; border-radius: 12px; }
   .vt-ico { width: 21px; height: 21px; }
   .vt-float { padding: 8px 12px 8px 8px; border-radius: 12px; }

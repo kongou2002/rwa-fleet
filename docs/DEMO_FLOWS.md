@@ -78,3 +78,22 @@ The published report is [`docs/audit/2026-11-22-car1-reported-vs-paid.md`](audit
 - [ ] Rehearse on `anvil --fork-url https://avalanche-fuji-c-chain-rpc.publicnode.com`. A real take uses up state, so a second take needs a re-plan, not a replay.
 - [ ] Serve `web/` locally and route `api.avax-test.network` to publicnode (it rate-limits).
 - [ ] After cutting: total under 3:00, no "USDC" on screen, one frame per caption checked (caption matches the screen, no skeletons, no error toasts).
+
+
+## Take 2 (UI v2, 22 Nov 2026)
+
+Re-recorded on the new UI, same roles. Before the take the operator logged two CX-5 rentals on the team L1 and sent the period report over ICM (L1 txs `0xb0daae10…`, `0x53d36de5…`, report `0xb974099f…`); the investor wallet used the demo-VND faucet. The holder in this take is Carol, who redeems her Toyota Vios shares. Audit document: `docs/audit/2026-11-22-car1-reported-vs-paid-v2.md`.
+
+| Step | Transaction |
+|---|---|
+| viewer · buy VF 8 shares | [`0x07cd347b…`](https://testnet.snowtrace.io/tx/0x07cd347bf20226eff0e8dbe5eea02de25f7fec6a80db2e34f99dd2f8ea77787f) |
+| viewer · buy VF 8 shares | [`0x391c8c54…`](https://testnet.snowtrace.io/tx/0x391c8c54a329253a3d13c3b219682c2fbb1336ff134669ddcafb101f4551753f) |
+| viewer · take offer | [`0x28aa8efd…`](https://testnet.snowtrace.io/tx/0x28aa8efdab2be068d658a24ac0420b525d8645597cc5480051727688a62c5c45) |
+| viewer · take offer | [`0x84aa8826…`](https://testnet.snowtrace.io/tx/0x84aa88269b772b41c03669227c301327b9c7385f17f10f43867bbb43c2d93ab8) |
+| operator · pay rent | [`0x23fb52d2…`](https://testnet.snowtrace.io/tx/0x23fb52d2027fb7cfda2f0dbbcee72de570c323ce4425faffca13d7a1943e4f00) |
+| manager · withdraw fees | [`0x1be29784…`](https://testnet.snowtrace.io/tx/0x1be29784e30af35917d9e4c7f9364d61db27b68e08cdcd3af8d976d1ed78d8fa) |
+| auditor · publish audit | [`0xec9b3eec…`](https://testnet.snowtrace.io/tx/0xec9b3eec5b289faf0b263589fae7c6ed8fdaaafb3ce4f6a0e4aba53074ca00dd) |
+| holder · collect rent | [`0x0d504cd4…`](https://testnet.snowtrace.io/tx/0x0d504cd43954bd6516d552013850fba6daa4f1acd2de1733d3f0aaa762b1e4df) |
+| holder · collect rent | [`0x793d870f…`](https://testnet.snowtrace.io/tx/0x793d870f6b7738c8b5f7221bc7d5aef2e38e6bb40c49b5aa0097470e8889a79c) |
+| holder · redeem | [`0xfc51bbe1…`](https://testnet.snowtrace.io/tx/0xfc51bbe1683ade99f916e7b9fd0584b6633e88f72a803e7e8f0b554674da9f2f) |
+| holder · redeem | [`0x930de547…`](https://testnet.snowtrace.io/tx/0x930de547aa190ace18b42136f445cd302f6f950c1b69b7099c2212480ca9cae5) |

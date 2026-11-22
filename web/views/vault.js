@@ -68,8 +68,9 @@ function hero(cars) {
     <div class="vt-art" aria-hidden="true">
       <div class="vt-grid"></div>
       <div class="vt-glow"></div>
-      <div class="vt-orbit"></div>
+      <div class="vt-orbit vt-orbit-b"></div>
       <div class="vt-logo">${LOGO}</div>
+      <div class="vt-orbit vt-orbit-f"></div>
       ${['car', 'key', 'doc', 'coin'].map((k, i) => `<div class="vt-sat" style="--d:${i}"><div class="vt-sat-y"><div class="vt-tile">${HERO_ICON[k]}</div></div></div>`).join('')}
       <div class="vt-float vt-float-trip"><span class="vt-ft-ico red">${HERO_ICON.car}</span><span><small>Trip completed</small><b>${trip}</b></span></div>
       <div class="vt-float vt-float-paid"><span class="vt-ft-ico green">${HERO_ICON.up}</span><span><small>Paid to you</small><b class="pos">+${lastRent}</b></span></div>

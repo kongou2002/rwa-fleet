@@ -764,7 +764,7 @@ export function route() {
 // ---------- views and render loop ----------
 
 const VIEWS = {};
-const TITLES = { vault: 'Fleet Vault', car: 'Car', market: 'Market', transparency: 'Transparency', portfolio: 'Portfolio', how: 'How it works' };
+const TITLES = { vault: 'Cars', car: 'Car', market: 'Resell', transparency: 'Records', portfolio: 'My cars', how: 'How it works' };
 
 /** fn(route) returns the HTML inside #view. opts: { needsData = true, title }. */
 export function registerView(name, fn, opts = {}) {
@@ -798,14 +798,12 @@ function renderView() {
   if (document.title !== title) document.title = title;
 }
 
-const TAB_TITLES = { income: 'Income vs. paid', audit: 'Documents', fees: 'Fees', activity: 'Activity', contracts: 'Contracts' };
 function pageTitle(r) {
   let t = TITLES[r.name] || '';
   if (r.name === 'car') {
     const c = S.data ? carById(r.id) : null;
     t = c ? c.name : S.data ? 'Car not found' : 'Car';
-  } else if (r.name === 'transparency') t = `${r.tab === 'audit' && cfg?.AuditRegistry ? 'Audit' : TAB_TITLES[r.tab] || 'Income vs. paid'} · Transparency`;
-  else if (r.name === 'vault') return 'FleetShares: own a share of a rental car';
+  } else if (r.name === 'vault') return 'FleetShares: own a share of a rental car';
   return `${t} · FleetShares`;
 }
 
@@ -823,7 +821,7 @@ function renderWallet() {
   const el = $('#wallet');
   if (!el) return;
   if (!S.account) {
-    setHTML(el, '<button class="btn btn-sm wallet-cta" type="button" data-act="connect">Connect wallet</button>');
+    setHTML(el, '<button class="btn-text hide-phone" type="button" data-act="connect">Log in</button><button class="btn btn-p btn-sm wallet-cta" type="button" data-act="connect">Get started</button>');
     return;
   }
   const me = S.data?.me;
@@ -831,7 +829,7 @@ function renderWallet() {
   const avax = me ? Number(V.formatEther(me.avax)).toFixed(3) : '…';
   let bal = me ? usd(me.usdc) : '…';
   setHTML(el, `<details id="wallet-menu" class="wmenu"${ui.walletOpen ? ' open' : ''}>
-    <summary id="wallet-chip" class="wallet" aria-label="Wallet menu: ${esc(bal)} VND, ${short(S.account)}">${bal} VND<span class="addr">${short(S.account)}</span></summary>
+    <summary id="wallet-chip" class="wallet" aria-label="Wallet menu: ${esc(bal)} VND, ${short(S.account)}"><span class="wbal">₫${me ? Number(num(me.usdc)).toLocaleString('en-US', { maximumFractionDigits: 0 }) : '…'}</span><span class="avatar" aria-hidden="true">${esc(role[0])}</span></summary>
     <div class="pop">
       <div class="pop-row"><span>Wallet</span><span>${who(S.account)} ${pill('', role)}</span></div>
       <div class="pop-row"><span>Demo VND</span><b>${me ? usdc(me.usdc) : '…'}</b></div>

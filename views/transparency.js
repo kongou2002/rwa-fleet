@@ -1,172 +1,164 @@
-// Transparency: what the operator reported, what it paid, what the manager took, and every record behind it.
+// Records: rent each car reported (RentalLog on the operator's L1, mirrored by IncomeMirror) and rent paid in.
+// Quiet sections at the bottom keep the audit reports, the auditor's form, the manager's fee withdrawal,
+// the event feed and every contract address.
 import {
-  registerView, S, ui, cfg, TERMS, FEED, esc, usd, fig, pct, short, txUrl, addrUrl, plural, ago, dateStr, same,
-  ICON, carName, photo, pill, spin, off, allEvents, stageOf, holdersOf,
+  registerView, S, ui, cfg, TERMS, FEED, esc, usd, short, txUrl, addrUrl, ago, dateStr, same,
+  ICON, carName, photo, pill, spin, off, allEvents, stageOf, metaOf,
 } from '../core.js';
 
-const TABS = [
-  ['income', 'Income vs. paid'],
-  ['audit', 'Documents'],
-  ['fees', 'Fees'],
-  ['activity', 'Activity'],
-  ['contracts', 'Contracts'],
-];
 const FEED_ROWS = 12;
 
+const vnd = (v) => `₫${usd(v)}`;
 const ext = (href, text, cls = '') => `<a${cls ? ` class="${cls}"` : ''} href="${esc(href)}" target="_blank" rel="noopener">${text} ${ICON.ext}</a>`;
 const copyBtn = (v, what) => `<button class="tr-copy" type="button" data-act="copy" data-v="${esc(v)}" aria-label="Copy ${esc(what)}">${ICON.copy}</button>`;
 const l1Url = (kind, v) => (cfg.l1?.explorer ? `${cfg.l1.explorer}/${kind}/${v}` : '');
-// Link to the L1 explorer, or the short hash with a copy button when the L1 has no public explorer.
-const l1Ref = (kind, v, text) => (cfg.l1?.explorer ? ext(l1Url(kind, v), text)
-  : `<span class="tr-hash">${text} <span class="t-addr">${esc(short(v))}</span>${copyBtn(v, text)}</span>`);
 const l1Label = () => esc(cfg.l1?.name || 'Operator L1');
-const empty = (text) => `<div class="empty"><p class="t-sm ink-3">${text}</p></div>`;
-const sumOf = (cars, f) => cars.reduce((a, c) => a + f(c), 0n);
-const sameId = (a, b) => a != null && b != null && BigInt(a) === BigInt(b);
 const when = (e) => (e.time
   ? `<time datetime="${new Date(e.time * 1000).toISOString()}" title="${esc(dateStr(e.time))}">${esc(ago(e.time))}</time>`
   : `block ${esc(e.block)}`);
+const day = (ts) => new Date(Number(ts) * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+const city = (c) => esc(metaOf(c).city || TERMS.country);
+const sumPct = (part, whole) => (whole > 0n ? Math.min(100, Number((part * 1000n) / whole) / 10) : 0);
 
 registerView('transparency', (r) => {
-  const tab = TABS.some(([k]) => k === r?.tab) ? r.tab : 'income';
-  const body = { income, audit, fees, activity, contracts }[tab]();
-  return `<div class="head"><div class="tr-intro">
-      <h1 class="t-display">Transparency</h1>
-      <p class="t-body ink-2">What ${esc(TERMS.operator)} reported, what it paid, what the manager took, and what was checked. Every figure links to its record on-chain.</p>
-    </div></div>
-    <nav class="tabs tr-tabs" aria-label="Transparency sections">${TABS.map(([k, l]) => [k, k === 'audit' && cfg.AuditRegistry ? 'Audit' : l]).map(([k, label]) => (k === tab
-      ? `<a href="#/transparency/${k}" class="on" aria-current="page">${label}</a>`
-      : `<a href="#/transparency/${k}">${label}</a>`)).join('')}</nav>
-    <div class="tr-body">${body}</div>`;
+  const cars = S.data.cars;
+  const onRoad = cars.filter((c) => stageOf(c).key === 'earning');
+  const sold = cars.filter((c) => stageOf(c).key === 'sold');
+  const any = onRoad.length + sold.length;
+
+  return `<div class="tr">
+    <header class="tr-head">
+      <h1 class="tr-display">Records</h1>
+      <p class="tr-lede">Rent each car reported, and rent paid in.</p>
+    </header>
+
+    ${any ? '' : '<div class="tr-card tr-none"><p class="ink-3">No car is on the road yet. Records start with its first rental.</p></div>'}
+    ${onRoad.map(carRecord).join('')}
+    ${sold.map(soldRecord).join('')}
+
+    <div class="tr-tiles">
+      <div class="tr-tile"><h2>Fee is always ${esc(TERMS.fee)}%</h2><p>Of rent. Nothing else.</p></div>
+      <div class="tr-tile"><h2>Refund if not funded</h2><p>Every đồng back. Claim it in one tap.</p></div>
+      <div class="tr-tile"><h2>Checked every quarter</h2><p>By an outside auditor. ${latestAudit()}</p></div>
+    </div>
+
+    <div class="tr-quiet">
+      ${audits()}
+      ${auditForm()}
+      ${feeTools()}
+      ${activity(r)}
+      ${contracts()}
+      <p class="tr-note">Testnet demo. A test token (1 unit = ₫25,000) stands in for VND that would move by bank transfer. The chain records who reported what and enforces the split; it cannot see the real car.</p>
+    </div>
+  </div>`;
 });
 
-// ---------- Income vs. paid ----------
+// ---------- per car ----------
 
-function income() {
-  const l1 = cfg.l1 || {};
-  const steps = `<div class="tr-steps">
-    <div class="card pad"><p class="t-label">Step 1 · ${l1Label()}</p><h2 class="t-title">${esc(TERMS.operator)} logs each rental</h2><p class="t-sm ink-3">Days rented and income, on its own Avalanche L1.</p></div>
-    <div class="card pad"><p class="t-label">Step 2 · Avalanche ICM</p><h2 class="t-title">Monthly totals cross over</h2><p class="t-sm ink-3">Signed by the L1's validators, checked on Fuji.</p></div>
-    <div class="card pad"><p class="t-label">Step 3 · Fuji C-Chain · chain ${esc(cfg.chainId)}</p><h2 class="t-title">Compared with rent paid</h2><p class="t-sm ink-3">Any gap shows here and on the car.</p></div>
-  </div>`;
-
-  const cars = S.data.cars.filter((c) => ['earning', 'sold'].includes(stageOf(c).key) || Number(S.ledger[c.id]?.periods ?? 0) > 0);
-  const rows = cars.map((c) => {
-    const L = S.ledger[c.id];
-    const rep = L?.reportedIncome ?? 0n, paid = L?.rentPaid ?? 0n;
-    const max = rep > paid ? rep : paid;
-    const w = (v) => (max > 0n ? Math.max(v > 0n ? 2 : 0, Number((v * 1000n) / max) / 10) : 0);
-    const status = !L || rep === 0n ? pill('', 'No report yet')
-      : L.unpaid === 0n ? pill('ok', 'Paid in full') : pill('warn', `${usd(L.unpaid)} due`);
-    return `<tr>
-      <td><a class="carcell" href="#/car/${c.id}">${photo(c, 'thumb', '')}${esc(c.name)}</a></td>
-      <td class="r">${L ? esc(Number(L.periods)) : '0'}</td>
-      <td class="num">${L ? usd(rep) : '–'}</td>
-      <td class="num">${L ? usd(paid) : '–'}</td>
-      <td><div class="tr-cov" aria-label="Paid ${max > 0n ? pct(paid, max, 0) : 0}% of reported"><i class="tr-cov-rep" style="width:${w(rep)}%"></i><i class="tr-cov-paid" style="width:${w(paid)}%"></i></div></td>
-      <td class="r">${status}</td>
-    </tr>`;
-  }).join('');
-  const table = cars.length
-    ? `<div class="tbl-box"><table class="t">
-        <thead><tr><th>Car</th><th class="r">Periods reported</th><th class="r">Reported</th><th class="r">Paid</th><th class="tr-cov-h">Coverage</th><th class="r">Status</th></tr></thead>
-        <tbody>${rows}</tbody></table></div>`
-    : empty('No car is earning yet. Reports from the operator start once a car is funded and rented out.');
-
-  const links = [
-    l1.RentalLog ? (l1.explorer ? ext(l1Url('address', l1.RentalLog), `RentalLog on ${l1Label()} ${short(l1.RentalLog)}`) : l1Ref('address', l1.RentalLog, `RentalLog on ${l1Label()}`)) : '',
-    l1.tx?.report ? l1Ref('tx', l1.tx.report, `Report sent from ${l1Label()}`) : '',
-    cfg.tx?.icmDeliveredOnFuji ? ext(txUrl(cfg.tx.icmDeliveredOnFuji), 'Delivered on Fuji by ICM') : '',
-    cfg.IncomeMirror ? ext(addrUrl(cfg.IncomeMirror), `IncomeMirror on Fuji ${short(cfg.IncomeMirror)}`) : '',
-  ].filter(Boolean);
-  const reports = S.reports || [];
-  const deliveries = reports.length
-    ? `<div class="tbl-box"><table class="t">
-        <thead><tr><th>Period</th><th>Car</th><th class="r">Rentals</th><th class="r">Days</th><th class="r">Income</th><th class="r">Delivered</th></tr></thead>
-        <tbody>${reports.map((e) => `<tr>
-          <td>${esc(e.args.period)}</td><td>${carName(e.args.carId)}</td>
-          <td class="r">${esc(e.args.rentals)}</td><td class="r">${esc(e.args.daysRented)}</td>
-          <td class="num">${usd(e.args.income)}</td>
-          <td class="r">${e.tx ? ext(txUrl(e.tx), when(e)) : when(e)}</td></tr>`).join('')}</tbody></table></div>`
-    : empty('No report has arrived by ICM yet.');
-
-  return `${steps}
-    <section class="card pad">
-      <div class="card-h"><div><h2 class="t-title">Reported income and rent paid</h2><p class="t-sm ink-3">VND, all time</p></div>
-        <div class="legend"><span><i class="tr-sw-rep"></i>Reported</span><span><i class="tr-sw-paid"></i>Paid</span></div></div>
-      ${table}
-    </section>
-    <section class="card pad tr-gap">
-      <div class="card-h"><div><h2 class="t-title">Deliveries by ICM</h2><p class="t-sm ink-3">Each period total from ${l1Label()}, as it arrived on Fuji</p></div></div>
-      ${deliveries}
-      ${links.length ? `<p class="tr-links t-sm">${links.join('')}</p>` : ''}
-    </section>
-    <div class="tr-pair tr-gap">
-      <section class="card pad tr-rules">
-        <h2 class="t-title">Rules in the contract</h2>
-        <dl class="kv">
-          <div><dt>Money</dt><dd>VND by bank transfer; the chain keeps rules and receipts</dd></div>
-          <div><dt>Manager holds investor money</dt><dd>Never</dd></div>
-          <div><dt>Operator paid</dt><dd>Only at sell-out</dd></div>
-          <div><dt>Missed funding deadline</dt><dd>Full refund</dd></div>
-          <div><dt>Management fee</dt><dd>${esc(TERMS.fee)}%, cannot change</dd></div>
-          ${cfg.CarExit ? '<div><dt>Resale proceeds</dt><dd>100% to holders, no fee</dd></div>' : ''}
-        </dl>
-      </section>
-      <section class="card pad tr-limits">
-        <h2 class="t-title">Limits</h2>
-        <div class="note warn">${ICON.shield}<div>
-          <p>This is a testnet demo. Amounts are in VND: a test token (1 unit = 25,000 VND) stands in for money that would move by bank transfer.</p>
-          <p>The chain cannot force a bank transfer. Someone must still report that the money arrived, and the record is only as true as that report.</p>
-          <p>The chain cannot see the real car or its real income. It records who reported what, and it enforces how the money is split.</p>
-          <p>Whether the operator buys the car and reports rent honestly depends on the operator and on the legal agreement behind the documents hash.</p>
-        </div></div>
-      </section>
-    </div>`;
+/** Monthly reports for one car, oldest first, each marked paid by applying rent paid to the oldest month first. */
+function months(c, paid) {
+  const list = (S.reports || []).filter((e) => BigInt(e.args.carId) === c.id)
+    .sort((a, b) => Number(a.args.period) - Number(b.args.period));
+  let left = paid;
+  return list.map((e) => {
+    const inc = BigInt(e.args.income);
+    const status = left >= inc ? 'paid' : left > 0n ? 'part' : 'due';
+    left = left >= inc ? left - inc : 0n;
+    return { e, inc, status };
+  });
 }
 
-// ---------- Documents ----------
+function carRecord(c) {
+  const L = S.ledger[c.id];
+  const rep = L?.reportedIncome ?? null;
+  const paid = L?.rentPaid ?? c.rentPaid;
+  const owed = L?.unpaid ?? 0n;
+  const flag = rep === null || rep === 0n ? pill('', 'No report yet')
+    : owed > 0n ? pill('risk', `${vnd(owed)} not paid yet`) : pill('ok', 'Paid in full');
+  const w = rep ? sumPct(paid, rep) : 0;
+  const rows = months(c, paid).reverse();
+  const st = { paid: pill('ok', 'Paid'), part: pill('warn', 'Part paid'), due: pill('risk', 'Not paid') };
+  const table = rows.length
+    ? `<div class="tbl-box"><table class="t tr-t">
+        <thead><tr><th>Month</th><th class="r">Trips</th><th class="r">Reported</th><th class="r">Status</th></tr></thead>
+        <tbody>${rows.map(({ e, inc, status }) => `<tr>
+          <td>${e.tx ? ext(txUrl(e.tx), `Month ${esc(e.args.period)}`, 'tr-month') : `Month ${esc(e.args.period)}`}</td>
+          <td class="r">${esc(e.args.rentals)}</td>
+          <td class="r">${vnd(inc)}</td>
+          <td class="r">${st[status]}</td></tr>`).join('')}</tbody></table></div>`
+    : '';
 
-// ---------- Audit reports (AuditRegistry add-on, only when fuji.json names it) ----------
+  return `<section class="tr-card" aria-label="${esc(c.name)} records">
+    <div class="tr-car-h">
+      <a class="tr-car" href="#/car/${c.id}">${photo(c, 'tr-thumb', '')}<span><span class="tr-name">${esc(c.name)}</span><span class="tr-where">${city(c)} · on the road</span></span></a>
+      <span class="tr-flag">${flag}</span>
+    </div>
+    <div class="tr-figs">
+      <div><p class="tr-lab">Reported by the operator</p><p class="tr-fig">${rep === null ? '–' : vnd(rep)}</p></div>
+      <div><p class="tr-lab">Paid in · ${100 - Number(TERMS.fee)}% to owners</p><p class="tr-fig tr-pos">${vnd(paid)}</p></div>
+      <div><p class="tr-lab">Still owed</p><p class="tr-fig${owed > 0n ? ' tr-neg' : ''}">${vnd(owed)}</p></div>
+    </div>
+    ${rep ? `<div class="tr-bar" role="img" aria-label="${w}% of reported rent paid in"><i style="width:${w}%"></i></div>` : ''}
+    ${table}
+  </section>`;
+}
 
-const day = (ts) => new Date(Number(ts) * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+function soldRecord(c) {
+  const L = S.ledger[c.id];
+  const rep = L?.reportedIncome ?? null;
+  const paid = L?.rentPaid ?? c.rentPaid;
+  const owed = L?.unpaid ?? 0n;
+  return `<section class="tr-card tr-sold" aria-label="${esc(c.name)} records">
+    <a class="tr-car" href="#/car/${c.id}">${photo(c, 'tr-thumb', '')}<span><span class="tr-name">${esc(c.name)}</span><span class="tr-where">${city(c)} · sold</span></span></a>
+    <div class="tr-sold-r">
+      <p class="tr-sold-n"><span>Reported <b>${rep === null ? '–' : vnd(rep)}</b></span><span>Paid in <b class="tr-pos">${vnd(paid)}</b></span></p>
+      ${owed > 0n ? pill('risk', `${vnd(owed)} not paid`) : pill('ok', 'Paid in full')}
+    </div>
+  </section>`;
+}
 
-function auditReports() {
+function latestAudit() {
+  const a = S.audits?.[0];
+  if (!cfg.AuditRegistry) return '<span class="ink-3">First report coming soon.</span>';
+  const text = a ? `Latest report · ${esc(day(a.publishedAt))}` : 'Reports';
+  return ext(addrUrl(cfg.AuditRegistry), text, 'tr-tile-a');
+}
+
+// ---------- quiet sections ----------
+
+const quiet = (title, body, extra = '') => `<section class="tr-q"><div class="tr-q-h"><h2>${title}</h2>${extra}</div>${body}</section>`;
+
+function audits() {
+  if (!cfg.AuditRegistry) return '';
   const list = S.audits;
-  let body;
-  if (list === null) body = '<p class="t-sm ink-3"><span class="skel">Reading audit reports</span></p>';
-  else if (!list.length) body = empty(S.auditsError ? 'The audit reports could not be read. They will show here when the network answers.' : 'No audit report has been published yet. Each one will show here with the hash of the signed report.');
-  else {
-    body = `<div class="tbl-box"><table class="t">
-      <thead><tr><th>Period</th><th>Scope</th><th>Finding</th><th>Report hash</th><th class="r">Published</th></tr></thead>
-      <tbody>${list.map((a) => {
-        const h = String(a.reportHash);
-        const subject = BigInt(a.carId) === 0n ? 'Whole fleet' : carName(a.carId);
-        return `<tr>
-          <td><b>${esc(a.period)}</b></td>
-          <td>${subject}${a.scope ? `<span class="t-sm ink-3"> · ${esc(a.scope)}</span>` : ''}</td>
-          <td>${a.exceptions ? pill('warn', 'Exceptions noted') : pill('ok', 'No exceptions')}</td>
-          <td><span class="tr-hash"><span class="t-addr ink-2" title="${esc(h)}">${esc(short(h))}</span>${copyBtn(h, `hash of the ${a.period} report`)}</span></td>
-          <td class="r">${esc(day(a.publishedAt))}</td>
-        </tr>`;
-      }).join('')}</tbody></table></div>`;
-  }
   const by = S.auditor || cfg.auditor;
-  return `<section class="card pad">
-      <div class="card-h"><div><h2 class="t-title">Audit reports</h2><p class="t-sm ink-3">Published on chain by the auditor wallet${by ? ` ${ext(addrUrl(by), `<span class="t-addr">${esc(short(by))}</span>`)}` : ''}. On this testnet demo that wallet belongs to the team. Reports cannot be edited or deleted. Each holds the hash of the signed report, so anyone with the file can check it.</p></div></div>
-      ${body}
-    </section>
-    ${auditForm()}`;
+  let body;
+  if (list === null) body = '<p class="tr-small"><span class="skel">Reading audit reports</span></p>';
+  else if (!list.length) body = `<p class="tr-small">${S.auditsError ? 'The audit reports could not be read right now.' : 'No audit report yet.'}</p>`;
+  else {
+    body = `<ul class="tr-rows">${list.map((a) => {
+      const h = String(a.reportHash);
+      const subject = BigInt(a.carId) === 0n ? 'Whole fleet' : carName(a.carId);
+      return `<li>
+        <span class="tr-rows-main"><b>${esc(a.period)}</b> · ${subject}${a.scope ? `<span class="ink-3"> · ${esc(a.scope)}</span>` : ''}</span>
+        ${a.exceptions ? pill('warn', 'Exceptions noted') : pill('ok', 'No exceptions')}
+        <span class="tr-hash"><span class="t-addr" title="${esc(h)}">${esc(short(h))}</span>${copyBtn(h, `hash of the ${a.period} report`)}</span>
+        <span class="ink-3">${esc(day(a.publishedAt))}</span>
+      </li>`;
+    }).join('')}</ul>`;
+  }
+  const note = `<p class="tr-small">Published by the auditor wallet${by ? ` ${ext(addrUrl(by), `<span class="t-addr">${esc(short(by))}</span>`)}` : ''}, a team wallet on this testnet. Each holds the hash of the signed report and cannot be edited.</p>`;
+  return quiet('Audit reports', body + note);
 }
 
 function auditForm() {
-  if (!S.account || !S.auditor || !same(S.account, S.auditor)) return '';
+  if (!cfg.AuditRegistry || !S.account || !S.auditor || !same(S.account, S.auditor)) return '';
   const f = ui.audit;
   const ex = f.exceptions === '1';
   const input = (k, label, ph) => `<div class="field"><label for="audit-${k}">${label}</label><input class="input" id="audit-${k}" data-bind="audit" data-k="${k}" value="${esc(f[k] ?? '')}" placeholder="${esc(ph)}" autocomplete="off"></div>`;
   const opt = (v, text) => `<option value="${esc(v)}"${String(f.car) === String(v) ? ' selected' : ''}>${text}</option>`;
-  return `<section class="card pad tr-gap" aria-label="Auditor tools">
-    <div class="card-h"><div><h2 class="t-title">Publish a report</h2><p class="t-sm ink-3">Only the auditor wallet sees this. A published report is permanent.</p></div></div>
+  return `<section class="tr-q tr-q-card" aria-label="Auditor tools">
+    <div class="tr-q-h"><h2>Publish a report</h2><span class="tr-small">Only the auditor wallet sees this. Permanent once published.</span></div>
     <div class="tr-form">
       <div class="field"><label for="audit-car">Car</label>
         <select class="input" id="audit-car" data-bind="audit" data-k="car">${opt('0', 'Whole fleet')}${S.data.cars.map((c) => opt(c.id.toString(), esc(c.name))).join('')}</select></div>
@@ -183,78 +175,27 @@ function auditForm() {
   </section>`;
 }
 
-function audit() {
-  const listed = allEvents().filter((e) => e.name === 'CarListed');
-  const rows = S.data.cars.map((c) => {
-    const ev = listed.find((e) => sameId(e.args.carId, c.id));
-    const h = c.docsHash ? String(c.docsHash) : '';
-    return `<tr>
-      <td><a class="carcell" href="#/car/${c.id}">${photo(c, 'thumb', '')}${esc(c.name)}</a></td>
-      <td>Legal documents hash</td>
-      <td>${h ? `<span class="tr-hash"><span class="t-addr ink-2" title="${esc(h)}">${esc(short(h))}</span>${copyBtn(h, `documents hash of ${c.name}`)}</span>` : '<span class="ink-3">None</span>'}</td>
-      <td class="r">${ev?.tx ? ext(txUrl(ev.tx), ev.time ? when(ev) : 'Listing') : '<span class="ink-3">–</span>'}</td>
-    </tr>`;
-  }).join('');
-  const reg = !!cfg.AuditRegistry;
-  return `${reg ? auditReports() : ''}
-    <section class="card pad${reg ? ' tr-gap' : ''}">
-      <div class="card-h"><div><h2 class="t-title">Documents on chain</h2><p class="t-sm ink-3">Each car is listed with a hash of its legal documents. Anyone holding the papers can check they match.</p></div></div>
-      ${S.data.cars.length
-        ? `<div class="tbl-box"><table class="t"><thead><tr><th>Car</th><th>Document</th><th>Hash</th><th class="r">Listed</th></tr></thead><tbody>${rows}</tbody></table></div>`
-        : empty('No cars are listed yet.')}
-    </section>
-    ${reg ? '' : '<p class="t-sm ink-3 tr-gap">Independent audit reports are planned each quarter and will be listed here with their hash. None has been published yet.</p>'}`;
+function feeTools() {
+  if (!S.account || !same(S.account, S.data.manager)) return '';
+  return `<section class="tr-q tr-q-card tr-withdraw" aria-label="Manager tools">
+    <div><h2>Manager fees</h2><p class="tr-small">${vnd(S.data.feesOwed)} ready to withdraw to this wallet.</p></div>
+    <button class="btn btn-p" type="button" data-act="withdrawFees"${off(S.data.feesOwed === 0n)}>${spin('fees')}Withdraw fees</button>
+  </section>`;
 }
 
-// ---------- Fees ----------
-
-function fees() {
-  const cars = S.data.cars;
-  const gross = sumOf(cars, (c) => c.rentPaid), toHolders = sumOf(cars, holdersOf), fee = sumOf(cars, (c) => c.feePaid);
-  const isManager = S.account && same(S.account, S.data.manager);
-  const paying = cars.filter((c) => c.rentPaid > 0n || ['earning', 'sold'].includes(stageOf(c).key));
-  const withdrawn = allEvents().filter((e) => e.name === 'FeesWithdrawn');
-  const share = 100 - Number(TERMS.fee);
-
-  const kpis = `<div class="kpis">
-    <div><p class="t-label">Rent paid in</p><p class="t-kpi">${fig(gross)}</p><p class="t-sm">Gross, all cars</p></div>
-    <div><p class="t-label">Paid to holders</p><p class="t-kpi">${fig(toHolders)}</p><p class="t-sm">${share}% of rent</p></div>
-    <div><p class="t-label">Management fee</p><p class="t-kpi">${fig(fee)}</p><p class="t-sm">${esc(TERMS.fee)}% of rent</p></div>
-    <div><p class="t-label">Fees awaiting withdrawal</p><p class="t-kpi">${fig(S.data.feesOwed)}</p><p class="t-sm">Held by the contract</p></div>
-  </div>`;
-
-  const table = paying.length
-    ? `<div class="tbl-box"><table class="t"><thead><tr><th>Car</th><th class="r">Rent paid in</th><th class="r">To holders</th><th class="r">Fee</th><th class="r">Fee share</th></tr></thead>
-        <tbody>${paying.map((c) => `<tr>
-          <td><a class="carcell" href="#/car/${c.id}">${photo(c, 'thumb', '')}${esc(c.name)}</a></td>
-          <td class="num">${usd(c.rentPaid)}</td><td class="num">${usd(holdersOf(c))}</td><td class="num">${usd(c.feePaid)}</td>
-          <td class="r">${c.rentPaid > 0n ? `${pct(c.feePaid, c.rentPaid)}%` : '–'}</td></tr>`).join('')}</tbody></table></div>`
-    : empty('No rent has been paid in yet.');
-
-  const list = withdrawn.length
-    ? `<ul class="tr-list">${withdrawn.map((e) => `<li><span>Manager withdrew <b>${usd(e.args.amount)}</b> VND</span>${e.tx ? ext(txUrl(e.tx), when(e)) : `<span class="ink-3">${when(e)}</span>`}</li>`).join('')}</ul>`
-    : S.events === null ? '<p class="t-sm ink-3"><span class="skel">Reading events</span></p>' : empty('The manager has not withdrawn any fees yet.');
-
-  return `${kpis}
-    <p class="t-sm ink-2 tr-gap">Every rent payment is split ${share} / ${esc(TERMS.fee)} the moment it arrives. This fee is the only money the manager can take out.</p>
-    ${isManager ? `<div class="card pad tr-gap tr-withdraw"><div><h2 class="t-title">You are the manager</h2><p class="t-sm ink-3">${usd(S.data.feesOwed)} VND is ready to withdraw to this wallet.</p></div>
-      <button class="btn btn-p" type="button" data-act="withdrawFees"${off(S.data.feesOwed === 0n)}>${spin('fees')}Withdraw fees</button></div>` : ''}
-    <section class="card pad tr-gap"><div class="card-h"><div><h2 class="t-title">Fees by car</h2><p class="t-sm ink-3">VND, all time</p></div></div>${table}</section>
-    <section class="card pad tr-gap"><div class="card-h"><div><h2 class="t-title">Fee withdrawals</h2><p class="t-sm ink-3">Read from FeesWithdrawn events</p></div></div>${list}</section>`;
-}
-
-// ---------- Activity ----------
-
-function activity() {
+function activity(r) {
+  const open = ui.trFeed === '1' || r?.tab === 'activity';
+  const toggle = `<button class="tr-link-btn" type="button" data-act="set" data-k="trFeed" data-v="${open ? '' : '1'}">${open ? 'Hide' : 'Show'}</button>`;
+  if (!open) return quiet('Activity', '', toggle);
   let body;
   if (S.feedError) {
-    body = `<div class="empty"><p class="t-sm ink-3">The activity feed could not be loaded. You can read every event on the ${ext(addrUrl(cfg.FleetShares), 'FleetShares contract')}.</p>
-      <button class="btn btn-sm" type="button" data-act="retry">Try again</button></div>`;
+    body = `<p class="tr-small">The activity feed could not be loaded. Every event is on the ${ext(addrUrl(cfg.FleetShares), 'FleetShares contract')}.</p>
+      <button class="btn btn-sm" type="button" data-act="retry">Try again</button>`;
   } else if (S.events === null) {
-    body = '<p class="t-sm ink-3"><span class="skel">Reading events from Avalanche Fuji</span></p>';
+    body = '<p class="tr-small"><span class="skel">Reading events from Avalanche Fuji</span></p>';
   } else {
     const all = allEvents();
-    if (!all.length) body = empty('No activity yet.');
+    if (!all.length) body = '<p class="tr-small">No activity yet.</p>';
     else {
       const shown = ui.trAll ? all : all.slice(0, FEED_ROWS);
       body = `<ol class="tr-feed">${shown.map((e) => {
@@ -262,13 +203,11 @@ function activity() {
         return `<li><span class="tr-tag">${esc(tag)}</span><span class="tr-ev">${text}</span>
           ${e.tx ? `<a class="tr-when" href="${esc(txUrl(e.tx))}" target="_blank" rel="noopener" aria-label="Transaction on the explorer">${when(e)} ${ICON.ext}</a>` : `<span class="tr-when ink-3">${when(e)}</span>`}</li>`;
       }).join('')}</ol>
-      ${all.length > FEED_ROWS ? `<button class="btn btn-sm tr-more" type="button" data-act="set" data-k="trAll" data-v="${ui.trAll ? '' : '1'}">${ui.trAll ? 'Show fewer' : `Show all ${all.length}`}</button>` : ''}`;
+      ${all.length > FEED_ROWS ? `<button class="tr-link-btn tr-more" type="button" data-act="set" data-k="trAll" data-v="${ui.trAll ? '' : '1'}">${ui.trAll ? 'Show fewer' : `Show all ${all.length}`}</button>` : ''}`;
     }
   }
-  return `<section class="card pad"><div class="card-h"><div><h2 class="t-title">Activity</h2><p class="t-sm ink-3">Read from contract events. Every line links to its transaction.</p></div></div>${body}</section>`;
+  return quiet('Activity', body, toggle);
 }
-
-// ---------- Contracts ----------
 
 const TX_LABELS = {
   listCar1: 'First car listed', listCar2: 'Second car listed', buyAlice: 'Shares bought (first buyer)', buyBob: 'Shares bought (second buyer)',
@@ -281,34 +220,26 @@ const readable = (k) => TX_LABELS[k] || k.replace(/([a-z])([A-Z0-9])/g, '$1 $2')
 
 function contracts() {
   const l1 = cfg.l1 || {};
-  const addrRow = (label, sub, addr, href) => (addr
-    ? `<div><dt>${label}<span class="t-sm ink-3">${sub}</span></dt><dd><span class="tr-hash">${href ? ext(href, `<span class="t-addr">${esc(short(addr))}</span>`) : `<span class="t-addr">${esc(short(addr))}</span>`}${copyBtn(addr, `${label} address`)}</span></dd></div>`
+  const fuji = `Fuji · ${esc(cfg.chainId)}`;
+  const row = (label, sub, v, href) => (v
+    ? `<li><span class="tr-c-l">${label}<span class="ink-3"> · ${sub}</span></span><span class="tr-hash">${href ? ext(href, `<span class="t-addr">${esc(short(v))}</span>`) : `<span class="t-addr">${esc(short(v))}</span>`}${copyBtn(v, `${label}`)}</span></li>`
     : '');
-  const fuji = `Fuji C-Chain · ${esc(cfg.chainId)}`;
-  const l1Name = l1Label();
-  const txRows = (txs, sub, url) => Object.entries(txs || {}).map(([k, h]) => {
-    const hash = `<span class="t-addr">${esc(short(h))}</span>`;
-    return `<div><dt>${esc(readable(k))}<span class="t-sm ink-3">${sub}</span></dt><dd><span class="tr-hash">${url(h) ? ext(url(h), hash) : hash}${copyBtn(h, `${readable(k)} transaction hash`)}</span></dd></div>`;
-  }).join('');
-  return `<div class="tr-pair">
-    <section class="card pad"><h2 class="t-title tr-kv-h">Contracts and roles</h2>
-      <dl class="kv tr-kv">
-        ${addrRow('FleetShares', fuji, cfg.FleetShares, addrUrl(cfg.FleetShares))}
-        ${addrRow('Demo VND token (test)', fuji, cfg.MockUSDC, addrUrl(cfg.MockUSDC))}
-        ${addrRow('IncomeMirror', fuji, cfg.IncomeMirror, cfg.IncomeMirror && addrUrl(cfg.IncomeMirror))}
-        ${addrRow('RentalLog', l1Name, l1.RentalLog, l1.RentalLog && l1Url('address', l1.RentalLog))}
-        ${addrRow('Manager', 'Lists cars, takes the fee', S.data.manager || cfg.manager, addrUrl(S.data.manager || cfg.manager))}
-        ${addrRow('Operator', `${esc(TERMS.operator)}, runs the cars`, cfg.operator, cfg.operator && addrUrl(cfg.operator))}
-        ${addrRow('CarExit', `${fuji} · pays out resale money`, cfg.CarExit, cfg.CarExit && addrUrl(cfg.CarExit))}
-        ${addrRow('AuditRegistry', `${fuji} · audit reports`, cfg.AuditRegistry, cfg.AuditRegistry && addrUrl(cfg.AuditRegistry))}
-        ${cfg.AuditRegistry ? addrRow('Auditor', 'Publishes audit reports', S.auditor || cfg.auditor, (S.auditor || cfg.auditor) && addrUrl(S.auditor || cfg.auditor)) : ''}
-      </dl>
-    </section>
-    <section class="card pad"><h2 class="t-title tr-kv-h">Reference transactions</h2>
-      <dl class="kv tr-kv">
-        ${txRows(cfg.tx, 'Fuji', txUrl)}
-        ${txRows(l1.tx, l1Name, (h) => l1Url('tx', h))}
-      </dl>
-    </section>
-  </div>`;
+  const auditor = S.auditor || cfg.auditor;
+  const addrs = [
+    row('FleetShares', fuji, cfg.FleetShares, addrUrl(cfg.FleetShares)),
+    row('Demo VND token', fuji, cfg.MockUSDC, addrUrl(cfg.MockUSDC)),
+    row('IncomeMirror', fuji, cfg.IncomeMirror, cfg.IncomeMirror && addrUrl(cfg.IncomeMirror)),
+    row('RentalLog', l1Label(), l1.RentalLog, l1.RentalLog && l1Url('address', l1.RentalLog)),
+    row('CarExit', fuji, cfg.CarExit, cfg.CarExit && addrUrl(cfg.CarExit)),
+    row('AuditRegistry', fuji, cfg.AuditRegistry, cfg.AuditRegistry && addrUrl(cfg.AuditRegistry)),
+    row('Manager', 'lists cars, takes the fee', S.data.manager || cfg.manager, addrUrl(S.data.manager || cfg.manager)),
+    row('Operator', esc(TERMS.operator), cfg.operator, cfg.operator && addrUrl(cfg.operator)),
+    cfg.AuditRegistry ? row('Auditor', 'publishes audit reports', auditor, auditor && addrUrl(auditor)) : '',
+    ...S.data.cars.map((c) => (c.docsHash ? row(`${esc(c.name)} documents`, 'hash', String(c.docsHash), '') : '')),
+  ].join('');
+  const open = ui.trTx === '1';
+  const txs = (list, sub, url) => Object.entries(list || {}).map(([k, h]) => row(esc(readable(k)), sub, h, url(h))).join('');
+  const txList = open ? `<ul class="tr-rows tr-c">${txs(cfg.tx, 'Fuji', txUrl)}${txs(l1.tx, l1Label(), (h) => l1Url('tx', h))}</ul>` : '';
+  const toggle = `<button class="tr-link-btn" type="button" data-act="set" data-k="trTx" data-v="${open ? '' : '1'}">${open ? 'Hide transactions' : 'Show reference transactions'}</button>`;
+  return quiet('Contracts', `<ul class="tr-rows tr-c">${addrs}</ul>${txList}`, toggle);
 }

@@ -6,11 +6,11 @@
   <title>FleetShares: own a share of a rental car</title>
   <meta name="description" content="Buy shares of rental cars on Avalanche. Rent is split by the contract: 90% to shareholders, 10% to the manager.">
   <meta name="color-scheme" content="light">
-  <meta name="theme-color" content="#c8102e">
+  <meta name="theme-color" content="#ffffff">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c8102e'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23ffffff' stroke-width='3'/%3E%3Cpath d='M16 16V7a9 9 0 0 1 9 9z' fill='%23ffffff'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="views/vault.css">
   <link rel="stylesheet" href="views/car.css">
@@ -25,16 +25,16 @@
   <div class="app">
     <header class="top">
       <div class="top-in">
-        <a class="logo" href="#/" aria-label="FleetShares, Vault"><svg width="24" height="24" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#ffffff"></rect><circle cx="16" cy="16" r="9" fill="none" stroke="#c8102e" stroke-width="3"></circle><path d="M16 16V7a9 9 0 0 1 9 9z" fill="#c8102e"></path></svg>FleetShares</a>
+        <a class="logo" href="#/" aria-label="FleetShares, Cars"><span class="logo-tile" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 32 32"><circle cx="16" cy="16" r="11" fill="none" stroke="#ffffff" stroke-width="4"></circle><path d="M16 16V5a11 11 0 0 1 11 11z" fill="#ffffff"></path></svg></span>FleetShares</a>
         <nav class="nav" aria-label="Main">
-          <a href="#/" data-nav="vault">Vault</a>
-          <a href="#/market" data-nav="market">Market</a>
-          <a href="#/transparency" data-nav="transparency">Transparency</a>
-          <a href="#/portfolio" data-nav="portfolio">Portfolio</a>
+          <a href="#/" data-nav="vault">Cars</a>
+          <a href="#/portfolio" data-nav="portfolio">My cars</a>
+          <a href="#/market" data-nav="market">Resell</a>
+          <a href="#/transparency" data-nav="transparency">Records</a>
           <a href="#/how" data-nav="how">How it works</a>
         </nav>
         <div class="top-r">
-          <span class="net" title="Avalanche Fuji testnet, chain 43113"><i></i>Avalanche Fuji</span>
+          <span class="net" title="Avalanche Fuji testnet, chain 43113"><i></i>Fuji</span>
           <div id="wallet"></div>
         </div>
       </div>
@@ -43,7 +43,7 @@
     <main class="wrap">
       <div id="notice" role="status"></div>
       <div id="view" tabindex="-1" aria-busy="true">
-        <div class="head"><div class="skel-head"><h1 class="t-display"><span class="skel">Fleet Vault</span></h1><p class="t-body"><span class="skel">Reading the vault from Avalanche Fuji</span></p></div></div>
+        <div class="head"><div class="skel-head"><h1 class="t-display"><span class="skel">Own a car.</span></h1><p class="t-body"><span class="skel">Loading the cars</span></p></div></div>
         <section class="kpis" aria-hidden="true">
           <div><p class="t-label"><span class="skel">Loading</span></p><p class="t-kpi"><span class="skel">00,000</span></p><p class="t-sm"><span class="skel">Reading the chain</span></p></div>
           <div><p class="t-label"><span class="skel">Loading</span></p><p class="t-kpi"><span class="skel">00,000</span></p><p class="t-sm"><span class="skel">Reading the chain</span></p></div>
@@ -53,17 +53,18 @@
       </div>
 
       <footer class="foot">
-        <p>Demo on Avalanche Fuji. Amounts are in VND: on this testnet a test token (1 unit = 25,000 VND) stands in for money that would move by bank transfer. Not an offer of securities or investment advice. <a href="demo.html">Watch the demo video</a></p>
-        <p class="credit">Photos: <a href="https://commons.wikimedia.org/wiki/File:2022_Mazda_CX-5_2.0_front.jpg" target="_blank" rel="noopener">2022 Mazda CX-5 2.0 front.jpg</a> by ShangTW, <a href="https://commons.wikimedia.org/wiki/File:VinFast_VF_8_IAA_2023_1X7A0681.jpg" target="_blank" rel="noopener">VinFast VF 8 IAA 2023 1X7A0681.jpg</a> by Alexander-93 and <a href="https://commons.wikimedia.org/wiki/File:2023_Toyota_Vios_1.5_G_in_Black,_front_left.jpg" target="_blank" rel="noopener">2023 Toyota Vios 1.5 G in Black, front left.jpg</a> by Ethan Llamas, all <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>, via Wikimedia Commons.</p>
+        <div class="foot-row"><span>© FleetShares · Demo on Avalanche Fuji</span><span>Not investment advice.</span></div>
+        <p>Amounts are in VND. On this testnet a test token (1 unit = 25,000 VND) stands in for money that moves by bank transfer. <a href="demo.html">Demo video</a></p>
+        <p class="credit">Photos: <a href="https://commons.wikimedia.org/wiki/File:2022_Mazda_CX-5_2.0_front.jpg" target="_blank" rel="noopener">Mazda CX-5</a> by ShangTW, <a href="https://commons.wikimedia.org/wiki/File:VinFast_VF_8_IAA_2023_1X7A0681.jpg" target="_blank" rel="noopener">VinFast VF 8</a> by Alexander-93, <a href="https://commons.wikimedia.org/wiki/File:2023_Toyota_Vios_1.5_G_in_Black,_front_left.jpg" target="_blank" rel="noopener">Toyota Vios</a> by Ethan Llamas, <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>, Wikimedia Commons.</p>
       </footer>
     </main>
 
     <nav class="ptabs" aria-label="Main">
-      <a href="#/" data-nav="vault"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="12" cy="12" r="3.5"></circle></svg>Vault</a>
-      <a href="#/market" data-nav="market"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"></path></svg>Market</a>
-      <a href="#/transparency" data-nav="transparency"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="M20 20l-4.3-4.3"></path></svg>Verify</a>
-      <a href="#/portfolio" data-nav="portfolio"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16M8 15l3.5-4 3 2.5L20 7"></path></svg>Portfolio</a>
-      <a href="#/how" data-nav="how"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg>About</a>
+      <a href="#/" data-nav="vault"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 16l1.5-5a2 2 0 0 1 1.9-1.4h7.2a2 2 0 0 1 1.9 1.4L19 16M4 16h16v3H4zM7 19v1.5M17 19v1.5"></path></svg>Cars</a>
+      <a href="#/portfolio" data-nav="portfolio"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20a7 7 0 0 1 14 0"></path></svg>My cars</a>
+      <a href="#/market" data-nav="market"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"></path></svg>Resell</a>
+      <a href="#/transparency" data-nav="transparency"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l4 4v14H7zM10 12h5M10 16h5"></path></svg>Records</a>
+      <a href="#/how" data-nav="how"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg>How</a>
     </nav>
   </div>
 

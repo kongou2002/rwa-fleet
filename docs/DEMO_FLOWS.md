@@ -1,73 +1,80 @@
 # FleetShares demo video
 
-[`web/demo.mp4`](../web/demo.mp4) · 2:57 · 1440×900 · silent, one caption per step. Recorded on 22 Nov 2026 (21 Nov UTC) against the live deployment in [`web/fuji.json`](../web/fuji.json) on Avalanche Fuji. Every screen is the app in a browser and every transaction below is a real Fuji transaction. Waits for confirmations are played at 8× and the page loads after each wallet switch are cut.
+[`web/demo.mp4`](../web/demo.mp4) · 2:30 · 1440×900 · silent, one caption per step. Recorded on 22 Nov 2026 against the live deployment in [`web/fuji.json`](../web/fuji.json) on Avalanche Fuji.
 
-Roles: **Investor** `0x135c…9171` (fresh wallet with 2,000 test USDC), **Operator** `0x6970…a392`, **Manager** `0xE436…07AA`, **Auditor** `0x8F3b…4921` (the team's own test wallet on this demo), **Alice** `0xD367…4319` (seeded holder). Wallets are switched on screen with Disconnect / Connect. There is no wallet popup: the recorder signs outside the page, so the app's "Confirm in your wallet" step passes on its own.
+Money is shown in VND. In the product, money moves in VND by bank transfer and the chain keeps the rules and the receipts. On this testnet demo a test token stands in for the transfer, at a fixed demo rate of 1 token unit = 25,000 VND. Every screen is the app in a browser and every transaction below is a real Fuji transaction. Waits for confirmations are played at 8×, page loads after each wallet switch are cut, and the two opening captions are held 2 s on a still frame.
+
+Roles: **Investor** `0x135c…9171`, **Operator** `0x6970…a392`, **Manager** `0xE436…07AA`, **Auditor** `0x8F3b…4921` (the team's own test wallet on this demo), **Bob** `0x0812…a419` (holder). Wallets are switched on screen with Disconnect / Connect. There is no wallet popup: the recorder signs outside the page, so the app's "Confirm in your wallet" step passes on its own.
 
 ## Beats and captions
 
 | Time | Screen | Caption |
 |---|---|---|
-| 0:00 | Vault | FleetShares on Avalanche Fuji: rental cars in Vietnam, owned in shares, read live from the chain. |
-| 0:03 | Vault figures, rent chart, split card | Rent paid to holders so far, and the fixed split: 90 to holders, 10 to the manager. |
-| 0:06 | Car cards | Three cars: two funded and earning rent, one still selling shares. |
-| 0:12 | Connect | Connect an investor wallet that holds 2,000 test USDC and no shares. |
-| 0:18 | VinFast VF 8 Eco | Open the VinFast VF 8 Eco and pick 2 shares at 250 USDC. |
-| 0:23 | Buy | Buy: approve 500 USDC, then purchase. The USDC waits in escrow until the car sells out. |
-| 0:29 | Progress, Your position | Shares sold move from 96 to 98 of 160, and the position shows 2 shares in escrow. |
-| 0:36 | Market | Market: buy 2 Mazda CX-5 shares from a holder's offer at 275 USDC. The seller is paid at once. |
-| 0:43 | Sell shares | Post an offer of your own: 1 share at 285 USDC. It keeps earning rent until someone buys it. |
-| 0:54 | Portfolio | Portfolio: holdings, ownership, allocation and this wallet's own transactions. |
-| 1:04 | Switch to operator, CX-5 page | Switch to the operator, the rental company that runs the cars. |
-| 1:10 | Income reports | Rentals are logged on the team's own L1. Period totals arrive here over Avalanche ICM. |
-| 1:14 | Reported vs paid | It reported 945 USDC of income but paid in only 630, so 315 USDC shows as due. |
-| 1:19 | Pay rent | The operator pays the 315 USDC. The contract splits it on arrival: 90% to holders, 10% fee. |
-| 1:27 | Income reports | Reported income and rent paid now match, and the car shows Paid in full. |
-| 1:30 | Toyota Vios 1.5 G, Record the sale | Skip ahead to the end of the Toyota Vios 1.5 G's term: the operator records its sale for 10,800 USDC. |
-| 1:42 | Switch to manager, Transparency | Switch to the manager. Transparency compares reported income with rent paid for each car. |
-| 1:51 | Fees | The manager withdraws its 135 USDC of fees. The contract can only send them to the manager address. |
-| 1:57 | Activity, Contracts | Every event links to its transaction. The contracts sit on Fuji and on the team's L1. |
-| 2:07 | Switch to auditor, Audit | Switch to the auditor wallet. In this demo it is the team's own test wallet. |
-| 2:13 | Publish a report | It publishes the hash of a short check written from chain reads: reported vs paid for the CX-5. |
-| 2:24 | Audit reports | The report hash is on chain and listed. It cannot be edited or deleted. |
-| 2:29 | Switch to Alice, Portfolio | Switch to Alice, a holder since the start. She collects her rent from both earning cars. |
-| 2:40 | Redeem | Then she hands in her 20 Toyota Vios shares for her part of the sale: 1,800 USDC, no fee. |
-| 2:48 | How it works | How it works: fund a car, rent it out for 4 to 5 years, sell it, and grow the fleet. |
+| 0:00 | Vault | Money moves in VND by bank transfer. The chain keeps the rules and the receipts. |
+| 0:04 | Vault figures | On this testnet demo, the bank transfer is simulated with a test token. |
+| 0:09 | Rent chart, split card | Rent paid to holders so far, and the fixed split: 90 to holders, 10 to the manager. |
+| 0:12 | Car cards | Three cars: one still selling shares, one earning rent, one already sold. |
+| 0:18 | Connect | Connect an investor's wallet. |
+| 0:23 | VinFast VF 8 Eco | Open the VinFast VF 8 Eco and pick 2 shares at 6.25M VND each. |
+| 0:28 | Buy | Buy: allow the payment of 12.5M VND, then purchase. It waits in escrow until the car sells out. |
+| 0:33 | Progress, Your position | Shares sold move from 98 to 100 of 160, and the position shows the new shares. |
+| 0:40 | Market | Market: buy 1 Mazda CX-5 share from a holder's offer at 6.875M VND. The seller is paid at once. |
+| 0:47 | Portfolio | Portfolio: holdings, ownership, allocation and this wallet's own transactions. |
+| 0:55 | Switch to operator, CX-5 page | Switch to the operator, the rental company that runs the cars. |
+| 1:00 | Income reports | Two new rentals were logged on the team's own L1. The totals arrived here over Avalanche ICM. |
+| 1:04 | Reported vs paid | Income reported: 31.5M VND. Rent paid in: 23.625M VND. So 7.875M VND shows as due. |
+| 1:08 | Pay rent | The operator pays the 7,875,000 VND. The contract splits it on arrival: 90% to holders, 10% fee. |
+| 1:15 | Income reports | Reported income and rent paid match again, and the car shows Paid in full. |
+| 1:18 | Switch to manager, Transparency | Switch to the manager. Transparency compares reported income with rent paid for each car. |
+| 1:27 | Fees | The manager withdraws its 787,500 VND fee. The contract can only send it to the manager. |
+| 1:32 | Activity, Contracts | Every event links to its transaction. The contracts sit on Fuji and on the team's L1. |
+| 1:41 | Switch to auditor, Audit | Switch to the auditor wallet. In this demo it is the team's own test wallet. |
+| 1:47 | Publish a report | It publishes the hash of a short check written from chain reads: reported vs paid for the CX-5. |
+| 2:01 | Audit reports | The new report hash is on chain and listed. It cannot be edited or deleted. |
+| 2:04 | Switch to Bob, Portfolio | Switch to Bob, a holder. The Toyota Vios is already sold. He collects his rent first. |
+| 2:14 | Redeem | Then he hands in his 50 Vios shares for his part of the sale: 112.5M VND, no fee. |
+| 2:22 | How it works | How it works: fund a car, rent it out for 4 to 5 years, sell it, and grow the fleet. |
 
-## Transactions made during the take
+## Transactions
+
+Before the take, on the team L1 (chain 510103, no explorer), the operator logged two CX-5 rentals and sent the period report over ICM (2 rentals, 14 days, 315 units = 7.875M VND):
+
+| Action | L1 transaction |
+|---|---|
+| logRental (car 1, 7 days, 3.9375M VND) | `0x2563f1b728c330c3418e4e7d72f2b3fee11707f5e867a51a64ef9af412388d63` |
+| logRental (car 1, 7 days, 3.9375M VND) | `0xd00912f4ac599a7857ca0b8cb2590a2ffced6a959f3bfd0c877168fc71d4c3f1` |
+| report (car 1), sent by ICM | `0xee016abf42fa7a37582379353316f3fd3b77e862cfb938bce40673f05fbeee9b` |
+
+During the take, on Fuji:
 
 | Time | Role | Action | Transaction |
 |---|---|---|---|
-| 0:27 | Investor | Approve 500 USDC | [0xd6a3…6554](https://testnet.snowtrace.io/tx/0xd6a3b009291c17775fdfec886af4f5246eda2b738c63c4f58919d59775556554) |
-| 0:27 | Investor | Buy 2 VF 8 Eco shares | [0x17b8…1f22](https://testnet.snowtrace.io/tx/0x17b89756aed562f7118b272e3da0d9586a7c88e8008ec3f78d31b7fcde771f22) |
-| 0:41 | Investor | Approve 550 USDC | [0xb97c…1000](https://testnet.snowtrace.io/tx/0xb97ce1bf6324ad44baf3dc72ae912cbbeffe54b00f7e6ca9017e9d12023e1000) |
-| 0:42 | Investor | Take 2 CX-5 shares from offer #1 at 275 | [0x8188…d82c](https://testnet.snowtrace.io/tx/0x81882f2b51e1959bb52ed19dc26e0d6d3d7acf1881b0f7dc63104455d72ed82c) |
-| 0:49 | Investor | Offer 1 CX-5 share at 285 | [0x2b1b…139b](https://testnet.snowtrace.io/tx/0x2b1b31f6cf674cbb39192983e7a789e67ec7baaf8886e9c0e04dddc1acb8139b) |
-| 1:24 | Operator | Pay 315 USDC rent on the CX-5 (283.50 to holders, 31.50 fee) | [0xc22c…1225](https://testnet.snowtrace.io/tx/0xc22cb50338fba686fde525c8c7af6424b93ef83c0d6cc6eb6d6e960799141225) |
-| 1:37 | Operator | Approve 10,800 USDC to CarExit | [0x6748…9714](https://testnet.snowtrace.io/tx/0x6748249c5ed5a97bf3c78eb4a42b208bbbbf727d6d7011477fc949e4bcb29714) |
-| 1:37 | Operator | Record the Vios resale, 10,800 USDC | [0xdcf9…999a](https://testnet.snowtrace.io/tx/0xdcf9676e1e09b75a008a624e170e7905a1b2b2fbe5b8bc772c09266e8923999a) |
-| 1:53 | Manager | Withdraw 135 USDC of fees | [0x2a15…4982](https://testnet.snowtrace.io/tx/0x2a159bf5e22f103b0253dd37a8075f0bcda6750fb558ab178252fbc993cb4982) |
-| 2:23 | Auditor | Publish report #1 (hash `0xa0fa…0e17`) | [0x4c0a…d4f5](https://testnet.snowtrace.io/tx/0x4c0ae04dd1e82baa26eeb77c34e6f5ce1f64b8f130698bbb50cbf28effebd4f5) |
-| 2:38 | Alice | Collect CX-5 rent | [0xc794…0448](https://testnet.snowtrace.io/tx/0xc794a6205c4afb462b83b8d92a516de06fed9e7be723469ff7f8ef70dfda0448) |
-| 2:38 | Alice | Collect Vios rent | [0x2b6e…dfce](https://testnet.snowtrace.io/tx/0x2b6ee06d13316d999c79aec7025ae44cd0976bac7ddd29e8d98b13cf03a9dfce) |
-| 2:43 | Alice | Allow CarExit to take her shares | [0x6e5a…4d20](https://testnet.snowtrace.io/tx/0x6e5a92b912abcaf3daff2a65afd0e27730ec4d6556dd66a8d26e56bf6a914d20) |
-| 2:44 | Alice | Redeem 20 Vios shares for 1,800 USDC | [0xb1ea…08fb](https://testnet.snowtrace.io/tx/0xb1eada4298b9211019d06bf409d6e710c281eb9455dbc21cecdf6dc2785e08fb) |
+| 0:31 | Investor | Allow the payment of 12.5M VND | [0x473a…c0b3](https://testnet.snowtrace.io/tx/0x473adf3387e28bb2b113d538dd1a22c8b475baa6626ffc37f6270b7ea71ac0b3) |
+| 0:31 | Investor | Buy 2 VF 8 Eco shares | [0x488b…701c](https://testnet.snowtrace.io/tx/0x488b6111d4ebbbfb101e6853e3fdd139940e39e966e7630c8b3c6682c7f4701c) |
+| 0:44 | Investor | Allow the payment of 6.875M VND | [0xce03…169a](https://testnet.snowtrace.io/tx/0xce031c9ca6e7800ea0cd681695cd52861f28a80d0bf834d318ea9f7fb24a169a) |
+| 0:44 | Investor | Take 1 CX-5 share from offer #1 | [0x8d8c…b43a](https://testnet.snowtrace.io/tx/0x8d8cc3fe65bb87c61f8304fa30593da27b7b015ce29a26784189add1a22eb43a) |
+| 1:12 | Operator | Pay 7,875,000 VND rent on the CX-5 | [0x56e5…4869](https://testnet.snowtrace.io/tx/0x56e5a7cd8ede58f6e1b62807c18a3ee0aee61296492d2c1889e2066e5daa4869) |
+| 1:28 | Manager | Withdraw the 787,500 VND fee | [0xe2f1…83af4](https://testnet.snowtrace.io/tx/0xe2f1b31c431264409e18304757494559b8e75baafc3b6f112e506e1c52c83af4) |
+| 1:56 | Auditor | Publish report #2 (hash `0x6d85…8f17`) | [0x8013…7c21](https://testnet.snowtrace.io/tx/0x8013a16026b57792883ae793963b868fc7fb11b94fb7b300111f848317a67c21) |
+| 2:12 | Bob | Collect CX-5 rent | [0x289f…099b](https://testnet.snowtrace.io/tx/0x289fa44f2c1354831b64a8d36ac4240f3b3d1f5ae1f7dd064ce5b177d5ff099b) |
+| 2:12 | Bob | Collect Vios rent | [0x7fc2…b098](https://testnet.snowtrace.io/tx/0x7fc2ee453f4b28f3e0dab7f503ffd16156b295a07c6371f96c99931cf131b098) |
+| 2:17 | Bob | Allow CarExit to take his shares | [0x4e49…0907](https://testnet.snowtrace.io/tx/0x4e49a7de6554fa0ce7be139846c93b09474934f6d074902fa90331c8c8760907) |
+| 2:17 | Bob | Redeem 50 Vios shares for 112.5M VND | [0xe40c…bfac](https://testnet.snowtrace.io/tx/0xe40cf8487ac7850f5b947f8af3663bcc9c1c03df56eefb611e4289529226bfac) |
 
-The published report is [`docs/audit/2026-11-21-car1-reported-vs-paid.md`](audit/2026-11-21-car1-reported-vs-paid.md): a reported-vs-paid read of car 1, generated from chain reads seconds before publishing. Its keccak256 is the hash stored on chain (`cast keccak 0x$(xxd -p -c0 docs/audit/2026-11-21-car1-reported-vs-paid.md)`). It says it is a demo check by the team's own wallet and not an independent audit. The period shows the UTC date (21 Nov) while the app shows the publish date in local time (22 Nov).
+The published report is [`docs/audit/2026-11-22-car1-reported-vs-paid.md`](audit/2026-11-22-car1-reported-vs-paid.md), generated from chain reads seconds before publishing. Its keccak256 is the hash on chain: `cast keccak 0x$(xxd -p -c0 docs/audit/2026-11-22-car1-reported-vs-paid.md)`. It says it is a demo check by the team's own wallet and not an independent audit. Report #1 ([`2026-11-21-car1-reported-vs-paid.md`](audit/2026-11-21-car1-reported-vs-paid.md)) comes from an earlier take that showed amounts in USDC.
 
 ## Not shown live, and why
 
-- **Listing a car and the funding sell-out.** These happened during seeding (see `tx` in `fuji.json`). A new listing would add a fourth car that nobody funds.
-- **Rental logging on the L1 and the ICM report.** These are on the team's L1 (chain 510103, no explorer) and were sent before the take. The video shows their result on Fuji (the deliveries in Income reports and the 945 reported).
-- **Faucet.** The investor started with 2,000 test USDC, so the faucet button is not used in the video.
-- **Refunds for a car that misses its deadline.** No car is past its deadline.
-- **The resale is not at the end of a real term.** The Vios was recorded as sold minutes after its rent, and the caption says it skips ahead.
+- **Recording the Vios resale.** It was recorded in the earlier take ([0xdcf9…999a](https://testnet.snowtrace.io/tx/0xdcf9676e1e09b75a008a624e170e7905a1b2b2fbe5b8bc772c09266e8923999a)) and can be recorded only once, so the video shows the Vios as Sold and a holder redeeming.
+- **Logging rentals and sending the ICM report.** These are on the team L1, which has no explorer, and were sent with `cast` before the take. The video shows their arrival on Fuji (period 4 in Income reports).
+- **Listing a car, the funding sell-out, refunds, and the demo-VND faucet.** Listings and sell-outs were seeded, no car is past its deadline, and the investor already held demo VND.
+- **Posting an offer.** The investor's 1-share CX-5 offer from the earlier take is still open, so the video shows it in the book.
 
 ## Pre-record checklist
 
 - [ ] `web/fuji.json` points at the deployment you mean to record, and the role keys match its `manager`, `operator` and `auditor`.
-- [ ] Read live state: VF 8 has shares left and a deadline in the future; the cheapest CX-5 offer still has at least 2 fillable shares; the CX-5 ledger shows an unpaid amount if you want the "due → Paid in full" beat; no resale is recorded for the car you will sell; feesOwed > 0.
-- [ ] Balances: every role has gas; investor ≥ 1,100 USDC; operator ≥ rent + resale USDC.
-- [ ] Rehearse the whole path on `anvil --fork-url https://avalanche-fuji-c-chain-rpc.publicnode.com` before the real take. Each real take uses up state (offers, resale, unpaid rent), so a second take needs a re-plan, not a replay.
-- [ ] Serve `web/` locally (`python3 -m http.server`). `api.avax-test.network` can rate-limit; route reads to publicnode.
-- [ ] After cutting: total under 3:00, one frame per caption checked (caption matches the screen, no skeletons, no error toasts).
+- [ ] Read live state: the funding car has shares left and a deadline in the future; the cheapest offer has a fillable share from another wallet; the car you will show has an unpaid amount in `IncomeMirror.ledger` (log rentals and `report` on the L1 first, then wait for the relayer); feesOwed > 0 after the rent; the holder you redeem with holds shares of a car whose sale is recorded.
+- [ ] Balances: every role has gas; the investor and the operator hold enough demo VND.
+- [ ] Rehearse on `anvil --fork-url https://avalanche-fuji-c-chain-rpc.publicnode.com`. A real take uses up state, so a second take needs a re-plan, not a replay.
+- [ ] Serve `web/` locally and route `api.avax-test.network` to publicnode (it rate-limits).
+- [ ] After cutting: total under 3:00, no "USDC" on screen, one frame per caption checked (caption matches the screen, no skeletons, no error toasts).

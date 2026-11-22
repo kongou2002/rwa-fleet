@@ -92,7 +92,7 @@ function income() {
 
   return `${steps}
     <section class="card pad">
-      <div class="card-h"><div><h2 class="t-title">Reported income and rent paid</h2><p class="t-sm ink-3">USDC, all time</p></div>
+      <div class="card-h"><div><h2 class="t-title">Reported income and rent paid</h2><p class="t-sm ink-3">VND, all time</p></div>
         <div class="legend"><span><i class="tr-sw-rep"></i>Reported</span><span><i class="tr-sw-paid"></i>Paid</span></div></div>
       ${table}
     </section>
@@ -105,6 +105,7 @@ function income() {
       <section class="card pad tr-rules">
         <h2 class="t-title">Rules in the contract</h2>
         <dl class="kv">
+          <div><dt>Money</dt><dd>VND by bank transfer; the chain keeps rules and receipts</dd></div>
           <div><dt>Manager holds investor money</dt><dd>Never</dd></div>
           <div><dt>Operator paid</dt><dd>Only at sell-out</dd></div>
           <div><dt>Missed funding deadline</dt><dd>Full refund</dd></div>
@@ -115,7 +116,8 @@ function income() {
       <section class="card pad tr-limits">
         <h2 class="t-title">Limits</h2>
         <div class="note warn">${ICON.shield}<div>
-          <p>This is a testnet demo. The USDC here is a test token with no value.</p>
+          <p>This is a testnet demo. Amounts are in VND: a test token (1 unit = 25,000 VND) stands in for money that would move by bank transfer.</p>
+          <p>The chain cannot force a bank transfer. Someone must still report that the money arrived, and the record is only as true as that report.</p>
           <p>The chain cannot see the real car or its real income. It records who reported what, and it enforces how the money is split.</p>
           <p>Whether the operator buys the car and reports rent honestly depends on the operator and on the legal agreement behind the documents hash.</p>
         </div></div>
@@ -230,14 +232,14 @@ function fees() {
     : empty('No rent has been paid in yet.');
 
   const list = withdrawn.length
-    ? `<ul class="tr-list">${withdrawn.map((e) => `<li><span>Manager withdrew <b>${usd(e.args.amount)}</b> USDC</span>${e.tx ? ext(txUrl(e.tx), when(e)) : `<span class="ink-3">${when(e)}</span>`}</li>`).join('')}</ul>`
+    ? `<ul class="tr-list">${withdrawn.map((e) => `<li><span>Manager withdrew <b>${usd(e.args.amount)}</b> VND</span>${e.tx ? ext(txUrl(e.tx), when(e)) : `<span class="ink-3">${when(e)}</span>`}</li>`).join('')}</ul>`
     : S.events === null ? '<p class="t-sm ink-3"><span class="skel">Reading events</span></p>' : empty('The manager has not withdrawn any fees yet.');
 
   return `${kpis}
     <p class="t-sm ink-2 tr-gap">Every rent payment is split ${share} / ${esc(TERMS.fee)} the moment it arrives. This fee is the only money the manager can take out.</p>
-    ${isManager ? `<div class="card pad tr-gap tr-withdraw"><div><h2 class="t-title">You are the manager</h2><p class="t-sm ink-3">${usd(S.data.feesOwed)} USDC is ready to withdraw to this wallet.</p></div>
+    ${isManager ? `<div class="card pad tr-gap tr-withdraw"><div><h2 class="t-title">You are the manager</h2><p class="t-sm ink-3">${usd(S.data.feesOwed)} VND is ready to withdraw to this wallet.</p></div>
       <button class="btn btn-p" type="button" data-act="withdrawFees"${off(S.data.feesOwed === 0n)}>${spin('fees')}Withdraw fees</button></div>` : ''}
-    <section class="card pad tr-gap"><div class="card-h"><div><h2 class="t-title">Fees by car</h2><p class="t-sm ink-3">USDC, all time</p></div></div>${table}</section>
+    <section class="card pad tr-gap"><div class="card-h"><div><h2 class="t-title">Fees by car</h2><p class="t-sm ink-3">VND, all time</p></div></div>${table}</section>
     <section class="card pad tr-gap"><div class="card-h"><div><h2 class="t-title">Fee withdrawals</h2><p class="t-sm ink-3">Read from FeesWithdrawn events</p></div></div>${list}</section>`;
 }
 
@@ -292,7 +294,7 @@ function contracts() {
     <section class="card pad"><h2 class="t-title tr-kv-h">Contracts and roles</h2>
       <dl class="kv tr-kv">
         ${addrRow('FleetShares', fuji, cfg.FleetShares, addrUrl(cfg.FleetShares))}
-        ${addrRow('Test USDC', fuji, cfg.MockUSDC, addrUrl(cfg.MockUSDC))}
+        ${addrRow('Demo VND token (test)', fuji, cfg.MockUSDC, addrUrl(cfg.MockUSDC))}
         ${addrRow('IncomeMirror', fuji, cfg.IncomeMirror, cfg.IncomeMirror && addrUrl(cfg.IncomeMirror))}
         ${addrRow('RentalLog', l1Name, l1.RentalLog, l1.RentalLog && l1Url('address', l1.RentalLog))}
         ${addrRow('Manager', 'Lists cars, takes the fee', S.data.manager || cfg.manager, addrUrl(S.data.manager || cfg.manager))}

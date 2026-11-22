@@ -3,12 +3,15 @@ import { registerView, S, TERMS, SERIES, esc, photo, stageOf, ICON } from '../co
 import { barChart, chartW } from '../chart.js';
 
 // Worked example. Every figure on the page is derived from these five numbers.
-const EX = { price: 28000, gross: 0.135, fee: 0.10, years: 5, resale: 0.55 };
+// Amounts in million VND (a 700M VND car).
+const EX = { price: 700, gross: 0.135, fee: 0.10, years: 5, resale: 0.55 };
 const PLAN = [6, 12, 20, 30]; // example roadmap, placeholders
 const GROSS_GRID = [0.135, 0.15, 0.20, 0.25];
 const RESALE_GRID = [0.50, 0.55, 0.60];
 
 const n0 = (n) => Math.round(n).toLocaleString('en-US');
+/** Million VND to the app's compact form: 700 -> '700M', 1225 -> '1.225B'. */
+const mv = (m) => (Math.abs(m) >= 1000 ? `${Number((m / 1000).toFixed(3))}B` : `${Number(m.toFixed(3))}M`);
 const p1 = (x) => `${(Math.round(x * 1000) / 10).toFixed(1)}%`;
 const pc = (x) => `${Math.round(x * 1000) / 10}%`;
 
@@ -60,8 +63,8 @@ registerView('how', () => {
       parts: [{ v: rentYear * (i + 1), color: SERIES[0] }, ...(i === EX.years - 1 ? [{ v: resale, color: SERIES[1] }] : [])],
     })),
     width: chartW(560), height: chartW(240, 220), labels: 'last', fmt: n0,
-    line: { v: EX.price, text: `Invested · ${n0(EX.price)}` },
-    aria: `Cumulative cash returned per year: rent builds to ${n0(rentTotal)} USDC by year ${EX.years}, resale adds ${n0(resale)}, against ${n0(EX.price)} invested`,
+    line: { v: EX.price, text: `Invested · ${mv(EX.price)}` },
+    aria: `Cumulative cash returned per year: in million VND: rent builds to ${mv(rentTotal)} VND by year ${EX.years}, resale adds ${mv(resale)}, against ${mv(EX.price)} invested`,
   });
   const sens = GROSS_GRID.map((g) => `<tr><td>${pc(g)}</td>${RESALE_GRID.map((rs) => {
     const v = irr(flows({ ...EX, gross: g, resale: rs }));
@@ -87,6 +90,7 @@ registerView('how', () => {
         <p class="t-label">Investor overview</p>
         <h1 class="t-display">Growing ${esc(TERMS.country)}'s rental fleet</h1>
         <p class="t-body ink-2">An offshore vault funds cars in fractional shares. ${esc(TERMS.operator)} rents them out in ${esc(TERMS.country)}. Each car earns rent for ${esc(TERMS.life)}, then is sold so the capital comes back and funds the next cars.</p>
+        <p class="t-sm ink-3">The bank holds the money in VND; the chain holds the rules and the proof.</p>
         <div class="row hw-cta"><a class="btn btn-p" href="#/">Open the vault</a><a class="btn" href="#/transparency">See the records</a></div>
       </div>
       ${hero ? `<a class="hw-hero-img" href="#/car/${hero.id}">${photo(hero, 'hw-photo', `${hero.name} from the fleet`)}</a>` : ''}
@@ -96,7 +100,7 @@ registerView('how', () => {
       <h2 class="t-h2">The life of one car</h2>
       <p class="t-sm ink-3 hw-sub">Four steps, run by the contract</p>
       <ol class="hw-steps">
-        ${step('01', 'Fund a car', 'Investors buy shares of one car in USDC. Money waits in escrow until it sells out.', 'Month 0')}
+        ${step('01', 'Fund a car', 'Investors buy shares of one car in VND. The contract holds the sale in escrow until it sells out.', 'Month 0')}
         ${step('02', `Rent it out in ${esc(TERMS.country)}`, `${esc(TERMS.operator)} runs the car and pays ${gLo}–${gHi}% of its price in rent each year, monthly.`, 'Years 1–5')}
         ${step('03', 'Sell while it holds value', `After ${esc(TERMS.life)} the car is sold. The resale goes back to holders.`, 'Year 4–5 · about 50–60% of price')}
         ${step('04', 'Grow the fleet', 'New money and returned capital fund the next cars in the vault.', 'Ongoing', true)}
@@ -107,23 +111,24 @@ registerView('how', () => {
       <h2 class="t-h2">Who does what</h2>
       <p class="t-sm ink-3 hw-sub">Three parties and one independent check</p>
       <div class="hw-who">
-        <div class="card pad"><p class="t-label">Anywhere · USDC</p><h3 class="t-title">Investors</h3><p class="t-sm ink-2">Hold car shares. Receive ${100 - fee}% of rent and the full resale value.</p></div>
+        <div class="card pad"><p class="t-label">Anywhere · VND</p><h3 class="t-title">Investors</h3><p class="t-sm ink-2">Hold car shares. Receive ${100 - fee}% of rent and the full resale value, by bank transfer.</p></div>
         ${arrow}
         <div class="card pad hw-vault"><p class="t-label">Offshore company</p><h3 class="t-title">FleetShares Vault</h3><p class="t-sm">Set up abroad. Invests in cars for ${esc(TERMS.country)}, lists them, takes a fixed ${fee}% of rent.</p></div>
         ${arrow}
         <div class="card pad"><p class="t-label">${esc(TERMS.country)}</p><h3 class="t-title">${esc(TERMS.operator)}</h3><p class="t-sm ink-2">Rents the cars out, pays rent monthly, sells each car at the end of its term.</p></div>
       </div>
+      <p class="t-sm ink-3 hw-gap">A bank or payment gateway carries the money in VND. The contract keeps the rules and records each payment it is told about.</p>
       <div class="hw-audit">${ICON.shield}<p class="t-sm ink-2"><b>Independent auditor, planned.</b> An independent auditor outside ${esc(TERMS.country)} is planned to check the cars, rental income and payouts each quarter. Report hashes will be published on-chain.</p></div>
     </section>
 
     <section class="hw-sec">
       <h2 class="t-h2">One car, start to finish</h2>
-      <p class="t-sm ink-3 hw-sub">Example: a ${n0(EX.price)} USDC car over ${EX.years} years. Illustration from the assumptions below, not a forecast.</p>
+      <p class="t-sm ink-3 hw-sub">Example: a ${mv(EX.price)} VND car over ${EX.years} years. Illustration from the assumptions below, not a forecast.</p>
       <div class="card pad hw-ex">
         <div class="hw-ex-l">
           <p class="t-title">Assumptions</p>
           <dl class="kv">
-            <div><dt>Car price</dt><dd>${n0(EX.price)} USDC</dd></div>
+            <div><dt>Car price</dt><dd>${mv(EX.price)} VND</dd></div>
             <div><dt>Gross rent</dt><dd>${pc(EX.gross)} a year</dd></div>
             <div><dt>Management fee</dt><dd>${pc(EX.fee)} of rent</dd></div>
             <div><dt>Years in service</dt><dd>${EX.years}</dd></div>
@@ -131,13 +136,13 @@ registerView('how', () => {
           </dl>
           <div class="hw-res">
             <div><p class="t-label">Total back</p><p class="t-fig">${(back / EX.price).toFixed(2)}×</p></div>
-            <div><p class="t-label">Profit</p><p class="t-fig${back >= EX.price ? ' pos' : ''}">${back >= EX.price ? '+' : '−'}${n0(Math.abs(back - EX.price))}</p></div>
+            <div><p class="t-label">Profit</p><p class="t-fig${back >= EX.price ? ' pos' : ''}">${back >= EX.price ? '+' : '−'}${mv(Math.abs(back - EX.price))}</p></div>
             <div><p class="t-label">IRR</p><p class="t-fig">${p1(base)}</p></div>
           </div>
         </div>
         <figure class="chart hw-ex-c">
-          <div class="card-h"><p class="t-title">Cash returned, cumulative</p>
-            <div class="legend"><span><i style="background:${SERIES[0]}"></i>Rent <b>${n0(rentTotal)}</b></span><span><i style="background:${SERIES[1]}"></i>Resale <b>${n0(resale)}</b></span></div></div>
+          <div class="card-h"><p class="t-title">Cash returned, cumulative <span class="t-sm ink-3">· million VND</span></p>
+            <div class="legend"><span><i style="background:${SERIES[0]}"></i>Rent <b>${mv(rentTotal)}</b></span><span><i style="background:${SERIES[1]}"></i>Resale <b>${mv(resale)}</b></span></div></div>
           ${cashChart}
         </figure>
       </div>

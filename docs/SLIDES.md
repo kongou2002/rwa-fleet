@@ -6,7 +6,7 @@ Tiền trên slide là tiền đồng. Bản demo trên testnet mô phỏng ti�
 
 Tên Avalanche và Fuji chỉ có trên slide 1 và slide cuối; các slide giữa gọi là "mạng riêng (L1)", "mạng chính", "testnet". Tên kỹ thuật (C-Chain, ICM, Teleporter) nằm trong ghi chú người nói.
 
-Số liệu sống đọc từ Fuji lúc khối 61,447,994 (2026-11-22 00:05 UTC) qua https://avalanche-fuji-c-chain-rpc.publicnode.com. Ảnh chụp app lúc 2026-11-22 00:05 UTC, ví chỉ đọc 0x0812ebF118750B566858241b429C574Aec59a419.
+Số liệu sống đọc từ Fuji lúc khối 61,448,230 (2026-11-22 00:13 UTC) qua https://avalanche-fuji-c-chain-rpc.publicnode.com. Ảnh chụp app lúc 2026-11-22 00:12 UTC, ví chỉ đọc 0x0812ebF118750B566858241b429C574Aec59a419.
 
 ## 1. Tổng quan
 
@@ -31,7 +31,7 @@ Xin chào, chúng tôi là FleetShares. Một chiếc xe cho thuê được chia
 Số liệu và nguồn:
 
 - 90/10: phí FEE_BPS cố định trong src/FleetShares.sol; README, mục Who doesn't trust whom
-- 100 phần × 7 triệu: FleetShares.getCar(1) trên Fuji, khối 61.447.994 (2026-11-22 00:05 UTC): 100 × 280 đơn vị token thử × 25.000 đ (tỷ giá demo của app); README, Proof: listCar1 0x02523e17934d4eae2634c154ddfa963314ff61a89cdda54e2381eed568e6adf6
+- 100 phần × 7 triệu: FleetShares.getCar(1) trên Fuji, khối 61.448.230 (2026-11-22 00:13 UTC): 100 × 280 đơn vị token thử × 25.000 đ (tỷ giá demo của app); README, Proof: listCar1 0x02523e17934d4eae2634c154ddfa963314ff61a89cdda54e2381eed568e6adf6
 
 Liên kết trên slide:
 
@@ -60,7 +60,7 @@ Một chiếc xe cho thuê ở Việt Nam đem về khoảng 10 đến 15% giá 
 Số liệu và nguồn:
 
 - 10–15%: khoảng trong đề bài của ban giám khảo cho dự án này; app dùng 12–15% (TERMS.gross trong web/core.js). Ước tính, nhóm chưa đo.
-- 700 triệu: giá xe Mazda CX-5 2.0 = 100 phần × 280 đơn vị × 25.000 đ, FleetShares.getCar(1), khối 61.447.994 (2026-11-22 00:05 UTC)
+- 700 triệu: giá xe Mazda CX-5 2.0 = 100 phần × 280 đơn vị × 25.000 đ, FleetShares.getCar(1), khối 61.448.230 (2026-11-22 00:13 UTC)
 
 ## 3. Vòng đời một chiếc xe
 
@@ -97,14 +97,14 @@ Chữ trên slide:
 
 Ghi chú người nói:
 
-Vòng đời một chiếc xe có sáu bước. Một: gọi vốn, nhà đầu tư mua cổ phần và chuyển khoản tiền đồng ngay khi mua; quản lý không cầm tiền, tiền chỉ được giải ngân theo luật ghi trên chuỗi. Hai: cổ phần cuối cùng bán xong thì toàn bộ tiền mua xe chuyển cho Công ty A ngay trong giao dịch đó. Quá hạn mà chưa đủ vốn thì ai cũng huỷ được và mọi người lấy lại đủ tiền. Ba: Công ty A cho thuê xe 4 đến 5 năm. Bốn: mỗi lần trả tiền thuê, hợp đồng chia 90% cho người giữ cổ phần, 10% phí quản lý, phí cố định, không ai sửa được. Năm và sáu: hết kỳ thì bán xe, tiền bán chia theo số cổ phần, không thu phí. Trên Fuji cả sáu bước đã chạy: chiếc Toyota Vios đã ghi bán 270 triệu và 20 trên 120 cổ phần đã được hoàn vốn.
+Vòng đời một chiếc xe có sáu bước. Một: gọi vốn, nhà đầu tư mua cổ phần và chuyển khoản tiền đồng ngay khi mua; quản lý không cầm tiền, tiền chỉ được giải ngân theo luật ghi trên chuỗi. Hai: cổ phần cuối cùng bán xong thì toàn bộ tiền mua xe chuyển cho Công ty A ngay trong giao dịch đó. Quá hạn mà chưa đủ vốn thì ai cũng huỷ được và mọi người lấy lại đủ tiền. Ba: Công ty A cho thuê xe 4 đến 5 năm. Bốn: mỗi lần trả tiền thuê, hợp đồng chia 90% cho người giữ cổ phần, 10% phí quản lý, phí cố định, không ai sửa được. Năm và sáu: hết kỳ thì bán xe, tiền bán chia theo số cổ phần, không thu phí. Trên Fuji cả sáu bước đã chạy: chiếc Toyota Vios đã ghi bán 270 triệu và 70 trên 120 cổ phần đã được hoàn vốn.
 
 Số liệu và nguồn:
 
 - 4–5 năm: TERMS.life trong web/core.js; README, Add-ons (CarExit)
 - 90% / 10%: FEE_BPS trong src/FleetShares.sol
 - hoàn 100%: cancelFunding + refund trong src/FleetShares.sol; README, Who doesn't trust whom
-- Cả sáu bước đã chạy: README Proof (listCar1, soldOutPaysOperator 0xb8879dee425910b16eab691de88fa667dad881b236c74d38eec646888985d813, payRent, claimRent); CarExit.exitOf(3) khối 61.447.994 (2026-11-22 00:05 UTC): bán 10.800 đơn vị = 270 triệu, 20/120 cổ phần đã hoàn
+- Cả sáu bước đã chạy: README Proof (listCar1, soldOutPaysOperator 0xb8879dee425910b16eab691de88fa667dad881b236c74d38eec646888985d813, payRent, claimRent); CarExit.exitOf(3) khối 61.448.230 (2026-11-22 00:13 UTC): bán 10.800 đơn vị = 270 triệu, 70/120 cổ phần đã hoàn
 
 ## 4. Ngân hàng giữ tiền, blockchain giữ bằng chứng
 
@@ -142,7 +142,7 @@ Chữ trên slide:
 > kongou2002.github.io/rwa-fleet
 > 6,25triệu
 > một cổ phần VinFast VF 8
-> 98/160
+> 100/160
 > cổ phần đã bán
 > Không đủ vốn: hoàn tiền đủ
 > FleetShares
@@ -150,11 +150,11 @@ Chữ trên slide:
 
 Ghi chú người nói:
 
-Đây là app thật, đang chạy. Chiếc VinFast VF 8 Eco, xe 1 tỷ, đang gọi vốn: 160 cổ phần, mỗi cổ phần 6,25 triệu đồng, đã bán 98. Chọn số cổ phần, app tính phần sở hữu, tiền thuê dự kiến và phần tiền bán xe, rồi trả tiền. Tiền chỉ tới Công ty A khi bán hết; nếu tới hạn mà chưa đủ, mỗi người lấy lại đủ số đã trả.
+Đây là app thật, đang chạy. Chiếc VinFast VF 8 Eco, xe 1 tỷ, đang gọi vốn: 160 cổ phần, mỗi cổ phần 6,25 triệu đồng, đã bán 100. Chọn số cổ phần, app tính phần sở hữu, tiền thuê dự kiến và phần tiền bán xe, rồi trả tiền. Tiền chỉ tới Công ty A khi bán hết; nếu tới hạn mà chưa đủ, mỗi người lấy lại đủ số đã trả.
 
 Số liệu và nguồn:
 
-- 6,25 triệu, 98/160: FleetShares.getCar(2), khối 61.447.994 (2026-11-22 00:05 UTC) (250 đơn vị × 25.000 đ); ảnh chụp app lúc 2026-11-22 00:05 UTC
+- 6,25 triệu, 100/160: FleetShares.getCar(2), khối 61.448.230 (2026-11-22 00:13 UTC) (250 đơn vị × 25.000 đ); ảnh chụp app lúc 2026-11-22 00:12 UTC
 
 Liên kết trên slide:
 
@@ -197,18 +197,18 @@ Chữ trên slide:
 > 1giao dịch
 > tiền cho người bán, cổ phần cho người mua
 > 4lệnh
-> đang mở, 22 cổ phần
+> đang mở, 21 cổ phần
 > FleetShares
 > Sổ lệnh không giữ cổ phần của người bán · Bản demo trên testnet: tiền VND được mô phỏng bằng token thử; cổng thanh toán chưa nối.
 
 Ghi chú người nói:
 
-Người giữ cổ phần đặt giá bán; cổ phần vẫn nhận tiền thuê tới khi có người mua. Người mua trả trong một giao dịch: tiền cho người bán, cổ phần cho người mua, hoặc không có gì xảy ra. Lúc chụp có 4 lệnh đang mở với 22 cổ phần. Giới hạn: sổ lệnh không giữ cổ phần, nên nếu người bán đã chuyển cổ phần đi thì lệnh đó không khớp được.
+Người giữ cổ phần đặt giá bán; cổ phần vẫn nhận tiền thuê tới khi có người mua. Người mua trả trong một giao dịch: tiền cho người bán, cổ phần cho người mua, hoặc không có gì xảy ra. Lúc chụp có 4 lệnh đang mở với 21 cổ phần. Giới hạn: sổ lệnh không giữ cổ phần, nên nếu người bán đã chuyển cổ phần đi thì lệnh đó không khớp được.
 
 Số liệu và nguồn:
 
 - 1 giao dịch: takeOffer trong src/FleetShares.sol; README, Who doesn't trust whom
-- 4 lệnh, 22 cổ phần: trang Market của app lúc 2026-11-22 00:05 UTC (đọc từ hợp đồng)
+- 4 lệnh, 21 cổ phần: trang Market của app lúc 2026-11-22 00:12 UTC (đọc từ hợp đồng)
 - Lệnh bán 5 cổ phần: README Proof: makeOffer 0x1aaa07517aa266c4ef5aa6258c526046ef8a33baaa4671caa5c711efddaef625
 
 ## 8. Công ty báo bao nhiêu, trả bao nhiêu
@@ -221,27 +221,28 @@ Chữ trên slide:
 > Kỳ 4: báo 7,875 triệu
 > Mazda CX-5, sang mạng chính
 > 7,875
-> triệu còn nợ
+> triệu chưa trả
 > ai cũng thấy, chưa cần ai kêu
-> Đã trả
-> 23,625 triệu / 31,5 triệu
+> Đã trả đủ
+> 31,5 triệu / 31,5 triệu
 > FleetShares
-> Kỳ 4: 0xcf65…9b75 · Trả nốt: — · Bản demo trên testnet: tiền VND được mô phỏng bằng token thử; cổng thanh toán chưa nối.
+> Kỳ 4: 0xcf65…9b75 · Trả nốt: 0x56e5…4869 · Bản demo trên testnet: tiền VND được mô phỏng bằng token thử; cổng thanh toán chưa nối.
 
 Ghi chú người nói:
 
-Đây là chỗ các bên không phải tin nhau. Công ty A ghi từng lượt thuê, tổng mỗi kỳ được gửi sang mạng chính và đặt cạnh số tiền thuê thật sự đã trả. Với chiếc CX-5, báo cáo kỳ 4 sang trước tiền thuê: báo tổng 31,5 triệu, đã trả 23,625 triệu, còn nợ 7,875 triệu, hiện ngay trên app và trên hợp đồng. Lúc đọc số liệu, khoản này chưa trả: đã trả 23,625 triệu trên 31,5 triệu đã báo. Chiếc Vios: báo 10,125 triệu, trả 10,125 triệu. Giới hạn: chuỗi không thấy lượt thuê mà công ty không ghi; hợp đồng không ép được công ty trả, chưa có tiền ký quỹ.
+Đây là chỗ các bên không phải tin nhau. Công ty A ghi từng lượt thuê, tổng mỗi kỳ được gửi sang mạng chính và đặt cạnh số tiền thuê thật sự đã trả. Với chiếc CX-5, báo cáo kỳ 4 sang trước tiền thuê: báo tổng 31,5 triệu, đã trả 23,625 triệu, còn nợ 7,875 triệu, hiện ngay trên app và trên hợp đồng. Sau đó Công ty A trả nốt, giờ là 31,5 triệu trên 31,5 triệu. Chiếc Vios: báo 10,125 triệu, trả 10,125 triệu. Giới hạn: chuỗi không thấy lượt thuê mà công ty không ghi; hợp đồng không ép được công ty trả, chưa có tiền ký quỹ.
 
 Số liệu và nguồn:
 
 - Kỳ 4: báo 315: IncomeMirror, sự kiện IncomeReported, tx 0xcf65497d9936d03cb7c19ab6586f3148e1d3121b1f5418b1c60447b30a479b75 (khối 61.447.739)
 - 7,875 triệu còn nợ: README Proof: ledger(1) = báo 945, trả 630, còn 315 đơn vị (× 25.000 đ) (tx 0xcf65497d9936d03cb7c19ab6586f3148e1d3121b1f5418b1c60447b30a479b75); tiền thuê đã trả trước đó 945 từ sự kiện RentPaid
-- Đã trả 23,625 triệu / 31,5 triệu: IncomeMirror.ledger(1), khối 61.447.994 (2026-11-22 00:05 UTC)
-- Vios 10,125 triệu: IncomeMirror.ledger(3), khối 61.447.994 (2026-11-22 00:05 UTC)
+- Đã trả 31,5 triệu / 31,5 triệu: IncomeMirror.ledger(1), khối 61.448.230 (2026-11-22 00:13 UTC); khoản trả nốt tx 0x56e5a7cd8ede58f6e1b62807c18a3ee0aee61296492d2c1889e2066e5daa4869 (khối 61.448.038)
+- Vios 10,125 triệu: IncomeMirror.ledger(3), khối 61.448.230 (2026-11-22 00:13 UTC)
 
 Liên kết trên slide:
 
 - 0xcf65…9b75: https://testnet.snowtrace.io/tx/0xcf65497d9936d03cb7c19ab6586f3148e1d3121b1f5418b1c60447b30a479b75
+- 0x56e5…4869: https://testnet.snowtrace.io/tx/0x56e5a7cd8ede58f6e1b62807c18a3ee0aee61296492d2c1889e2066e5daa4869
 
 ## 9. Hai mạng
 
@@ -267,11 +268,11 @@ Chữ trên slide:
 
 Ghi chú người nói:
 
-Vì sao hai mạng. Sổ cho thuê hằng ngày của Công ty A nằm trên một Avalanche L1 riêng (chain 510103): mỗi lượt thuê là một giao dịch rẻ, và chỉ những ví được bật trong danh sách cho phép mới ghi được. Hết kỳ, ai cũng gọi được report: hợp đồng RentalLog tự gửi tổng của nó sang C-Chain qua Avalanche ICM (Teleporter), có chữ ký của validator L1. Trên C-Chain, IncomeMirror chỉ nhận tin từ Teleporter, từ đúng L1 đó và đúng RentalLog đó, rồi đặt tổng cạnh tiền thuê đã ghi nhận trong FleetShares. Đến khối 61.447.994 (2026-11-22 00:05 UTC) đã có 6 báo cáo kỳ sang tới Fuji. Giới hạn: L1 hiện do nhóm chạy, một validator, chưa có trình duyệt khối công khai.
+Vì sao hai mạng. Sổ cho thuê hằng ngày của Công ty A nằm trên một Avalanche L1 riêng (chain 510103): mỗi lượt thuê là một giao dịch rẻ, và chỉ những ví được bật trong danh sách cho phép mới ghi được. Hết kỳ, ai cũng gọi được report: hợp đồng RentalLog tự gửi tổng của nó sang C-Chain qua Avalanche ICM (Teleporter), có chữ ký của validator L1. Trên C-Chain, IncomeMirror chỉ nhận tin từ Teleporter, từ đúng L1 đó và đúng RentalLog đó, rồi đặt tổng cạnh tiền thuê đã ghi nhận trong FleetShares. Đến khối 61.448.230 (2026-11-22 00:13 UTC) đã có 6 báo cáo kỳ sang tới Fuji. Giới hạn: L1 hiện do nhóm chạy, một validator, chưa có trình duyệt khối công khai.
 
 Số liệu và nguồn:
 
-- 6 báo cáo: số sự kiện IncomeReported của IncomeMirror 0x9D1479479FCB0EFeFF7E8398558b326886be263d từ khối 61.445.000 tới khối 61.447.994 (2026-11-22 00:05 UTC)
+- 6 báo cáo: số sự kiện IncomeReported của IncomeMirror 0x9D1479479FCB0EFeFF7E8398558b326886be263d từ khối 61.445.000 tới khối 61.448.230 (2026-11-22 00:13 UTC)
 - Chỉ ví được phép: README, Two chains joined by Avalanche ICM (allow-list của L1 510103)
 
 ## 10. Một chiếc xe từ đầu đến cuối (ví dụ)
@@ -319,7 +320,7 @@ Chữ trên slide:
 > bài kiểm thử, đều qua
 > 6
 > hợp đồng trên 2 mạng
-> 37
+> 46
 > giao dịch trên mạng thử
 > 6
 > báo cáo thu nhập qua 2 mạng
@@ -327,19 +328,19 @@ Chữ trên slide:
 > bán xe Vios, chia theo cổ phần
 > Mở app
 > FleetShares
-> Đọc từ chuỗi lúc khối 61.447.994 (2026-11-22 00:05 UTC) · kongou2002.github.io/rwa-fleet/
+> Đọc từ chuỗi lúc khối 61.448.230 (2026-11-22 00:13 UTC) · kongou2002.github.io/rwa-fleet/
 
 Ghi chú người nói:
 
-Số liệu đọc lúc khối 61.447.994 (2026-11-22 00:05 UTC). 50 bài kiểm thử Foundry trên các đường đi của tiền, chạy lại hôm nay, đều qua. 6 hợp đồng: FleetShares, MockUSDC, IncomeMirror, CarExit, AuditRegistry trên Fuji và RentalLog trên L1 của nhóm. 37 giao dịch đã chạm vào các hợp đồng của app trên Fuji. 6 báo cáo kỳ đã đi từ L1 sang Fuji. Chiếc Toyota Vios đã ghi bán 270 triệu qua CarExit, 20 cổ phần đã hoàn vốn. AuditRegistry có 1 báo cáo kiểm toán, do ví kiểm toán của nhóm công bố. Quét mã để mở app.
+Số liệu đọc lúc khối 61.448.230 (2026-11-22 00:13 UTC). 50 bài kiểm thử Foundry trên các đường đi của tiền, chạy lại hôm nay, đều qua. 6 hợp đồng: FleetShares, MockUSDC, IncomeMirror, CarExit, AuditRegistry trên Fuji và RentalLog trên L1 của nhóm. 46 giao dịch đã chạm vào các hợp đồng của app trên Fuji. 6 báo cáo kỳ đã đi từ L1 sang Fuji. Chiếc Toyota Vios đã ghi bán 270 triệu qua CarExit, 70 cổ phần đã hoàn vốn. AuditRegistry có 2 báo cáo kiểm toán, do ví kiểm toán của nhóm công bố. Quét mã để mở app.
 
 Số liệu và nguồn:
 
 - 50: forge test trên nhánh ui-redesign, 22/11/2026: 50 passed, 0 failed (đếm function test trong test/*.sol)
 - 6: docs/fuji.json: 5 hợp đồng trên Fuji + RentalLog trên L1 510103
-- 37: số mã giao dịch khác nhau trong log của FleetShares, IncomeMirror, CarExit, AuditRegistry từ khối 61.445.000 tới khối 61.447.994 (2026-11-22 00:05 UTC)
-- 6: sự kiện IncomeReported, khối 61.447.994 (2026-11-22 00:05 UTC)
-- 270 triệu: CarExit.exitOf(3), khối 61.447.994 (2026-11-22 00:05 UTC): 10.800 đơn vị × 25.000 đ
+- 46: số mã giao dịch khác nhau trong log của FleetShares, IncomeMirror, CarExit, AuditRegistry từ khối 61.445.000 tới khối 61.448.230 (2026-11-22 00:13 UTC)
+- 6: sự kiện IncomeReported, khối 61.448.230 (2026-11-22 00:13 UTC)
+- 270 triệu: CarExit.exitOf(3), khối 61.448.230 (2026-11-22 00:13 UTC): 10.800 đơn vị × 25.000 đ
 - QR: https://kongou2002.github.io/rwa-fleet/
 
 Liên kết trên slide:
@@ -425,7 +426,7 @@ Lộ trình ba bước. Bây giờ: testnet, ba xe mẫu, tiền đồng mô ph�
 
 Số liệu và nguồn:
 
-- 3 xe mẫu: FleetShares.carCount(), khối 61.447.994 (2026-11-22 00:05 UTC)
+- 3 xe mẫu: FleetShares.carCount(), khối 61.448.230 (2026-11-22 00:13 UTC)
 - Các bước tiếp theo: docs/SLIDES.md cũ, mục Next; README, Limits
 
 ## 15. Cảm ơn

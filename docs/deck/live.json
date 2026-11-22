@@ -1,6 +1,6 @@
 {
- "block": 61447994,
- "time_utc": "2026-11-22 00:05 UTC",
+ "block": 61448230,
+ "time_utc": "2026-11-22 00:13 UTC",
  "rpc": "https://avalanche-fuji-c-chain-rpc.publicnode.com",
  "cars": [
   {
@@ -11,12 +11,12 @@
    "sold": 100,
    "status": 2,
    "price": 280.0,
-   "rent": 945.0,
-   "fee": 94.5,
+   "rent": 1260.0,
+   "fee": 126.0,
    "ledger": {
     "reported": 1260.0,
-    "paid": 945.0,
-    "unpaid": 315.0
+    "paid": 1260.0,
+    "unpaid": 0.0
    },
    "exit": {
     "proceeds": 0.0,
@@ -31,7 +31,7 @@
    "name": "VinFast VF 8 Eco",
    "image": "https://commons.wikimedia.org/wiki/Special:FilePath/VinFast%20VF%208%20IAA%202023%201X7A0681.jpg?width=1200",
    "total": 160,
-   "sold": 98,
+   "sold": 100,
    "status": 1,
    "price": 250.0,
    "rent": 0.0,
@@ -66,14 +66,14 @@
    },
    "exit": {
     "proceeds": 10800.0,
-    "paidOut": 1800.0,
+    "paidOut": 6300.0,
     "totalShares": 120,
-    "redeemed": 20,
+    "redeemed": 70,
     "soldAt": 1795304608
    }
   }
  ],
- "audits": 1,
+ "audits": 2,
  "rentPaid": [
   {
    "block": 61446200,
@@ -104,6 +104,12 @@
    "car": 1,
    "gross": 315.0,
    "tx": "0xc22cb50338fba686fde525c8c7af6424b93ef83c0d6cc6eb6d6e960799141225"
+  },
+  {
+   "block": 61448038,
+   "car": 1,
+   "gross": 315.0,
+   "tx": "0x56e5a7cd8ede58f6e1b62807c18a3ee0aee61296492d2c1889e2066e5daa4869"
   }
  ],
  "reports": [
@@ -162,7 +168,7 @@
    "tx": "0xcf65497d9936d03cb7c19ab6586f3148e1d3121b1f5418b1c60447b30a479b75"
   }
  ],
- "fujiTxs": 37,
+ "fujiTxs": 46,
  "contracts": 6,
  "tests": 50
 }

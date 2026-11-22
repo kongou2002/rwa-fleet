@@ -291,7 +291,7 @@ slide(f'''
   {screen(img(W / "shots/ledger.png", 2400, 90), "Transparency: thu nhập Công ty A báo và tiền thuê đã trả, từng xe", "flat")}
   <ol class="gapline">
     <li>{ic("file-text", 44)}<span><b>Kỳ {rep3["period"]}: báo {money(rep3["income"])}</b><small>Mazda CX-5, sang mạng chính</small></span></li>
-    <li class="due"><strong>{money(gap, False)}</strong><span><b>triệu còn nợ</b><small>ai cũng thấy, chưa cần ai kêu</small></span></li>
+    <li class="due"><strong>{money(gap, False)}</strong><span><b>{"triệu chưa trả" if late else "triệu còn nợ"}</b><small>ai cũng thấy, chưa cần ai kêu</small></span></li>
     <li class="{"ok" if late else "wait"}">{ic("circle-check" if late else "hourglass", 44)}<span><b>{"Đã trả đủ" if late else "Đã trả"}</b><small>{money(cx5["ledger"]["paid"])} / {money(cx5["ledger"]["reported"])}</small></span></li>
   </ol>
 </div>''',

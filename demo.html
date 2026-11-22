@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Demo video · FleetShares</title>
-  <meta name="description" content="A 3:00 walkthrough of FleetShares with Vietnamese voice-over, recorded live on Avalanche Fuji.">
+  <meta name="description" content="A 2:30 walkthrough of the FleetShares screens.">
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#ffffff">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c8102e'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23ffffff' stroke-width='3'/%3E%3Cpath d='M16 16V7a9 9 0 0 1 9 9z' fill='%23ffffff'/%3E%3C/svg%3E">
@@ -17,8 +17,7 @@
     .dm-head { align-items: center; margin-bottom: 24px; }
     .dm-actions { display: flex; flex-wrap: wrap; gap: 8px; }
     /* As wide as the page allows, but never taller than the window, so the controls stay in view. */
-    .dm-video { display: block; width: min(100%, calc((100vh - 96px) * 1.6)); aspect-ratio: 1440 / 900; margin: 0 auto; border: 1px solid var(--line); border-radius: var(--radius-card); background: #0a0a0a; }
-    .dm-facts { margin-top: 24px; }
+    .dm-video { display: block; width: min(100%, calc((100vh - 96px) * 1.778)); aspect-ratio: 16 / 9; margin: 0 auto; border: 1px solid var(--line); border-radius: var(--radius-card); background: #0a0a0a; }
     .dm-note { max-width: 880px; margin-top: 16px; }
     @media (max-width: 720px) {
       .dm-video { width: 100%; }
@@ -50,7 +49,7 @@
       <div class="head dm-head">
         <div>
           <h1 class="t-display">Demo video</h1>
-          <p class="t-body ink-2">3:00, Vietnamese voice-over and captions. Recorded live on Avalanche Fuji on 22 Nov 2026.</p>
+          <p class="t-body ink-2">2:30 walkthrough of the FleetShares screens, with captions.</p>
         </div>
         <div class="dm-actions">
           <a class="btn" href="demo.mp4" download>Download the mp4</a>
@@ -60,14 +59,7 @@
 
       <video class="dm-video" id="video" src="demo.mp4" controls preload="metadata" playsinline></video>
 
-      <section class="kpis dm-facts" aria-label="About this recording">
-        <div><p class="t-label">Transactions in the video</p><p class="t-kpi">11</p><p class="t-sm">Real, on the Fuji testnet</p></div>
-        <div><p class="t-label">Wallets acting</p><p class="t-kpi">5</p><p class="t-sm">Investor, operator, manager, auditor, holder</p></div>
-        <div><p class="t-label">Money shown in</p><p class="t-kpi">VND</p><p class="t-sm">1 test token unit = 25,000 VND</p></div>
-        <div><p class="t-label">Screen</p><p class="t-kpi">Live app</p><p class="t-sm">Every click is the real app</p></div>
-      </section>
-
-      <p class="t-sm ink-3 dm-note">In the product, money moves by bank transfer and the chain keeps the rules and the receipts. On this testnet demo a test token stands in for the transfer. <a href="https://github.com/kongou2002/rwa-fleet" target="_blank" rel="noopener">Source on GitHub</a>.</p>
+            <p class="t-sm ink-3 dm-note">In the product, money moves by bank transfer and the chain keeps the rules and the receipts. The live app runs on Avalanche Fuji, where a test token stands in for the transfer; every step and its transaction is listed in <a href="https://github.com/kongou2002/rwa-fleet/blob/main/docs/DEMO_FLOWS.md" target="_blank" rel="noopener">DEMO_FLOWS</a>. <a href="https://github.com/kongou2002/rwa-fleet" target="_blank" rel="noopener">Source on GitHub</a>.</p>
 
       <footer class="foot">
         <div class="foot-row"><span>© FleetShares · Demo on Avalanche Fuji</span><span>Not investment advice.</span></div>

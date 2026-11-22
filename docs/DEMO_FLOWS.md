@@ -1,6 +1,6 @@
 # FleetShares demo video
 
-[`web/demo.mp4`](../web/demo.mp4) · 2:49 (a 29-second animated intro, then the live take) · 1440×900 · Vietnamese voice-over (synthetic voice) and a soft music bed, one Vietnamese caption per step (the beat list below gives them in English). Recorded on 22 Nov 2026 against the live deployment in [`web/fuji.json`](../web/fuji.json) on Avalanche Fuji.
+[`web/demo.mp4`](../web/demo.mp4) · 2:56 (a 29-second animated intro, the live take, a 7-second closing card) · 1440×900 · Vietnamese voice-over (synthetic voice) and a soft music bed, one Vietnamese caption per step (the beat list below gives them in English). Recorded on 22 Nov 2026 against the live deployment in [`web/fuji.json`](../web/fuji.json) on Avalanche Fuji.
 
 Money is shown in VND. In the product, money moves in VND by bank transfer and the chain keeps the rules and the receipts. On this testnet demo a test token stands in for the transfer, at a fixed demo rate of 1 token unit = 25,000 VND. Every screen is the app in a browser and every transaction below is a real Fuji transaction. Waits for confirmations are played at 8×, page loads after each wallet switch are cut, and the two opening captions are held 2 s on a still frame.
 

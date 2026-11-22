@@ -59,13 +59,38 @@ function notFound(id) {
 
 // ---------- top: gallery, title, stats ----------
 
+const idStr = (c) => c.id.toString();
+
 function gallery(c) {
+  const z = (cls, inner, label) => `<button type="button" class="${cls}" data-zoom="${idStr(c)}" aria-label="${esc(label)}">${inner}</button>`;
   return `<div class="cr-gal">
-    <div class="cr-g1">${photo(c, 'cr-gimg', c.name)}</div>
-    <div class="cr-g2">${photo(c, 'cr-gimg', '')}</div>
-    <div class="cr-g3">${photo(c, 'cr-gimg', '')}<span class="cr-gmore">+8 photos</span></div>
+    ${z('cr-g1', photo(c, 'cr-gimg', c.name), `View the photo of ${c.name}`)}
+    ${z('cr-g2', photo(c, 'cr-gimg', ''), 'View the photo, close up')}
+    ${z('cr-g3', `${photo(c, 'cr-gimg', '')}<span class="cr-gmore"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg>View photo</span>`, 'View the photo full size')}
   </div>`;
 }
+
+// Full-size photo viewer: one <dialog>, opened from any gallery tile. Esc, the close button or a click outside closes it.
+function zoomPhoto(id) {
+  const c = S.data?.cars.find((x) => idStr(x) === String(id));
+  const img = c && document.querySelector(`[data-zoom="${idStr(c)}"] img`);
+  if (!img) return;
+  let dlg = document.getElementById('cr-zoom');
+  if (!dlg) {
+    dlg = document.createElement('dialog');
+    dlg.id = 'cr-zoom';
+    dlg.className = 'cr-zoom';
+    dlg.addEventListener('click', (e) => { if (e.target === dlg || e.target.closest('[data-zoom-close]')) dlg.close(); });
+    document.body.appendChild(dlg);
+  }
+  dlg.innerHTML = `<figure><img src="${esc(img.currentSrc || img.src)}" alt="${esc(c.name)}"><figcaption><span>${esc(c.name)}</span><span class="ink-3">Photo: Wikimedia Commons, CC BY-SA 4.0</span></figcaption></figure>
+    <button type="button" class="cr-zoom-x" data-zoom-close aria-label="Close">${ICON.x}</button>`;
+  dlg.showModal();
+}
+document.addEventListener('click', (e) => {
+  const t = e.target.closest?.('[data-zoom]');
+  if (t) zoomPhoto(t.dataset.zoom);
+});
 
 function statusPill(c, st) {
   const p = (cls, t) => `<span class="cr-pill ${cls}">${t}</span>`;

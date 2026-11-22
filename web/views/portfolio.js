@@ -234,7 +234,7 @@ registerView('portfolio', () => {
   const yieldPct = investedEarning > 0n ? `${pct(earned, investedEarning)}%` : '–';
 
   const collectBtn = ready > 0n
-    ? `<button class="btn btn-p" type="button" data-act="claimAll"${off()}>${spin('claimAll')}Collect ${usd(ready)} USDC</button>`
+    ? `<button class="btn btn-p" type="button" data-act="claimAll"${off()}>${spin('claimAll')}Collect ${usd(ready)} VND</button>`
     : '';
   const line = `${plural(held.length, 'car')} · <span class="t-addr">${esc(short(me.address))}</span>`;
 

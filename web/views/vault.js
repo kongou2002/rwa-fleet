@@ -51,8 +51,8 @@ function kpis(cars) {
   const fleetSub = [`${earning} earning`, `${funding} funding`, sold ? `${sold} sold` : '', cancelled ? `${cancelled} cancelled` : ''].filter(Boolean).join(' · ');
   return `<section class="kpis vt-kpis" aria-label="Vault summary">
     <div><p class="t-label">Target net rent yield</p><p class="t-kpi pos">${netRange()}</p><p class="t-sm">${TERMS.gross[0]}–${TERMS.gross[1]}% gross rent, after the ${TERMS.fee}% fee</p></div>
-    <div><p class="t-label">Vault value</p><p class="t-kpi">${fig(value)}</p><p class="t-sm">${usd(escrow)} USDC in funding escrow</p></div>
-    <div><p class="t-label">Paid to holders</p><p class="t-kpi">${fig(rent - fee)}</p><p class="t-sm">${usd(fee)} USDC management fee</p></div>
+    <div><p class="t-label">Vault value</p><p class="t-kpi">${fig(value)}</p><p class="t-sm">${usd(escrow)} VND in funding escrow</p></div>
+    <div><p class="t-label">Paid to holders</p><p class="t-kpi">${fig(rent - fee)}</p><p class="t-sm">${usd(fee)} VND management fee</p></div>
     <div><p class="t-label">Fleet</p><p class="t-kpi">${cars.length}<span class="unit">${cars.length === 1 ? 'car' : 'cars'}</span></p><p class="t-sm">${fleetSub}</p></div>
   </section>`;
 }
@@ -96,13 +96,13 @@ function rentChart(cars) {
       const groups = months.map((m) => ({ label: m.label, parts: ids.map((id) => ({ v: m.by[id] || 0, color: seriesOf(id) })) }));
       const totals = months.map((m) => Object.values(m.by).reduce((a, v) => a + v, 0));
       const fmt2 = (n) => n.toLocaleString('en-US', { maximumFractionDigits: 2 });
-      const aria = `Rent paid to holders by month: ${months.map((m, i) => `${m.long} ${fmt2(totals[i])}`).join(', ')} USDC`;
+      const aria = `Rent paid to holders by month: ${months.map((m, i) => `${m.long} ${fmt2(totals[i])}`).join(', ')} million VND`;
       body = `<figure class="chart">${barChart({ groups, width: chartW(720), height: chartW(240, 200), labels: 'last', aria })}</figure>`;
     }
   }
   return `<section class="card pad vt-chart">
     <div class="card-h">
-      <div><h2 class="t-title">Rent paid to holders</h2><p class="t-sm ink-3">USDC per month, after the ${TERMS.fee}% fee</p></div>
+      <div><h2 class="t-title">Rent paid to holders</h2><p class="t-sm ink-3">Million VND per month, after the ${TERMS.fee}% fee</p></div>
       ${legend}
     </div>
     ${body}
@@ -112,9 +112,9 @@ function rentChart(cars) {
 function splitCard() {
   const fee = TERMS.fee, hold = 100 - fee;
   return `<section class="card pad vt-split-card">
-    <h2 class="t-title">Where 100 USDC of rent goes</h2>
+    <h2 class="t-title">Where 100 VND of rent goes</h2>
     <p class="t-sm ink-3">Split by the contract when rent arrives</p>
-    <div class="vt-split" role="img" aria-label="${hold} USDC to holders, ${fee} USDC fee">
+    <div class="vt-split" role="img" aria-label="${hold} VND to holders, ${fee} VND fee">
       <div class="vt-split-h" style="flex:${hold}">${hold} to holders</div>
       <div class="vt-split-f" style="flex:${Math.max(fee, 14)}">${fee} fee</div>
     </div>
@@ -138,26 +138,26 @@ function carCard(c) {
   const shares = `${c.sold} of ${c.totalShares} shares sold`;
   let stats, bar, caption, rowRight, rowSub;
   if (st.key === 'earning') {
-    stats = [['Net yield to date', `<span class="pos">${yieldToDate(c)}%</span>`], ['Per share', `${usd(c.sharePrice)} USDC`], ['Car value', `${usd(valueOf(c))} USDC`]];
+    stats = [['Net yield to date', `<span class="pos">${yieldToDate(c)}%</span>`], ['Per share', `${usd(c.sharePrice)} VND`], ['Car value', `${usd(valueOf(c))} VND`]];
     bar = '<i class="full" style="width:100%"></i>';
-    caption = `Fully funded · ${usd(c.rentPaid)} USDC rent paid in`;
+    caption = `Fully funded · ${usd(c.rentPaid)} VND rent paid in`;
     rowRight = `<span class="t-title pos">${yieldToDate(c)}%</span>`;
     rowSub = [m.city, 'Earning'].filter(Boolean).map(esc).join(' · ');
   } else if (st.key === 'funding') {
-    stats = [['Target net yield', rangePct(...targetNet(c))], ['Per share', `${usd(c.sharePrice)} USDC`], ['Closes in', `<b class="vt-cd" data-deadline="${c.fundingDeadline}">…</b>`]];
+    stats = [['Target net yield', rangePct(...targetNet(c))], ['Per share', `${usd(c.sharePrice)} VND`], ['Closes in', `<b class="vt-cd" data-deadline="${c.fundingDeadline}">…</b>`]];
     bar = `<i style="width:${w}%"></i>`;
-    caption = `${shares} · ${usd(raisedOf(c))} of ${usd(valueOf(c))} USDC`;
+    caption = `${shares} · ${usd(raisedOf(c))} of ${usd(valueOf(c))} VND`;
   } else if (st.key === 'expired') {
-    stats = [['Target net yield', rangePct(...targetNet(c))], ['Per share', `${usd(c.sharePrice)} USDC`], ['Deadline', '<span class="warn-t">Passed</span>']];
+    stats = [['Target net yield', rangePct(...targetNet(c))], ['Per share', `${usd(c.sharePrice)} VND`], ['Deadline', '<span class="warn-t">Passed</span>']];
     bar = `<i style="width:${w}%"></i>`;
     caption = `${shares} · missed its deadline, close the sale to open refunds`;
   } else if (st.key === 'sold') {
     const ex = exitOf(c);
-    stats = [['Resale proceeds', `${usd(ex.proceeds)} USDC`], ['Per share', `${usd(ex.proceeds / BigInt(ex.totalShares))} USDC`], ['Net yield to date', `<span class="pos">${yieldToDate(c)}%</span>`]];
+    stats = [['Resale proceeds', `${usd(ex.proceeds)} VND`], ['Per share', `${usd(ex.proceeds / BigInt(ex.totalShares))} VND`], ['Net yield to date', `<span class="pos">${yieldToDate(c)}%</span>`]];
     bar = '<i class="full" style="width:100%"></i>';
-    caption = `Sold for ${usd(ex.proceeds)} USDC · ${ex.redeemedShares} of ${ex.totalShares} shares redeemed`;
+    caption = `Sold for ${usd(ex.proceeds)} VND · ${ex.redeemedShares} of ${ex.totalShares} shares redeemed`;
   } else {
-    stats = [['Per share', `${usd(c.sharePrice)} USDC`], ['Car value', `${usd(valueOf(c))} USDC`], ['Sold', `${c.sold} / ${c.totalShares}`]];
+    stats = [['Per share', `${usd(c.sharePrice)} VND`], ['Car value', `${usd(valueOf(c))} VND`], ['Sold', `${c.sold} / ${c.totalShares}`]];
     bar = `<i style="width:${w}%"></i>`;
     caption = 'Sale closed without selling out · refunds open';
   }
@@ -190,7 +190,7 @@ function carsSection(cars) {
     .map(([k, label]) => `<button type="button" class="${f === k ? 'on' : ''}" aria-pressed="${f === k}" data-act="set" data-k="vtFilter" data-v="${k}">${label} ${counts[k]}</button>`)
     .join('');
   return `<div class="head vt-sec-head">
-      <div><h2 class="t-h2">Cars in the vault</h2><p class="t-sm ink-3">Buy a fraction of any car. Prices in USDC.</p></div>
+      <div><h2 class="t-h2">Cars in the vault</h2><p class="t-sm ink-3">Buy a fraction of any car. Prices in VND.</p></div>
       ${cars.length ? `<div class="seg" role="group" aria-label="Filter cars">${seg}</div>` : ''}
     </div>
     ${shown.length
@@ -228,7 +228,7 @@ function register(cars) {
     </tr>`;
   }).join('');
   return `<section class="card pad vt-register">
-    <div class="card-h"><div><h2 class="t-h2">Fleet register</h2><p class="t-sm ink-3">Every car the vault holds, read from the contract. Amounts in USDC.</p></div><a class="btn btn-sm" href="#/transparency">Reports</a></div>
+    <div class="card-h"><div><h2 class="t-h2">Fleet register</h2><p class="t-sm ink-3">Every car the vault holds, read from the contract. Amounts in VND.</p></div><a class="btn btn-sm" href="#/transparency">Reports</a></div>
     <div class="tbl-box">
       <table class="t">
         <thead><tr><th>Car</th><th>City</th><th>Status</th><th class="r">Shares sold</th><th class="r">Car value</th><th class="r">Net yield</th><th class="r">${anySold ? 'Resale' : 'Resale (est.)'}</th><th class="r">Term</th></tr></thead>
@@ -265,7 +265,7 @@ function roleTools(cars) {
             ${field('docs', 'Documents: text to hash, or a 0x hash', 'Registration and rental agreement')}
             ${field('operator', 'Operator address', cfg.operator || '0x…')}
             ${field('shares', 'Number of shares', '100', 'numeric')}
-            ${field('price', 'Price per share (USDC)', '25', 'decimal')}
+            ${field('price', 'Price per share (VND)', '6,250,000', 'decimal')}
             ${field('days', 'Funding period (days)', '30', 'decimal')}
           </div>
           <button class="btn btn-p" type="button" data-act="listCar"${off()}>${spin('list')}List car</button>` : '<p class="t-sm ink-3">Opens a sale for a new car. Shares, price and the funding window are fixed once listed.</p>'}

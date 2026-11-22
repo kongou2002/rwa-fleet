@@ -2,16 +2,16 @@
 .hw { --hw-display: var(--display, "Inter Tight", "Inter", "Helvetica Neue", Arial, sans-serif); }
 
 .hw-hero { padding: 24px 0 48px; }
-.hw-display { max-width: 16ch; margin: 0; font: 500 64px/1.02 var(--hw-display); letter-spacing: -0.04em; color: var(--ink); }
+.hw-display { margin: 0; white-space: nowrap; font: 500 clamp(36px, 4.1vw, 60px)/1.02 var(--hw-display); letter-spacing: -0.04em; color: var(--ink); }
 .hw-lede { margin-top: 20px; font: 400 22px/1.4 var(--sans); color: var(--ink-2); }
 
 .hw-steps { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
-.hw-step { display: grid; grid-template-columns: 120px minmax(0, 1fr) minmax(0, 360px); gap: 32px; align-items: center; padding: 32px 0; border-bottom: 1px solid var(--line); }
+.hw-step { display: grid; grid-template-columns: 120px minmax(0, 1fr) minmax(0, 330px); gap: 32px; align-items: center; padding: 32px 0; border-bottom: 1px solid var(--line); }
 .hw-no { font: 300 72px/1 var(--hw-display); letter-spacing: -0.04em; color: var(--ink-3); }
 .hw-step-h { margin: 0; font: 500 28px/1.2 var(--hw-display); letter-spacing: -0.02em; color: var(--ink); }
 .hw-step-s { margin-top: 8px; font: 400 16px/1.5 var(--sans); color: var(--ink-3); max-width: 46ch; }
-.hw-media { height: 118px; border-radius: var(--radius-tile, 16px); overflow: hidden; background: var(--surface-2); }
-.hw-img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.hw-media { aspect-ratio: 3 / 2; height: auto; border-radius: var(--radius-tile, 16px); overflow: hidden; background: var(--surface-2); }
+.hw-img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .hw-img.ph { display: flex; align-items: center; justify-content: center; color: var(--ink-3); }
 .hw-paid { display: flex; flex-direction: column; justify-content: center; gap: 4px; height: 100%; padding: 0 28px; background: var(--yield-soft); }
 .hw-paid-l { font: 500 14px/1.3 var(--sans); color: var(--yield); }
@@ -32,13 +32,13 @@
 
 @media (max-width: 720px) {
   .hw-hero { padding: 8px 0 32px; }
-  .hw-display { font-size: 40px; }
+  .hw-display { font-size: 40px; white-space: normal; }
   .hw-lede { margin-top: 14px; font-size: 18px; }
   .hw-step { grid-template-columns: 56px minmax(0, 1fr); gap: 12px 16px; padding: 24px 0; align-items: start; }
   .hw-no { font-size: 36px; }
   .hw-step-h { font-size: 22px; }
   .hw-step-s { font-size: 15px; }
-  .hw-media { grid-column: 1 / -1; height: 140px; }
+  .hw-media { grid-column: 1 / -1; aspect-ratio: 3 / 2; height: auto; }
   .hw-paid-v { font-size: 28px; }
   .hw-faq { margin-top: 56px; }
   .hw-h2 { font-size: 36px; margin-bottom: 16px; }

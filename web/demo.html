@@ -1,23 +1,81 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FleetShares demo video</title>
-<style>
-  body { margin: 0; background: #0f1513; color: #f3f2ec; font: 16px/1.5 system-ui, -apple-system, Arial, sans-serif; }
-  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
-  h1 { font-size: 24px; margin: 0 0 4px; }
-  p { color: #a3a9a4; margin: 0 0 16px; }
-  video { width: 100%; height: auto; border-radius: 12px; background: #000; }
-  a { color: #ffc42e; }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Demo video · FleetShares</title>
+  <meta name="description" content="A silent 2:30 walkthrough of FleetShares, recorded live on Avalanche Fuji.">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#c8102e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c8102e'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23ffffff' stroke-width='3'/%3E%3Cpath d='M16 16V7a9 9 0 0 1 9 9z' fill='%23ffffff'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Demo page (dm-): the app's shell around one large video. */
+    .dm-head { align-items: center; margin-bottom: 24px; }
+    .dm-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    /* As wide as the page allows, but never taller than the window, so the controls stay in view. */
+    .dm-video { display: block; width: min(100%, calc((100vh - 96px) * 1.6)); aspect-ratio: 1440 / 900; margin: 0 auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
+    .dm-facts { margin-top: 24px; }
+    .dm-note { max-width: 880px; margin-top: 16px; }
+    .dm-open { height: 36px; border-color: #ffffff; color: var(--brand); }
+    .dm-open:hover { border-color: #ffffff; background: var(--brand-soft); }
+    @media (max-width: 720px) {
+      .dm-video { width: 100%; }
+      .dm-actions .btn { flex: 1 1 auto; }
+    }
+  </style>
 </head>
 <body>
-<main>
-  <h1>FleetShares: demo video (2:30)</h1>
-  <p>Silent, with one caption per step. Money is shown in VND: in the product it moves by bank transfer and the chain keeps the rules and receipts; on this testnet demo a test token stands in for the transfer. Recorded live on Avalanche Fuji on 22 Nov 2026: every click is the real app, and the 11 transactions in it are real testnet transactions by the investor, operator, manager, auditor and a holder. <a href="./">Open the app</a> · <a href="https://github.com/kongou2002/rwa-fleet">Source</a> · <a href="demo.mp4">Download the mp4</a></p>
-  <video src="demo.mp4" controls preload="metadata"></video>
-</main>
+  <a class="skip" href="#video">Skip to the video</a>
+
+  <div class="app">
+    <header class="top">
+      <div class="top-in">
+        <a class="logo" href="./#/" aria-label="FleetShares, Vault"><svg width="24" height="24" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#ffffff"></rect><circle cx="16" cy="16" r="9" fill="none" stroke="#c8102e" stroke-width="3"></circle><path d="M16 16V7a9 9 0 0 1 9 9z" fill="#c8102e"></path></svg>FleetShares</a>
+        <nav class="nav" aria-label="Main">
+          <a href="./#/">Vault</a>
+          <a href="./#/market">Market</a>
+          <a href="./#/transparency">Transparency</a>
+          <a href="./#/portfolio">Portfolio</a>
+          <a href="./#/how">How it works</a>
+        </nav>
+        <div class="top-r">
+          <span class="net" title="Avalanche Fuji testnet, chain 43113"><i></i>Avalanche Fuji</span>
+          <a class="btn btn-sm dm-open" href="./#/">Open the app</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="wrap dm-wrap">
+      <div class="head dm-head">
+        <div>
+          <h1 class="t-display">Demo video</h1>
+          <p class="t-body ink-2">2:30, silent, one caption per step. Recorded live on Avalanche Fuji on 22 Nov 2026.</p>
+        </div>
+        <div class="dm-actions">
+          <a class="btn" href="demo.mp4" download>Download the mp4</a>
+          <a class="btn" href="https://github.com/kongou2002/rwa-fleet/blob/main/docs/DEMO_FLOWS.md" target="_blank" rel="noopener">Steps and transactions</a>
+        </div>
+      </div>
+
+      <video class="dm-video" id="video" src="demo.mp4" controls preload="metadata" playsinline></video>
+
+      <section class="kpis dm-facts" aria-label="About this recording">
+        <div><p class="t-label">Transactions in the video</p><p class="t-kpi">11</p><p class="t-sm">Real, on the Fuji testnet</p></div>
+        <div><p class="t-label">Wallets acting</p><p class="t-kpi">5</p><p class="t-sm">Investor, operator, manager, auditor, holder</p></div>
+        <div><p class="t-label">Money shown in</p><p class="t-kpi">VND</p><p class="t-sm">1 test token unit = 25,000 VND</p></div>
+        <div><p class="t-label">Screen</p><p class="t-kpi">Live app</p><p class="t-sm">Every click is the real app</p></div>
+      </section>
+
+      <p class="t-sm ink-3 dm-note">In the product, money moves by bank transfer and the chain keeps the rules and the receipts. On this testnet demo a test token stands in for the transfer. <a href="https://github.com/kongou2002/rwa-fleet" target="_blank" rel="noopener">Source on GitHub</a>.</p>
+
+      <footer class="foot">
+        <p>Demo on Avalanche Fuji. Amounts are in VND: on this testnet a test token (1 unit = 25,000 VND) stands in for money that would move by bank transfer. Not an offer of securities or investment advice. <a href="./#/">Open the app</a></p>
+      </footer>
+    </main>
+  </div>
 </body>
 </html>

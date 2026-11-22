@@ -1,274 +1,304 @@
-// Car detail: photo, life, details, income reports; aside with stats and the action card.
+// Car detail: gallery, title and stats, specs, rent split, the plan, records; sticky action card on the right.
 import {
-  registerView, S, ui, cfg, esc, usd, usdc, toVnd, fig, num, trim, plural, same, ICON, who, txUrl, addrUrl, ago,
-  dateStr, parseShares, parseUsd, carById, metaOf, valueOf, raisedOf, holdersOf, yieldToDate, targetNet,
-  rangePct, stageOf, pill, photo, buyAmount, spin, off, faucetBtn, allEvents, TERMS, exitOf,
+  registerView, S, ui, cfg, esc, usd, usdc, toVnd, trim, plural, same, ICON, who, txUrl, addrUrl, ago,
+  parseShares, parseUsd, carById, metaOf, valueOf, holdersOf, targetNet,
+  stageOf, photo, buyAmount, spin, off, faucetBtn, TERMS, exitOf,
 } from '../core.js';
 
 // Earning and sold cars were both funded and rented out; a sold car also has a CarExit record.
 const onRoad = (st) => st.key === 'earning' || st.key === 'sold';
-
+const DAY = 86400;
 const day = (sec) => new Date(Number(sec) * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+const dayShort = (sec) => new Date(Number(sec) * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 const shareOf = (n, total) => (total ? trim((n / total) * 100, n && (n / total) * 100 < 1 ? 2 : 1) : '0');
-const resaleOf = (c, base) => {
-  const r = metaOf(c).resale;
-  return r ? (base * BigInt(Math.round(r * 100))) / 10000n : null;
-};
+const daysLeft = (c) => Math.max(0, Math.ceil((Number(c.fundingDeadline) - Date.now() / 1000) / DAY));
 const ext = (href, text) => `<a href="${href}" target="_blank" rel="noopener">${text} ${ICON.ext}</a>`;
+/** Token base units to '₫6.25M'; full to '₫31,250,000'. */
+const vnd = (v) => `₫${usd(v)}`;
+const vndFull = (v) => `₫${toVnd(v).toLocaleString('en-US')}`;
+/** Whole VND to '₫1.3M' / '₫1B'. */
+const vShort = (n) => (n >= 1e9 ? `₫${+(n / 1e9).toFixed(2)}B` : n >= 1e6 ? `₫${+(n / 1e6).toFixed(2)}M` : n >= 1e3 ? `₫${Math.floor(n / 1e3)}k` : `₫${Math.floor(n)}`);
+
+/**
+ * Off-chain facts about each car, from the registration and the rental agreement. The chain does not hold
+ * these: edit them here. City, body type and term live in core.js CAR_META. `daily` is the rental price per day in VND.
+ */
+const SPECS = {
+  1: {
+    seats: 5, daily: 1100000,
+    rows: [['Model', 'Mazda CX-5 2.0 Premium'], ['Year', '2022'], ['Body', 'SUV, 5 seats'], ['Colour', 'Machine Grey'],
+      ['Engine', '2.0 L Skyactiv-G petrol'], ['Range', '~650 km a tank'], ['Power', '154 hp'], ['Gearbox', '6-speed automatic'],
+      ['Odometer', '38,200 km'], ['Registered', 'Hanoi, 2022']],
+  },
+  2: {
+    seats: 5, daily: 1300000,
+    rows: [['Model', 'VinFast VF 8 Eco'], ['Year', '2023'], ['Body', 'Electric SUV, 5 seats'], ['Colour', 'Brahminy White'],
+      ['Battery', '87.7 kWh'], ['Range', '471 km'], ['Power', '260 kW, AWD'], ['Gearbox', 'Single-speed'],
+      ['Odometer', '6,400 km'], ['Registered', 'Ho Chi Minh City, 2023']],
+  },
+  3: {
+    seats: 5, daily: 650000,
+    rows: [['Model', 'Toyota Vios 1.5 G'], ['Year', '2023'], ['Body', 'Sedan, 5 seats'], ['Colour', 'Black'],
+      ['Engine', '1.5 L Dual VVT-i petrol'], ['Range', '~600 km a tank'], ['Power', '107 hp'], ['Gearbox', 'CVT automatic'],
+      ['Odometer', '41,500 km'], ['Registered', 'Da Nang, 2023']],
+  },
+};
+const specOf = (c) => SPECS[c.id.toString()] || null;
+
+/** Estimated rent to holders per month in VND for `cost` (token units), midpoint of the agreed range after the fee. */
+function estMonthly(c, cost) {
+  const [lo, hi] = targetNet(c);
+  return (Number(toVnd(cost)) * ((lo + hi) / 2)) / 100 / 12;
+}
+const round10k = (n) => Math.round(n / 10000) * 10000;
 
 function notFound(id) {
-  return `<nav class="crumbs" aria-label="Breadcrumb"><a href="#/">Vault</a><span aria-hidden="true">/</span><span class="cd-now">Not found</span></nav>
-    <div class="card pad empty cd-missing">${ICON.car}<p class="t-sm ink-3">Car not found${id ? ` (id ${esc(id)})` : ''}. It may not be listed yet.</p><a class="btn btn-sm" href="#/">Back to the vault</a></div>`;
+  return `<a class="cr-back" href="#/">${ICON.back}All cars</a>
+    <div class="cr-missing">${ICON.car}<p>Car not found${id ? ` (id ${esc(id)})` : ''}. It may not be listed yet.</p><a class="btn" href="#/">Back to cars</a></div>`;
+}
+
+// ---------- top: gallery, title, stats ----------
+
+function gallery(c) {
+  return `<div class="cr-gal">
+    <div class="cr-g1">${photo(c, 'cr-gimg', c.name)}</div>
+    <div class="cr-g2">${photo(c, 'cr-gimg', '')}</div>
+    <div class="cr-g3">${photo(c, 'cr-gimg', '')}<span class="cr-gmore">+8 photos</span></div>
+  </div>`;
+}
+
+function statusPill(c, st) {
+  const p = (cls, t) => `<span class="cr-pill ${cls}">${t}</span>`;
+  if (st.key === 'funding') { const d = daysLeft(c); return p('warn', `Open · ${d} ${d === 1 ? 'day' : 'days'} left`); }
+  if (st.key === 'earning') return p('ok', 'On the road');
+  if (st.key === 'sold') return p('', `Sold ${day(exitOf(c).soldAt)}`);
+  if (st.key === 'expired') return p('risk', 'Deadline passed');
+  return p('risk', 'Not funded · refunds open');
+}
+
+function titleBlock(c, st) {
+  const m = metaOf(c);
+  const sp = specOf(c);
+  const sub = [m.city, m.type, sp?.seats ? `${sp.seats} seats` : null].filter(Boolean).map(esc).join(' · ');
+  const stat = (v, k) => `<div><dt>${k}</dt><dd>${v}</dd></div>`;
+  const stats = [
+    sp?.daily ? stat(vShort(sp.daily), 'rental per day') : stat(vnd(c.sharePrice), 'per share'),
+    stat(m.term ? `${m.term} years` : esc(TERMS.life), 'on the road'),
+    stat(vnd(valueOf(c)), 'car value'),
+    stat(String(c.totalShares), 'shares'),
+  ];
+  return `<header class="cr-head">
+    ${statusPill(c, st)}
+    <h1 class="cr-h">${esc(c.name)}</h1>
+    ${sub ? `<p class="cr-sub">${sub}</p>` : ''}
+    <dl class="cr-stats">${stats.join('')}</dl>
+  </header>`;
 }
 
 // ---------- left column ----------
 
-function lifeCard(c, st) {
-  const m = metaOf(c);
-  const funded = onRoad(st);
-  const ex = exitOf(c);
-  const filled = ex ? 4 : funded ? 3 : 1;
-  const paidOut = allEvents().find((e) => e.name === 'CarFunded' && e.args.carId?.toString() === c.id.toString());
-  const toOperator = paidOut ? paidOut.args.paidToOperator : valueOf(c);
-  const resale = resaleOf(c, valueOf(c));
-  const fundLine = { funding: `Closes ${day(c.fundingDeadline)}`, expired: `Deadline passed ${day(c.fundingDeadline)}`, earning: 'Sold out', sold: 'Sold out', cancelled: 'Closed · refunds open' }[st.key];
-  const steps = [
-    ['Funding', fundLine],
-    ['Sell-out', funded ? `${usd(toOperator)} VND paid to the operator` : `${esc(TERMS.operator)} buys the car`],
-    [m.term ? `Years 1–${m.term}` : 'Rental years', ex ? `${usd(c.rentPaid)} VND rent paid in` : funded ? `${usd(c.rentPaid)} VND rent so far` : 'Rent paid monthly'],
-    ['Resale', ex ? `Sold · ${usd(ex.proceeds)} VND<br><span class="ink-3">${day(ex.soldAt)}</span>` : resale !== null ? `Est. ${usd(resale)} VND at the end of the term` : 'Sold at the end of the term'],
-  ];
-  const sub = ex
-    ? `Sold on ${day(ex.soldAt)}. Every dong of the sale goes to holders, with no fee.`
-    : `Rented out for ${m.term ? `${m.term} years` : esc(TERMS.life)}, then sold. The resale goes to holders.`;
-  return `<section class="card pad">
-    <div class="card-h cd-tight"><div><h2 class="t-title">Car life</h2><p class="t-sm ink-3">${sub}</p></div></div>
-    <div class="cd-life" role="img" aria-label="Stage ${filled} of 4${st.key === 'cancelled' ? ', sale cancelled' : ''}">${steps.map((_, i) => `<i class="${i < filled ? (st.key === 'cancelled' ? 'x' : 'on') : ''}"></i>`).join('')}</div>
-    <ol class="cd-life-l">${steps.map(([k, v], i) => `<li class="${i === filled - 1 ? 'now' : ''}"><p class="t-label">${k}</p><p class="t-sm">${v}</p></li>`).join('')}</ol>
-  </section>`;
-}
-
-function detailsCard(c) {
-  const m = metaOf(c);
+function specsCard(c) {
+  const sp = specOf(c);
   const h = c.docsHash || '';
-  const row = (k, v) => `<div><dt>${k}</dt><dd>${v}</dd></div>`;
-  const left = [
-    row('Model', esc(c.name)),
-    m.type ? row('Type', esc(m.type)) : '',
-    m.city ? row('City', esc(m.city)) : '',
-    row('Operator', `${esc(TERMS.operator)} · ${who(c.operator)}`),
-  ].join('');
-  const right = [
-    row('Shares', `${c.totalShares} × ${usd(c.sharePrice)} VND`),
-    m.gross ? row('Gross rent agreed', `${m.gross[0]}–${m.gross[1]}% a year`) : '',
-    m.resale ? row('Resale estimate', `${m.resale}% of price`) : '',
-    h ? row('Legal documents', `<button class="cd-copy" type="button" data-act="copy" data-v="${esc(h)}" aria-label="Copy document hash ${esc(h)}" title="${esc(h)}"><span class="t-addr">${esc(h.slice(0, 6))}…${esc(h.slice(-4))}</span>${ICON.copy}</button>`) : '',
-    row('Funding deadline', esc(dateStr(c.fundingDeadline))),
-  ].join('');
-  return `<section class="card pad">
-    <h2 class="t-title cd-mb">Details</h2>
-    <div class="cd-kv2"><dl class="kv">${left}</dl><dl class="kv">${right}</dl></div>
+  const rows = [
+    ...(sp ? sp.rows : [['Model', esc(c.name)]]),
+    ['Insurance', 'Full cover, paid by operator'],
+    ['Servicing', 'Operator, every 12,000 km'],
+  ].map(([k, v]) => [k, esc(v)]);
+  rows.push(['Operator', `${esc(TERMS.operator)} · ${who(c.operator)}`]);
+  if (h) rows.push(['Documents', `<button class="cr-copy" type="button" data-act="copy" data-v="${esc(h)}" aria-label="Copy document hash ${esc(h)}" title="${esc(h)}"><span class="t-addr">${esc(h.slice(0, 6))}…${esc(h.slice(-4))}</span>${ICON.copy}</button>`]);
+  return `<section class="cr-sec">
+    <h2 class="cr-h2">Specs</h2>
+    <dl class="cr-specs">${rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
   </section>`;
 }
 
-function reportsCard(c, st) {
+function splitCard() {
+  const fee = TERMS.fee, hold = 100 - fee;
+  return `<section class="cr-sec">
+    <h2 class="cr-h2">Where the rent goes</h2>
+    <div class="cr-split" role="img" aria-label="${hold}% to owners, ${fee}% fee">
+      <div class="h" style="flex:${hold}"><b>${hold}%</b> to owners</div><div class="f" style="flex:${Math.max(fee, 12)}">${fee}% fee</div>
+    </div>
+  </section>`;
+}
+
+function planCard(c, st) {
+  const m = metaOf(c);
+  const ex = exitOf(c);
+  const now = ex ? 3 : onRoad(st) ? 2 : 0; // index of the current step
+  const steps = [
+    onRoad(st) ? ['Funded', `All ${c.totalShares} shares sold`]
+      : [st.key === 'funding' ? 'Now' : 'Funding', st.key === 'cancelled' ? 'Not funded · refunds' : `Funding · ${c.sold} of ${c.totalShares}`],
+    [`When share ${c.totalShares} sells`, 'On the road. Rent starts'],
+    ['Every month', 'Rent paid to owners'],
+    [`After ${m.term ? `${m.term} years` : esc(TERMS.life)}`, ex ? `Car sold for ${vnd(ex.proceeds)}` : 'Car sold, money back'],
+  ];
+  const cls = (i) => (st.key === 'cancelled' ? (i === 0 ? 'now x' : '') : i < now ? 'done' : i === now ? 'now' : '');
+  const foot = st.key === 'funding' || st.key === 'expired'
+    ? `<p class="cr-foot">Not sold out by ${day(c.fundingDeadline)}? The sale closes and everyone gets a full refund.</p>`
+    : st.key === 'cancelled' ? '<p class="cr-foot">The sale closed before it sold out. Every buyer can take their money back.</p>'
+      : ex ? `<p class="cr-foot">Sold on ${day(ex.soldAt)}. All of the sale money goes to owners, no fee.</p>` : '';
+  return `<section class="cr-sec">
+    <h2 class="cr-h2">The plan</h2>
+    <ol class="cr-plan">${steps.map(([k, v], i) => `<li class="${cls(i)}"><i aria-hidden="true"></i><p class="k">${k}</p><p class="v">${v}</p></li>`).join('')}</ol>
+    ${foot}
+  </section>`;
+}
+
+function recordsCard(c, st) {
+  if (!onRoad(st)) return '';
   const L = S.ledger?.[c.id];
   const l1 = cfg.l1 || {};
   const mine = (S.reports || []).filter((r) => r.args.carId?.toString() === c.id.toString());
-  const intro = `<h2 class="t-title">Income reports</h2>
-    <p class="t-sm ink-3">${esc(TERMS.operator)} logs each rental on its own chain${l1.name ? `, ${esc(l1.name)}` : ''}. Monthly totals arrive here by Avalanche ICM and sit next to the rent it paid.</p>`;
-  // The operator chain may have no public explorer: then show the short hash with a copy button instead of a link.
   const l1Ref = (kind, v, text) => (l1.explorer ? ext(`${l1.explorer}/${kind}/${v}`, text)
-    : `<span>${text} <button class="cd-copy" type="button" data-act="copy" data-v="${esc(v)}" aria-label="Copy ${esc(text)} ${esc(v)}" title="${esc(v)}"><span class="t-addr">${esc(v.slice(0, 6))}…${esc(v.slice(-4))}</span>${ICON.copy}</button></span>`);
+    : `<span>${text} <button class="cr-copy" type="button" data-act="copy" data-v="${esc(v)}" aria-label="Copy ${esc(text)} ${esc(v)}" title="${esc(v)}"><span class="t-addr">${esc(v.slice(0, 6))}…${esc(v.slice(-4))}</span>${ICON.copy}</button></span>`);
   const links = [
-    l1.RentalLog ? l1Ref('address', l1.RentalLog, 'Rental log on the operator chain') : '',
-    l1.tx?.report ? l1Ref('tx', l1.tx.report, 'Report sent') : '',
-    cfg.tx?.icmDeliveredOnFuji ? ext(txUrl(cfg.tx.icmDeliveredOnFuji), 'Delivered on Fuji') : '',
+    l1.RentalLog ? l1Ref('address', l1.RentalLog, 'Rental log') : '',
     cfg.IncomeMirror ? ext(addrUrl(cfg.IncomeMirror), 'IncomeMirror') : '',
   ].filter(Boolean);
-  const hasData = L && (L.reportedIncome > 0n || Number(L.periods) > 0 || mine.length);
-  if (!cfg.IncomeMirror || !hasData) {
-    const msg = onRoad(st)
-      ? 'No period reported yet. The first report from the operator chain will show here.'
-      : st.key === 'cancelled' ? 'This sale was cancelled, so there is nothing to report.' : 'Reports start once the car is funded and on the road.';
-    return `<section class="card pad">${intro}
-      <div class="empty cd-empty">${ICON.clock}<p class="t-sm ink-3">${msg}</p></div>
-      ${onRoad(st) && links.length ? `<p class="t-sm cd-links">${links.join('')}</p>` : ''}
-    </section>`;
+  const hasData = cfg.IncomeMirror && L && (L.reportedIncome > 0n || Number(L.periods) > 0 || mine.length);
+  if (!hasData) {
+    return `<section class="cr-sec"><h2 class="cr-h2">Records</h2><p class="cr-foot">No month reported yet.</p></section>`;
   }
-  const max = L.reportedIncome > L.rentPaid ? L.reportedIncome : L.rentPaid;
-  const w = (v) => (max > 0n ? Math.max(v > 0n ? 2 : 0, Number((v * 1000n) / max) / 10) : 0);
-  const verdict = L.unpaid === 0n ? pill('ok', 'Paid in full') : pill('warn', `${usd(L.unpaid)} VND due`);
-  const n = (v, one, many) => `<div><dt class="t-label">${Number(v) === 1 ? one : many}</dt><dd class="t-fig">${Number(v)}</dd></div>`;
-  const rows = mine.map((r) => `<li>
-      <span><b>Period ${esc(String(r.args.period))}</b> <span class="ink-3">· ${plural(r.args.rentals, 'rental')} · ${plural(r.args.daysRented, 'day')}</span></span>
-      <span class="cd-dl-r"><b>${usd(r.args.income)} VND</b> <a href="${txUrl(r.tx)}" target="_blank" rel="noopener">${r.time ? ago(Number(r.time)) : 'Delivery'} ${ICON.ext}</a></span>
+  const paid = L.rentPaid > L.reportedIncome ? L.reportedIncome : L.rentPaid;
+  const w = L.reportedIncome > 0n ? Number((paid * 1000n) / L.reportedIncome) / 10 : 100;
+  const rows = mine.slice(0, 6).map((r) => `<li>
+      <span>Period ${esc(String(r.args.period))} <span class="ink-3">· ${plural(r.args.rentals, 'trip')} · ${plural(r.args.daysRented, 'day')}</span></span>
+      <span class="cr-dl-r"><b>${vnd(r.args.income)}</b> <a href="${txUrl(r.tx)}" target="_blank" rel="noopener" aria-label="Delivery transaction">${r.time ? ago(Number(r.time)) : 'tx'} ${ICON.ext}</a></span>
     </li>`).join('');
-  return `<section class="card pad">${intro}
-    <div class="cd-meters">
-      <div><div class="cd-mh"><span class="t-sm ink-2">Reported on the operator chain</span><b>${fig(L.reportedIncome)}</b></div><div class="cd-meter"><i class="rep" style="width:${w(L.reportedIncome)}%"></i></div></div>
-      <div><div class="cd-mh"><span class="t-sm ink-2">Rent paid here</span><b>${fig(L.rentPaid)}</b></div><div class="cd-meter"><i class="paid" style="width:${w(L.rentPaid)}%"></i></div></div>
+  return `<section class="cr-sec">
+    <div class="cr-sec-h"><h2 class="cr-h2">Records</h2><a class="cr-link" href="#/transparency">All records ${ICON.arrow}</a></div>
+    <div class="cr-rec-n">
+      <div><span>Reported</span><b>${vnd(L.reportedIncome)}</b></div>
+      <div><span>Paid in</span><b class="pos">${vnd(L.rentPaid)}</b></div>
+      <div><span>Not paid</span><b class="${L.unpaid > 0n ? 'cr-red' : ''}">${vnd(L.unpaid)}</b></div>
     </div>
-    <div class="row cd-verdict">${verdict}<span class="t-sm ink-3">${L.unpaid === 0n ? 'Rent paid covers everything the operator reported.' : 'The operator reported more income than it has paid in so far.'}</span></div>
-    <dl class="cd-counts">${n(L.rentals, 'Rental', 'Rentals')}${n(L.daysRented, 'Day rented', 'Days rented')}${n(L.periods, 'Period', 'Periods')}</dl>
-    ${rows ? `<h3 class="t-label cd-dl-h">ICM deliveries</h3><ul class="cd-dl">${rows}</ul>` : ''}
-    ${links.length ? `<p class="t-sm cd-links">${links.join('')}</p>` : ''}
+    <div class="cr-two-bar" role="img" aria-label="${w}% of reported rent paid in"><i style="width:${w}%"></i></div>
+    ${rows ? `<ul class="cr-dl">${rows}</ul>` : ''}
+    ${links.length ? `<p class="cr-links">${links.join('')}</p>` : ''}
   </section>`;
 }
 
-// ---------- aside ----------
+// ---------- aside: action cards ----------
 
-function statGrid(c, st) {
-  const cell = (k, v, cls = '') => `<div class="${cls}"><dt class="t-label">${k}</dt><dd class="t-fig">${v}</dd></div>`;
-  let cells;
-  const ex = exitOf(c);
-  if (ex) {
-    cells = [cell('Resale proceeds', fig(ex.proceeds)), cell('Per share at resale', fig(ex.proceeds / BigInt(ex.totalShares))),
-      cell('Net yield to date', `<span class="pos">${yieldToDate(c)}%</span>`, 'hide-phone'), cell('Shares redeemed', `${ex.redeemedShares} / ${ex.totalShares}`)];
-  } else if (st.key === 'earning') {
-    cells = [cell('Net yield to date', `<span class="pos">${yieldToDate(c)}%</span>`), cell('Per share', fig(c.sharePrice)), cell('Car value', fig(valueOf(c)), 'hide-phone'), cell('Rent paid in', fig(c.rentPaid))];
-  } else if (st.key === 'cancelled') {
-    cells = [cell('Per share', fig(c.sharePrice)), cell('Car value', fig(valueOf(c)), 'hide-phone'), cell('Raised, refundable', fig(raisedOf(c))), cell('Shares sold', `${c.sold} / ${c.totalShares}`)];
-  } else {
-    cells = [cell('Target net yield', rangePct(...targetNet(c))), cell('Per share', fig(c.sharePrice)), cell('Car value', fig(valueOf(c)), 'hide-phone'),
-      st.key === 'funding' ? cell('Closes in', `<b class="cd-cd" data-deadline="${c.fundingDeadline}">…</b>`) : cell('Deadline', '<span class="warn-t">Passed</span>')];
-  }
-  return `<dl class="card statgrid cd-stats">${cells.join('')}</dl>`;
-}
+const connectBtn = (label) => `<button class="btn btn-p cr-cta" type="button" data-act="connect">${ICON.wallet}${label}</button>`;
+const loadingMe = '<p class="skel">Loading your position</p>';
+const priceHead = (c) => `<p class="cr-price"><b>${vnd(c.sharePrice)}</b> <span>/ share</span></p>`;
 
 function progress(c, st) {
-  const w = c.totalShares ? Math.round((c.sold / c.totalShares) * 1000) / 10 : 0;
-  return `<div class="cd-prog">
-    <div class="bar" role="progressbar" aria-label="Shares sold" aria-valuemin="0" aria-valuemax="${c.totalShares}" aria-valuenow="${c.sold}"><i class="${onRoad(st) ? 'full' : ''}" style="width:${onRoad(st) ? 100 : w}%"></i></div>
-    <div class="cd-prog-l t-sm"><span><b>${c.sold}</b> <span class="ink-3">of ${c.totalShares} shares sold</span></span><span class="ink-3">${usd(raisedOf(c))} / ${usd(valueOf(c))} VND</span></div>
+  const w = onRoad(st) ? 100 : c.totalShares ? Math.round((c.sold / c.totalShares) * 1000) / 10 : 0;
+  const right = st.key === 'funding' ? `<span data-cr-days>${daysLeft(c)} ${daysLeft(c) === 1 ? 'day' : 'days'} left</span>`
+    : st.key === 'expired' ? '<span class="cr-red">Deadline passed</span>' : onRoad(st) ? '<span>Fully funded</span>' : '<span>Closed</span>';
+  return `<div class="cr-prog">
+    <div class="cr-bar${onRoad(st) ? ' full' : ''}" role="progressbar" aria-label="Shares sold" aria-valuemin="0" aria-valuemax="${c.totalShares}" aria-valuenow="${c.sold}"><i style="width:${w}%"></i></div>
+    <div class="cr-prog-l"><span><b>${c.sold}</b> of ${c.totalShares} sold</span>${right}</div>
   </div>`;
 }
 
-const connectPrompt = (what) => `<div class="cd-connect"><p class="t-sm ink-3">${what}</p><button class="btn btn-w" type="button" data-act="connect">${ICON.wallet}Connect wallet</button></div>`;
-const loadingMe = '<p class="skel">Loading your position</p>';
-
-function buyTab(c, myShares) {
+function buyCard(c, st, myShares) {
   const id = c.id.toString();
   const me = S.data.me;
   const left = c.totalShares - c.sold;
   const amt = buyAmount(c);
   const n = Math.min(parseShares(amt), left);
   const cost = BigInt(n) * c.sharePrice;
-  const [lo, hi] = targetNet(c);
-  const resale = resaleOf(c, cost);
-  const chips = [1, 5, 10, 25].filter((x) => x < left).map((x) => [x, String(x)]).concat([[left, `All ${left}`]]);
+  const chips = [1, 5, 10, 25].filter((x) => x <= left);
   const short = S.account && me && me.usdc < cost;
-  return `<div class="field">
+  const monthly = round10k(estMonthly(c, cost));
+  return `<section class="cr-card">
+    ${priceHead(c)}
+    ${progress(c, st)}
+    <div class="cr-qty">
       <label for="buy-${id}">Shares</label>
-      <div class="stepper">
+      <div class="cr-step">
         <button type="button" data-act="step" data-car="${id}" data-d="-1" aria-label="One share fewer"${n <= 1 ? ' disabled' : ''}>${ICON.minus}</button>
-        <input id="buy-${id}" data-bind="buy" data-car="${id}" value="${esc(amt)}" inputmode="numeric" autocomplete="off">
+        <input id="buy-${id}" data-bind="buy" data-car="${id}" value="${esc(amt)}" inputmode="numeric" autocomplete="off" aria-label="Shares to buy">
         <button type="button" data-act="step" data-car="${id}" data-d="1" aria-label="One share more"${n >= left ? ' disabled' : ''}>${ICON.plus}</button>
       </div>
     </div>
-    <div class="row cd-chips">${chips.map(([v, t]) => `<button class="btn btn-sm${n === v ? ' on' : ''}" type="button" aria-pressed="${n === v}" data-act="step" data-car="${id}" data-set="${v === left ? 'max' : v}">${t}</button>`).join('')}</div>
-    <dl class="kv">
-      <div><dt>Ownership after purchase</dt><dd>${shareOf(myShares + n, c.totalShares)}% of the car</dd></div>
-      <div><dt>Rent to you per year (target)</dt><dd class="pos">${usd((cost * BigInt(Math.round(lo * 10))) / 1000n)}–${usd((cost * BigInt(Math.round(hi * 10))) / 1000n)} VND</dd></div>
-      ${resale !== null ? `<div><dt>Resale share (est.)</dt><dd>${usd(resale)} VND</dd></div>` : ''}
+    <div class="cr-chips">${chips.map((v) => `<button class="chip${n === v ? ' on' : ''}" type="button" aria-pressed="${n === v}" data-act="step" data-car="${id}" data-set="${v}">${v}</button>`).join('')}${left > 25 || !chips.includes(left) ? `<button class="chip${n === left && !chips.includes(left) ? ' on' : ''}" type="button" aria-pressed="${n === left}" data-act="step" data-car="${id}" data-set="max">All ${left}</button>` : ''}</div>
+    <dl class="cr-rows">
+      <div><dt>You pay</dt><dd>${vndFull(cost)}</dd></div>
+      <div><dt>You earn, once on the road</dt><dd class="pos">~₫${monthly.toLocaleString('en-US')} / month</dd></div>
+      <div><dt>You own</dt><dd>${shareOf(myShares + n, c.totalShares)}% of the car</dd></div>
     </dl>
-    <div class="total"><span class="t-sm ink-3">You pay</span><span class="t-fig">${fig(cost)}</span></div>
     ${S.account
-      ? `<button class="btn btn-p btn-lg btn-w hide-phone" type="button" data-act="buy" data-car="${id}"${off(n < 1)}>${spin(`buy-${id}`)}Buy ${plural(n, 'share')}</button>`
-      : `<button class="btn btn-p btn-lg btn-w hide-phone" type="button" data-act="connect">${ICON.wallet}Connect wallet to buy</button>`}
-    ${short ? `<div class="cd-short"><p class="t-sm warn-t">You have ${usdc(me.usdc)}, ${usdc(cost - me.usdc)} short.</p>${faucetBtn('btn-w')}</div>` : ''}
-    <div class="note">${ICON.shield}<span>Your money stays in escrow until the car sells out. If it doesn't by ${day(c.fundingDeadline)}, you get all of it back. In the real product you pay by bank transfer (VietQR) and the chain records the receipt and the rule; here the transfer is simulated with a test token.</span></div>`;
+      ? `<button class="btn btn-p cr-cta hide-phone" type="button" data-act="buy" data-car="${id}"${off(n < 1)}>${spin(`buy-${id}`)}Buy ${plural(n, 'share')}</button>`
+      : `<span class="hide-phone">${connectBtn('Log in to buy')}</span>`}
+    ${short ? `<div class="cr-short"><p class="t-sm warn-t">You have ${usdc(me.usdc)}, ${usdc(cost - me.usdc)} short.</p>${faucetBtn('btn-w')}</div>` : ''}
+    ${myShares ? `<p class="cr-mine">You already own ${plural(myShares, 'share')} · ${vnd(BigInt(myShares) * c.sharePrice)} held safely</p>` : ''}
+    <p class="cr-safe">${ICON.shield}Full refund if not funded by ${dayShort(c.fundingDeadline)}</p>
+  </section>`;
 }
 
-function positionRows(c, myShares, extra = '') {
-  return `<dl class="kv">
-    <div><dt>Your shares</dt><dd>${myShares}</dd></div>
-    <div><dt>Ownership</dt><dd>${shareOf(myShares, c.totalShares)}% of the car</dd></div>
-    ${extra}
-  </dl>`;
-}
-
-function fundingPosition(c, myShares) {
-  if (!S.account) return connectPrompt('Connect your wallet to see your shares in this car.');
-  if (!S.data.me) return loadingMe;
-  if (!myShares) return '<p class="t-sm ink-3">You hold no shares in this car yet. Buy some on the first tab.</p>';
-  return `${positionRows(c, myShares, `<div><dt>Paid, in escrow</dt><dd>${usd(BigInt(myShares) * c.sharePrice)} VND</dd></div>`)}
-    <p class="t-sm ink-3">Rent starts once the car sells out. If it doesn't, you get the full amount back.</p>`;
+function rowsDl(pairs) {
+  return `<dl class="cr-rows">${pairs.map(([k, v, cls = '']) => `<div><dt>${k}</dt><dd class="${cls}">${v}</dd></div>`).join('')}</dl>`;
 }
 
 function actionArea(c, st, myShares, myClaim) {
   const id = c.id.toString();
-  if (st.key === 'funding') {
-    const tab = ui.cdTab === 'pos' ? 'pos' : 'buy';
-    const t = (k, label) => `<button type="button" role="tab" class="${tab === k ? 'on' : ''}" aria-selected="${tab === k}" data-act="set" data-k="cdTab" data-v="${k}">${label}</button>`;
-    return `<section class="card cd-act">
-      <div class="tabs cd-tabs" role="tablist">${t('buy', 'Buy shares')}${t('pos', 'Your position')}</div>
-      <div class="cd-act-b" role="tabpanel">${tab === 'buy' ? buyTab(c, myShares) : fundingPosition(c, myShares)}</div>
-    </section>`;
-  }
+  if (st.key === 'funding') return buyCard(c, st, myShares);
   if (st.key === 'expired') {
-    return `<section class="card pad cd-act-b">
-      <h2 class="t-title">Close the sale</h2>
-      <p class="t-sm ink-2">The deadline passed on ${esc(dateStr(c.fundingDeadline))} before the car sold out. Anyone can close a sale that missed its deadline. Closing it opens refunds for every buyer.</p>
-      ${S.account && S.data.me && myShares ? `<p class="t-sm">You have ${usdc(BigInt(myShares) * c.sharePrice)} in escrow for ${plural(myShares, 'share')}.</p>` : ''}
-      <button class="btn btn-p btn-lg btn-w" type="button" data-act="${S.account ? 'cancelFunding' : 'connect'}" data-car="${id}"${off()}>${spin(`cancel-${id}`)}${S.account ? 'Close sale and open refunds' : 'Connect wallet to close the sale'}</button>
+    return `<section class="cr-card">
+      ${priceHead(c)}${progress(c, st)}
+      <p class="cr-note">The deadline passed before the car sold out. Anyone can close the sale, which opens refunds for every buyer.</p>
+      ${S.account && S.data.me && myShares ? rowsDl([['In escrow for you', vndFull(BigInt(myShares) * c.sharePrice)]]) : ''}
+      <button class="btn btn-p cr-cta" type="button" data-act="${S.account ? 'cancelFunding' : 'connect'}" data-car="${id}"${off()}>${spin(`cancel-${id}`)}${S.account ? 'Close sale and open refunds' : 'Log in to close the sale'}</button>
     </section>`;
   }
   if (st.key === 'cancelled') {
     let body;
-    if (!S.account) body = connectPrompt('Connect your wallet to see if you have a refund.');
+    if (!S.account) body = connectBtn('Log in to see your refund');
     else if (!S.data.me) body = loadingMe;
-    else body = `${positionRows(c, myShares, `<div><dt>Refund due</dt><dd>${usd(BigInt(myShares) * c.sharePrice)} VND</dd></div>`)}
-      <button class="btn btn-p btn-lg btn-w" type="button" data-act="refund" data-car="${id}"${off(myShares === 0)}>${spin(`refund-${id}`)}${myShares ? `Refund ${usdc(BigInt(myShares) * c.sharePrice)}` : 'Nothing to refund'}</button>`;
-    return `<section class="card pad cd-act-b">
-      <h2 class="t-title">Your position</h2>
-      <p class="t-sm ink-3">The sale was closed without selling out. Every buyer can take their money back.</p>
-      ${body}
-    </section>`;
+    else body = `${rowsDl([['Your shares', myShares], ['Refund due', vndFull(BigInt(myShares) * c.sharePrice)]])}
+      <button class="btn btn-p cr-cta" type="button" data-act="refund" data-car="${id}"${off(myShares === 0)}>${spin(`refund-${id}`)}${myShares ? `Refund ${vnd(BigInt(myShares) * c.sharePrice)}` : 'Nothing to refund'}</button>`;
+    return `<section class="cr-card"><h2 class="cr-card-h">Full refund</h2><p class="cr-note">The sale closed without selling out.</p>${body}</section>`;
   }
   if (st.key === 'sold') {
     const due = S.data.me?.redeemable?.[c.id] ?? 0n;
     let pos;
-    if (!S.account) pos = connectPrompt('Connect your wallet to redeem your shares for your part of the sale.');
+    if (!S.account) pos = connectBtn('Log in to redeem');
     else if (!S.data.me) pos = loadingMe;
     else {
-      pos = `${positionRows(c, myShares, `<div><dt>Redeems for</dt><dd class="${due > 0n ? 'pos' : ''}">${usd(due)} VND</dd></div>
-        <div><dt>Rent to collect</dt><dd class="${myClaim > 0n ? 'pos' : ''}">${usd(myClaim)} VND</dd></div>`)}
-      <button class="btn ${myShares ? 'btn-p' : ''} btn-lg btn-w" type="button" data-act="redeem" data-car="${id}"${off(!myShares)}>${spin(`redeem-${id}`)}${myShares ? `Redeem ${plural(myShares, 'share')} for ${usdc(due)}` : 'No shares to redeem'}</button>
-      ${myShares ? '<p class="t-sm ink-3">This hands your shares to the resale contract for good. Rent you have not collected stays yours to collect.</p>' : ''}
-      ${myClaim > 0n ? `<button class="btn btn-lg btn-w" type="button" data-act="claim" data-car="${id}"${off()}>${spin(`claim-${id}`)}Collect ${usdc(myClaim)} rent</button>` : ''}`;
+      pos = `${rowsDl([['Your shares', myShares], ['Redeems for', vndFull(due), due > 0n ? 'pos' : ''], ['Rent to collect', vndFull(myClaim), myClaim > 0n ? 'pos' : '']])}
+      <button class="btn ${myShares ? 'btn-p' : ''} cr-cta" type="button" data-act="redeem" data-car="${id}"${off(!myShares)}>${spin(`redeem-${id}`)}${myShares ? `Redeem ${plural(myShares, 'share')} for ${vnd(due)}` : 'No shares to redeem'}</button>
+      ${myClaim > 0n ? `<button class="btn cr-cta2" type="button" data-act="claim" data-car="${id}"${off()}>${spin(`claim-${id}`)}Collect ${vnd(myClaim)} rent</button>` : ''}`;
     }
-    return `<section class="card pad cd-act-b"><h2 class="t-title">Your position</h2>${pos}</section>
-      ${saleCard(c)}
-      ${rentCard(c, true)}`;
+    return `<section class="cr-card">
+      <p class="cr-price"><b>${vnd(exitOf(c).proceeds / BigInt(exitOf(c).totalShares))}</b> <span>/ share at sale</span></p>
+      ${pos}
+    </section>
+    ${saleCard(c)}
+    ${rentCard(c, true)}`;
   }
   // earning
-  const toMarket = (label) => `<a class="btn btn-w" href="#/market" data-act="market" data-car="${id}">${label}</a>`;
+  const perShare = c.accPerShare / 10n ** 18n;
+  const resell = (label, p = false) => `<a class="btn ${p ? 'btn-p' : ''} cr-cta2" href="#/market" data-act="market" data-car="${id}">${label}</a>`;
   let pos;
-  if (!S.account) pos = `${connectPrompt('Connect your wallet to see your shares and collect rent.')}${toMarket('Buy shares on the market')}`;
+  if (!S.account) pos = `${connectBtn('Log in to collect rent')}${resell('Buy on Resell')}`;
   else if (!S.data.me) pos = loadingMe;
-  else pos = `${positionRows(c, myShares, `<div><dt>Rent to collect</dt><dd class="${myClaim > 0n ? 'pos' : ''}">${usd(myClaim)} VND</dd></div>`)}
-    <button class="btn ${myClaim > 0n ? 'btn-p' : ''} btn-lg btn-w" type="button" data-act="claim" data-car="${id}"${off(myClaim === 0n)}>${spin(`claim-${id}`)}${myClaim > 0n ? `Collect ${usdc(myClaim)}` : 'No rent to collect yet'}</button>
-    ${toMarket(myShares ? 'Sell your shares on the market' : 'Buy shares on the market')}`;
-  return `<section class="card pad cd-act-b"><h2 class="t-title">Your position</h2>${pos}</section>
-    ${offersCard(c)}
-    ${rentCard(c)}
-    ${saleForm(c)}`;
+  else {
+    pos = `${rowsDl([['Your shares', `${myShares}${myShares ? ` · ${shareOf(myShares, c.totalShares)}%` : ''}`], ['Ready to collect', vndFull(myClaim), myClaim > 0n ? 'pos' : '']])}
+      <button class="btn ${myClaim > 0n ? 'btn-p' : ''} cr-cta" type="button" data-act="claim" data-car="${id}"${off(myClaim === 0n)}>${spin(`claim-${id}`)}${myClaim > 0n ? `Collect ${vnd(myClaim)}` : 'No rent to collect yet'}</button>
+      ${resell(myShares ? 'Resell your shares' : 'Buy on Resell')}`;
+  }
+  return `<section class="cr-card">
+    <p class="cr-price"><b class="pos">${vnd(perShare)}</b> <span>rent paid per share</span></p>
+    ${progress(c, st)}
+    ${pos}
+  </section>
+  ${offersCard(c)}
+  ${rentCard(c)}
+  ${saleForm(c)}`;
 }
 
 // A sold car: what the sale brought in and how much of it holders have taken. CarExit add-on.
 function saleCard(c) {
   const ex = exitOf(c);
-  const left = ex.proceeds - ex.paidOut;
-  return `<section class="card pad cd-act-b">
-    <div class="card-h cd-tight"><div><h2 class="t-title">Sale</h2><p class="t-sm ink-3">Recorded by the operator on ${day(ex.soldAt)}</p></div></div>
-    <dl class="kv">
-      <div><dt>Sold for</dt><dd>${usd(ex.proceeds)} VND</dd></div>
-      <div><dt>Shares redeemed</dt><dd>${ex.redeemedShares} of ${ex.totalShares}</dd></div>
-      <div><dt>Paid to holders</dt><dd>${usd(ex.paidOut)} VND</dd></div>
-      <div><dt>Still to redeem</dt><dd>${usd(left)} VND</dd></div>
-    </dl>
-    <p class="t-sm ink-3">The share contract has no sold state, so it still lists this car as active and its shares can still change hands there. Shares handed in stay with the resale contract.</p>
+  return `<section class="cr-card cr-card-sm">
+    <h2 class="cr-card-h">Sale</h2>
+    ${rowsDl([['Sold for', vnd(ex.proceeds)], ['Shares redeemed', `${ex.redeemedShares} of ${ex.totalShares}`], ['Paid to owners', vnd(ex.paidOut)], ['Still to redeem', vnd(ex.proceeds - ex.paidOut)]])}
   </section>`;
 }
 
@@ -277,76 +307,58 @@ function saleForm(c) {
   if (!cfg.CarExit || !same(S.account, c.operator)) return '';
   const id = c.id.toString();
   const amt = parseUsd(ui.exit?.[id]);
-  const est = resaleOf(c, valueOf(c));
-  return `<section class="card pad cd-act-b">
-    <div class="card-h cd-tight"><div><h2 class="t-title">Record the sale</h2><p class="t-sm ink-3">Once the car is sold, pay the money in here. Holders redeem their shares for it.</p></div></div>
+  const r = metaOf(c).resale;
+  const est = r ? (valueOf(c) * BigInt(Math.round(r * 100))) / 10000n : null;
+  return `<section class="cr-card cr-card-sm">
+    <h2 class="cr-card-h">Record the sale</h2>
+    <p class="cr-note">Once the car is sold, pay the money in here. Owners redeem their shares for it.</p>
     <div class="field"><label for="exit-${id}">Resale amount</label>
       <div class="input-suffix"><input class="input" id="exit-${id}" data-bind="exit" data-car="${id}" value="${esc(ui.exit?.[id] ?? '')}" placeholder="${est ? toVnd(est).toLocaleString('en-US') : '385,000,000'}" inputmode="decimal" autocomplete="off"><span>VND</span></div></div>
-    ${amt
-      ? `<p class="t-sm ink-2">Each of the ${c.totalShares} shares receives ${usdc(amt / BigInt(c.totalShares))}. No fee is taken.</p>`
-      : '<p class="t-sm ink-3">The money comes from this wallet. A sale can be recorded only once.</p>'}
-    <button class="btn btn-p btn-w" type="button" data-act="settleExit" data-car="${id}"${off(!amt)}>${spin(`exit-${id}`)}Record the sale</button>
+    ${amt ? `<p class="t-sm ink-2">Each of the ${c.totalShares} shares receives ${usdc(amt / BigInt(c.totalShares))}.</p>` : '<p class="t-sm ink-3">Paid from this wallet. Only once.</p>'}
+    <button class="btn btn-p cr-cta2" type="button" data-act="settleExit" data-car="${id}"${off(!amt)}>${spin(`exit-${id}`)}Record the sale</button>
   </section>`;
 }
 
-// Open offers for this car: re-trading between holders, as on the market page.
+// Open offers for this car: re-trading between holders, as on the Resell page.
 function offersCard(c) {
   const id = c.id.toString();
   const open = S.data.offers.filter((o) => o.amount > 0 && o.carId === c.id);
-  const head = `<div class="card-h cd-tight"><div><h2 class="t-title">Shares for sale</h2><p class="t-sm ink-3">${open.length ? `${plural(open.length, 'open offer')} from holders` : 'Holders can resell their shares here'}</p></div></div>`;
-  if (!open.length) {
-    return `<section class="card pad cd-act-b">${head}
-      <p class="t-sm ink-3">No shares of this car are for sale right now.</p>
-      <a class="cd-more t-sm" href="#/market" data-act="market" data-car="${id}">Open the market ${ICON.arrow}</a>
-    </section>`;
-  }
+  if (!open.length) return '';
   const rows = open.slice(0, 4).map((o) => {
     const oid = o.id.toString();
-    const diff = Number(((o.pricePerShare - c.sharePrice) * 1000n) / c.sharePrice) / 10;
-    const vs = diff === 0 ? 'issue price' : `${diff < 0 ? '−' : '+'}${trim(Math.abs(diff))}% vs. issue`;
     let btn;
-    if (same(o.seller, S.account)) btn = `<button class="btn btn-sm" type="button" data-act="cancelOffer" data-offer="${oid}"${off()}>${spin(`unoffer-${oid}`)}Cancel</button>`;
+    if (same(o.seller, S.account)) btn = `<button class="btn btn-sm" type="button" data-act="cancelOffer" data-offer="${oid}"${off()}>${spin(`unoffer-${oid}`)}Remove</button>`;
     else if (o.fillable < 1) btn = '<span class="t-sm ink-3">Sold out</span>';
-    else if (!S.account) btn = '<button class="btn btn-sm" type="button" data-act="connect">Connect to buy</button>';
+    else if (!S.account) btn = '<button class="btn btn-sm" type="button" data-act="connect">Log in</button>';
     else {
       const n = Math.min(parseShares(ui.take[oid] ?? String(o.fillable)), o.fillable);
-      btn = `<button class="btn btn-sm" type="button" data-act="takeOffer" data-offer="${oid}"${off(n < 1)}>${spin(`take-${oid}`)}Buy ${n} for ${usd(BigInt(n) * o.pricePerShare)} VND</button>`;
+      btn = `<button class="btn btn-sm" type="button" data-act="takeOffer" data-offer="${oid}"${off(n < 1)}>${spin(`take-${oid}`)}Buy ${vnd(BigInt(n) * o.pricePerShare)}</button>`;
     }
-    return `<li><span><b>${plural(o.fillable, 'share')}</b> at ${usd(o.pricePerShare)} VND <span class="ink-3">· ${vs} · ${who(o.seller)}</span></span>${btn}</li>`;
+    return `<li><span><b>${plural(o.fillable, 'share')}</b> <span class="ink-3">at ${vnd(o.pricePerShare)}</span></span>${btn}</li>`;
   }).join('');
-  return `<section class="card pad cd-act-b">${head}
-    <ul class="cd-offers">${rows}</ul>
-    <a class="cd-more t-sm" href="#/market" data-act="market" data-car="${id}">${open.length > 4 ? `All ${open.length} offers` : 'Choose how many on the market'} ${ICON.arrow}</a>
+  return `<section class="cr-card cr-card-sm">
+    <h2 class="cr-card-h">For sale by owners</h2>
+    <ul class="cr-offers">${rows}</ul>
+    <a class="cr-link" href="#/market" data-act="market" data-car="${id}">${open.length > 4 ? `All ${open.length} offers` : 'Open Resell'} ${ICON.arrow}</a>
   </section>`;
 }
 
 function rentCard(c, sold = false) {
   const id = c.id.toString();
-  const holders = holdersOf(c);
-  const fee = TERMS.fee, hold = 100 - fee;
-  const perShare = c.accPerShare / 10n ** 18n;
+  const operator = !sold && same(S.account, c.operator);
+  const fee = TERMS.fee;
   let pay = '';
-  if (!sold && same(S.account, c.operator)) {
+  if (operator) {
     const preview = parseUsd(ui.rent?.[id]);
     const feePart = preview ? (preview * BigInt(fee)) / 100n : 0n;
-    pay = `<div class="cd-pay">
-      <h3 class="t-title">Pay rent</h3>
-      <div class="field"><label for="rent-${id}">Rent to pay</label>
+    pay = `<div class="field"><label for="rent-${id}">Rent to pay</label>
         <div class="input-suffix"><input class="input" id="rent-${id}" data-bind="rent" data-car="${id}" value="${esc(ui.rent?.[id] ?? '')}" placeholder="7,875,000" inputmode="decimal" autocomplete="off"><span>VND</span></div></div>
-      ${preview ? `<p class="t-sm ink-2">Holders get ${usdc(preview - feePart)}. Manager gets ${usdc(feePart)}.</p>` : '<p class="t-sm ink-3">You operate this car. The contract splits rent on arrival.</p>'}
-      <button class="btn btn-p btn-w" type="button" data-act="payRent" data-car="${id}"${off(!preview)}>${spin(`rent-${id}`)}Pay rent</button>
-    </div>`;
+      ${preview ? `<p class="t-sm ink-2">Owners get ${usdc(preview - feePart)}. Manager gets ${usdc(feePart)}.</p>` : '<p class="t-sm ink-3">You operate this car. The contract splits rent on arrival.</p>'}
+      <button class="btn btn-p cr-cta2" type="button" data-act="payRent" data-car="${id}"${off(!preview)}>${spin(`rent-${id}`)}Pay rent</button>`;
   }
-  return `<section class="card pad cd-act-b">
-    <div class="card-h cd-tight"><div><h2 class="t-title">Rent</h2><p class="t-sm ink-3">${c.rentPaid > 0n ? `${usdc(c.rentPaid)} paid in so far` : 'No rent paid in yet'}</p></div></div>
-    <div class="cd-split" role="img" aria-label="${hold}% to holders, ${fee}% management fee">
-      <div class="h" style="flex:${hold}">${hold}% holders</div><div class="f" style="flex:${Math.max(fee, 14)}">${fee}% fee</div>
-    </div>
-    <dl class="kv">
-      <div><dt>To holders</dt><dd>${usd(holders)} VND</dd></div>
-      <div><dt>Management fee</dt><dd>${usd(c.feePaid)} VND</dd></div>
-      <div><dt>Rent per share so far</dt><dd>${usd(perShare)} VND</dd></div>
-    </dl>
+  return `<section class="cr-card cr-card-sm">
+    <h2 class="cr-card-h">Rent</h2>
+    ${rowsDl([['Paid in', vnd(c.rentPaid)], ['To owners', vnd(holdersOf(c)), 'pos'], [`${fee}% fee`, vnd(c.feePaid)]])}
     ${pay}
   </section>`;
 }
@@ -355,40 +367,33 @@ function buyBar(c) {
   const id = c.id.toString();
   const n = Math.min(parseShares(buyAmount(c)), c.totalShares - c.sold);
   const cost = BigInt(n) * c.sharePrice;
-  return `<div class="buybar cd-buybar only-phone">${S.account
-    ? `<button class="btn btn-p btn-lg btn-w" type="button" data-act="buy" data-car="${id}"${off(n < 1)}>${spin(`buy-${id}`)}Buy ${plural(n, 'share')} · ${usd(cost)} VND</button>`
-    : `<button class="btn btn-p btn-lg btn-w" type="button" data-act="connect">${ICON.wallet}Connect wallet to buy</button>`}</div>`;
+  return `<div class="buybar cr-buybar">
+    <div class="cr-bb-l"><b>${vnd(c.sharePrice)}</b> <span>/ share</span><small>${plural(n, 'share')} · ${vnd(cost)}</small></div>
+    ${S.account
+      ? `<button class="btn btn-p" type="button" data-act="buy" data-car="${id}"${off(n < 1)}>${spin(`buy-${id}`)}Buy</button>`
+      : '<button class="btn btn-p" type="button" data-act="connect">Log in to buy</button>'}
+  </div>`;
 }
 
 registerView('car', (r) => {
   const c = r.id != null ? carById(r.id) : null;
   if (!c) return notFound(r.id);
   const st = stageOf(c);
-  const m = metaOf(c);
   const me = S.data.me;
   const myShares = me ? Number(me.shares?.[c.id] ?? 0n) : 0;
   const myClaim = me ? me.claimable?.[c.id] ?? 0n : 0n;
-  const plate = `FS-${c.id.toString().padStart(3, '0')}`;
-  const sub = [m.city, m.term ? `${m.term}-year term` : null].filter(Boolean).map(esc).join(' · ');
-  return `<div class="cd-page${st.key === 'funding' ? ' cd-has-bar' : ''}">
-    <nav class="crumbs cd-crumbs" aria-label="Breadcrumb"><a href="#/">Vault</a><span aria-hidden="true">/</span><span class="cd-now">${esc(c.name)}</span></nav>
-    <div class="cd-grid">
-      <div class="cd-photo">${photo(c, 'photo', c.name)}</div>
-      <aside class="cd-aside">
-        <div class="cd-title">
-          <div class="row">${st.pill}<span class="t-sm ink-3 hide-phone">${plate}${m.term ? ` · ${m.term}-year term` : ''}</span></div>
-          ${sub ? `<p class="t-sm ink-3 only-phone">${sub}</p>` : ''}
-          <h1 class="t-h1">${esc(c.name)}</h1>
-        </div>
-        ${statGrid(c, st)}
-        ${progress(c, st)}
-        ${actionArea(c, st, myShares, myClaim)}
-      </aside>
-      <div class="cd-rest">
-        ${lifeCard(c, st)}
-        ${detailsCard(c)}
-        ${reportsCard(c, st)}
+  return `<div class="cr-page${st.key === 'funding' ? ' cr-has-bar' : ''}">
+    <a class="cr-back" href="#/">${ICON.back}All cars</a>
+    <div class="cr-grid">
+      <div class="cr-main">
+        ${gallery(c)}
+        ${titleBlock(c, st)}
+        ${specsCard(c)}
+        ${splitCard()}
+        ${planCard(c, st)}
+        ${recordsCard(c, st)}
       </div>
+      <aside class="cr-aside">${actionArea(c, st, myShares, myClaim)}</aside>
     </div>
     ${st.key === 'funding' ? buyBar(c) : ''}
   </div>`;

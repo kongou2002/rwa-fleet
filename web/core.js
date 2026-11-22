@@ -764,7 +764,7 @@ export function route() {
 // ---------- views and render loop ----------
 
 const VIEWS = {};
-const TITLES = { vault: 'Fleet Vault', car: 'Car', market: 'Market', transparency: 'Transparency', portfolio: 'Portfolio', how: 'How it works' };
+const TITLES = { vault: 'Cars', car: 'Car', market: 'Market', transparency: 'Transparency', portfolio: 'Portfolio', how: 'How it works' };
 
 /** fn(route) returns the HTML inside #view. opts: { needsData = true, title }. */
 export function registerView(name, fn, opts = {}) {
@@ -777,6 +777,9 @@ function skeleton(title) {
   return `<div class="head"><div class="skel-head"><h1 class="t-display">${esc(title)}</h1><p class="t-body"><span class="skel">Reading the vault from Avalanche Fuji</span></p></div></div>
     <section class="kpis" aria-hidden="true">${kpi.repeat(4)}</section>`;
 }
+
+// The home page's loading state is the hero skeleton written in index.html, kept from first paint.
+let homeSkeleton = null;
 
 const brokenView = `<div class="note warn">${ICON.x}<span><b>This view could not be drawn.</b> Reload the page, or open another section.</span></div>`;
 
@@ -791,7 +794,11 @@ function renderView() {
   else if (S.data || v.opts.needsData === false) {
     try { html = v.fn(r); } catch (e) { console.error(`View "${r.name}" failed`, e); html = brokenView; }
   } else if (S.loadError) html = '';
-  else { html = skeleton(v.opts.title || TITLES[r.name] || ''); loading = true; }
+  else {
+    if (homeSkeleton === null) homeSkeleton = el.querySelector('.hm-hero') ? el.innerHTML : '';
+    html = r.name === 'vault' && homeSkeleton ? homeSkeleton : skeleton(v.opts.title || TITLES[r.name] || '');
+    loading = true;
+  }
   el.setAttribute('aria-busy', loading ? 'true' : 'false');
   setHTML(el, html);
   const title = pageTitle(r);

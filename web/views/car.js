@@ -17,7 +17,7 @@ const resaleOf = (c, base) => {
 const ext = (href, text) => `<a href="${href}" target="_blank" rel="noopener">${text} ${ICON.ext}</a>`;
 
 function notFound(id) {
-  return `<nav class="crumbs" aria-label="Breadcrumb"><a href="#/">Vault</a><span aria-hidden="true">/</span><span class="cd-now">Not found</span></nav>
+  return `<nav class="crumbs" aria-label="Breadcrumb"><a href="#/">Cars</a><span aria-hidden="true">/</span><span class="cd-now">Not found</span></nav>
     <div class="card pad empty cd-missing">${ICON.car}<p class="t-sm ink-3">Car not found${id ? ` (id ${esc(id)})` : ''}. It may not be listed yet.</p><a class="btn btn-sm" href="#/">Back to the vault</a></div>`;
 }
 
@@ -371,7 +371,7 @@ registerView('car', (r) => {
   const plate = `FS-${c.id.toString().padStart(3, '0')}`;
   const sub = [m.city, m.term ? `${m.term}-year term` : null].filter(Boolean).map(esc).join(' · ');
   return `<div class="cd-page${st.key === 'funding' ? ' cd-has-bar' : ''}">
-    <nav class="crumbs cd-crumbs" aria-label="Breadcrumb"><a href="#/">Vault</a><span aria-hidden="true">/</span><span class="cd-now">${esc(c.name)}</span></nav>
+    <nav class="crumbs cd-crumbs" aria-label="Breadcrumb"><a href="#/">Cars</a><span aria-hidden="true">/</span><span class="cd-now">${esc(c.name)}</span></nav>
     <div class="cd-grid">
       <div class="cd-photo">${photo(c, 'photo', c.name)}</div>
       <aside class="cd-aside">

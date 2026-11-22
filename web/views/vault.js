@@ -1,4 +1,4 @@
-// Vault (home): fleet summary, rent chart, cars, register, role tools.
+// Home: what FleetShares is (hero, three steps), the cars, then the track record read from the chain.
 import {
   registerView, S, ui, cfg, esc, usd, fig, num, same, ICON,
   metaOf, valueOf, raisedOf, holdersOf, yieldToDate, targetNet, rangePct, stageOf,
@@ -24,36 +24,76 @@ function resaleOf(c) {
   return r ? (valueOf(c) * BigInt(Math.round(r * 100))) / 10000n : null;
 }
 
-// ---------- head + KPIs ----------
+// ---------- hero: what this is, in one screen ----------
 
-function head(cars) {
-  const open = cars.find((c) => stageOf(c).key === 'funding');
-  return `<div class="head vt-head">
-    <div class="vt-intro">
-      <h1 class="t-display">Fleet Vault</h1>
-      <p class="t-body ink-2">Rental cars in ${esc(TERMS.country)}, owned in shares.<span class="hide-phone"> ${esc(TERMS.operator)} rents them out, rent is split on-chain, and each car is sold after ${esc(TERMS.life)} to return capital.</span></p>
+const featuredOf = (cars) => cars.find((c) => stageOf(c).key === 'funding') || cars.find((c) => stageOf(c).key === 'earning') || cars[0];
+
+function hero(cars) {
+  const funding = cars.filter((c) => stageOf(c).key === 'funding');
+  const from = funding.length ? funding.reduce((a, c) => (c.sharePrice < a ? c.sharePrice : a), funding[0].sharePrice) : null;
+  const feat = featuredOf(cars);
+  const cta = funding.length
+    ? `<a class="btn btn-p btn-lg" href="#/car/${idStr(funding[0])}">Buy shares in ${esc(funding[0].name)} ${ICON.arrow}</a>`
+    : '';
+  return `<section class="hm-hero">
+    <div class="hm-hero-t">
+      <p class="hm-eyebrow">Rental cars in ${esc(TERMS.country)} · on Avalanche</p>
+      <h1 class="hm-h1">Own part of a rental car.<br>Get paid its rent.</h1>
+      <p class="hm-lede">Buy shares of a car${from !== null ? ` from <b>${usd(from)} VND</b>` : ''}. ${esc(TERMS.operator)} rents it out, the contract pays <b>${100 - TERMS.fee}% of every rent payment</b> to shareholders, and the car is sold at the end of its term to return your capital.</p>
+      <div class="row hm-cta">${cta}<a class="btn btn-lg" href="#/how">How it works</a></div>
+      <ul class="hm-facts">
+        <li><b class="pos">${netRange()}</b><span>target a year, after fees</span></li>
+        <li><b>${100 - TERMS.fee} / ${TERMS.fee}</b><span>rent split, fixed in the contract</span></li>
+        <li><b>Escrow</b><span>full refund if a car doesn't sell out</span></li>
+      </ul>
     </div>
-    <div class="row">
-      <a class="btn" href="#/how">How it works</a>
-      ${open ? `<a class="btn btn-p" href="#/car/${idStr(open)}">Buy shares</a>` : ''}
-    </div>
-  </div>`;
+    ${feat ? featuredCard(feat) : ''}
+  </section>`;
 }
+
+function featuredCard(c) {
+  const st = stageOf(c);
+  const live = st.key === 'funding';
+  return `<a class="hm-feat" href="#/car/${idStr(c)}" aria-label="${esc(c.name)}">
+    ${photo(c, 'hm-feat-img', '')}
+    <div class="hm-feat-b">
+      <div class="hm-feat-top"><span>${st.pill}</span><span class="t-sm ink-3">${metaLine(c)}</span></div>
+      <p class="t-h2">${esc(c.name)}</p>
+      <div class="hm-feat-n">
+        <div><p class="t-label">${live ? 'Target a year' : 'Paid so far'}</p><p class="t-fig pos">${live ? rangePct(...targetNet(c)) : `${yieldToDate(c)}%`}</p></div>
+        <div><p class="t-label">Per share</p><p class="t-fig">${usd(c.sharePrice)}<span class="unit">VND</span></p></div>
+      </div>
+      ${live ? `<div class="bar"><i style="width:${pctBar(c)}%"></i></div>
+      <p class="t-sm ink-3">${c.sold} of ${c.totalShares} shares sold · closes in <b class="ink-2" data-deadline="${c.fundingDeadline}">…</b></p>` : ''}
+    </div>
+  </a>`;
+}
+
+const STEPS = [
+  ['Buy shares', 'Pick a car and buy as many shares as you like. Your money waits in the contract until the car sells out, or comes back in full if it doesn\'t.'],
+  ['The car goes to work', `When the last share sells, the money goes to ${TERMS.operator}, who buys the car and rents it out.`],
+  ['Collect rent, then the resale', `Each rent payment is split on arrival: ${100 - TERMS.fee}% to shareholders, ${TERMS.fee}% fee. Collect any time. At the end of the term the car is sold and the proceeds go to shareholders.`],
+];
+
+function steps() {
+  return `<section class="hm-steps" aria-label="How it works">
+    ${STEPS.map(([t, d], i) => `<div class="hm-step"><span class="hm-num">${i + 1}</span><h3 class="t-title">${t}</h3><p class="t-sm ink-2">${esc(d)}</p></div>`).join('')}
+  </section>`;
+}
+
+// ---------- track record ----------
 
 function kpis(cars) {
   const live = cars.filter((c) => !['cancelled', 'sold'].includes(stageOf(c).key)); // a sold car has left the vault
   const value = live.reduce((a, c) => a + valueOf(c), 0n);
-  const escrow = cars.filter((c) => c.statusName === 'Funding').reduce((a, c) => a + raisedOf(c), 0n);
   const rent = cars.reduce((a, c) => a + c.rentPaid, 0n);
   const fee = cars.reduce((a, c) => a + c.feePaid, 0n);
   const count = (k) => cars.filter((c) => stageOf(c).key === k).length;
-  const earning = count('earning'), funding = count('funding') + count('expired'), cancelled = count('cancelled'), sold = count('sold');
-  const fleetSub = [`${earning} earning`, `${funding} funding`, sold ? `${sold} sold` : '', cancelled ? `${cancelled} cancelled` : ''].filter(Boolean).join(' · ');
-  return `<section class="kpis vt-kpis" aria-label="Vault summary">
-    <div><p class="t-label">Target net rent yield</p><p class="t-kpi pos">${netRange()}</p><p class="t-sm">${TERMS.gross[0]}–${TERMS.gross[1]}% gross rent, after the ${TERMS.fee}% fee</p></div>
-    <div><p class="t-label">Vault value</p><p class="t-kpi">${fig(value)}</p><p class="t-sm">${usd(escrow)} VND in funding escrow</p></div>
-    <div><p class="t-label">Paid to holders</p><p class="t-kpi">${fig(rent - fee)}</p><p class="t-sm">${usd(fee)} VND management fee</p></div>
-    <div><p class="t-label">Fleet</p><p class="t-kpi">${cars.length}<span class="unit">${cars.length === 1 ? 'car' : 'cars'}</span></p><p class="t-sm">${fleetSub}</p></div>
+  const earning = count('earning'), funding = count('funding') + count('expired'), sold = count('sold');
+  const fleetSub = [`${earning} earning`, `${funding} funding`, sold ? `${sold} sold` : ''].filter(Boolean).join(' · ');
+  return `<section class="kpis vt-kpis" aria-label="Track record">
+    <div><p class="t-label">Rent paid to shareholders</p><p class="t-kpi pos">${fig(rent - fee)}</p><p class="t-sm">after the ${usd(fee)} VND fee</p></div>
+    <div><p class="t-label">Value of cars on the road or funding</p><p class="t-kpi">${fig(value)}</p><p class="t-sm">${cars.length} ${cars.length === 1 ? 'car' : 'cars'}: ${fleetSub}</p></div>
   </section>`;
 }
 
@@ -102,7 +142,7 @@ function rentChart(cars) {
   }
   return `<section class="card pad vt-chart">
     <div class="card-h">
-      <div><h2 class="t-title">Rent paid to holders</h2><p class="t-sm ink-3">Million VND per month, after the ${TERMS.fee}% fee</p></div>
+      <div><h2 class="t-title">Rent paid to shareholders, by month</h2><p class="t-sm ink-3">Million VND, after the ${TERMS.fee}% fee</p></div>
       ${legend}
     </div>
     ${body}
@@ -112,8 +152,8 @@ function rentChart(cars) {
 function splitCard() {
   const fee = TERMS.fee, hold = 100 - fee;
   return `<section class="card pad vt-split-card">
-    <h2 class="t-title">Where 100 VND of rent goes</h2>
-    <p class="t-sm ink-3">Split by the contract when rent arrives</p>
+    <h2 class="t-title">Where each 100 VND of rent goes</h2>
+    <p class="t-sm ink-3">The contract splits it the moment it arrives</p>
     <div class="vt-split" role="img" aria-label="${hold} VND to holders, ${fee} VND fee">
       <div class="vt-split-h" style="flex:${hold}">${hold} to holders</div>
       <div class="vt-split-f" style="flex:${Math.max(fee, 14)}">${fee} fee</div>
@@ -130,48 +170,42 @@ function splitCard() {
 
 // ---------- car cards ----------
 
+/** One headline number, one progress line, one action per card. */
 function carCard(c) {
   const st = stageOf(c);
   const id = idStr(c);
-  const m = metaOf(c);
-  const w = pctBar(c);
-  const shares = `${c.sold} of ${c.totalShares} shares sold`;
-  let stats, bar, caption, rowRight, rowSub;
-  if (st.key === 'earning') {
-    stats = [['Net yield to date', `<span class="pos">${yieldToDate(c)}%</span>`], ['Per share', `${usd(c.sharePrice)} VND`], ['Car value', `${usd(valueOf(c))} VND`]];
+  let big, bigLabel, line, action, bar;
+  if (st.key === 'funding') {
+    big = rangePct(...targetNet(c)); bigLabel = 'target a year';
+    bar = `<i style="width:${pctBar(c)}%"></i>`;
+    line = `${c.sold} of ${c.totalShares} shares sold · closes in <b class="vt-cd" data-deadline="${c.fundingDeadline}">…</b>`;
+    action = '<span class="btn btn-p btn-w">Buy shares</span>';
+  } else if (st.key === 'earning') {
+    big = `${yieldToDate(c)}%`; bigLabel = 'paid to shareholders so far';
     bar = '<i class="full" style="width:100%"></i>';
-    caption = `Fully funded · ${usd(c.rentPaid)} VND rent paid in`;
-    rowRight = `<span class="t-title pos">${yieldToDate(c)}%</span>`;
-    rowSub = [m.city, 'Earning'].filter(Boolean).map(esc).join(' · ');
-  } else if (st.key === 'funding') {
-    stats = [['Target net yield', rangePct(...targetNet(c))], ['Per share', `${usd(c.sharePrice)} VND`], ['Closes in', `<b class="vt-cd" data-deadline="${c.fundingDeadline}">…</b>`]];
-    bar = `<i style="width:${w}%"></i>`;
-    caption = `${shares} · ${usd(raisedOf(c))} of ${usd(valueOf(c))} VND`;
-  } else if (st.key === 'expired') {
-    stats = [['Target net yield', rangePct(...targetNet(c))], ['Per share', `${usd(c.sharePrice)} VND`], ['Deadline', '<span class="warn-t">Passed</span>']];
-    bar = `<i style="width:${w}%"></i>`;
-    caption = `${shares} · missed its deadline, close the sale to open refunds`;
+    line = `Fully funded · on the road${metaOf(c).term ? ` for ${metaOf(c).term} years` : ''}`;
+    action = '<span class="btn btn-w">View car</span>';
   } else if (st.key === 'sold') {
     const ex = exitOf(c);
-    stats = [['Resale proceeds', `${usd(ex.proceeds)} VND`], ['Per share', `${usd(ex.proceeds / BigInt(ex.totalShares))} VND`], ['Net yield to date', `<span class="pos">${yieldToDate(c)}%</span>`]];
+    big = `${usd(ex.proceeds / BigInt(ex.totalShares))}<span class="unit">VND</span>`; bigLabel = 'resale paid per share';
     bar = '<i class="full" style="width:100%"></i>';
-    caption = `Sold for ${usd(ex.proceeds)} VND · ${ex.redeemedShares} of ${ex.totalShares} shares redeemed`;
+    line = `Sold · ${ex.redeemedShares} of ${ex.totalShares} shares redeemed`;
+    action = '<span class="btn btn-w">View car</span>';
   } else {
-    stats = [['Per share', `${usd(c.sharePrice)} VND`], ['Car value', `${usd(valueOf(c))} VND`], ['Sold', `${c.sold} / ${c.totalShares}`]];
-    bar = `<i style="width:${w}%"></i>`;
-    caption = 'Sale closed without selling out · refunds open';
+    big = `${c.sold} / ${c.totalShares}`; bigLabel = 'shares sold';
+    bar = `<i style="width:${pctBar(c)}%"></i>`;
+    line = st.key === 'expired' ? 'Missed its deadline · close the sale to open refunds' : 'Did not sell out · refunds open';
+    action = '<span class="btn btn-w">Get a refund</span>';
   }
-  const compact = st.key === 'earning';
-  return `<a class="car vt-car${compact ? ' vt-car--row' : ''}" href="#/car/${id}">
-    ${photo(c, 'vt-img', c.name)}
+  const pos = st.key === 'funding' || st.key === 'earning';
+  return `<a class="car vt-car" href="#/car/${id}">
+    <div class="vt-img-box">${photo(c, 'vt-img', c.name)}<span class="vt-pill">${st.pill}</span></div>
     <div class="car-b">
-      <div class="vt-car-top">
-        <div class="vt-car-name"><h3 class="t-title">${esc(c.name)}</h3><p class="t-sm ink-3 vt-sub">${metaLine(c)}</p>${compact ? `<p class="t-sm ink-3 vt-sub-row">${rowSub}</p>` : ''}</div>
-        <span class="vt-pill">${st.pill}</span>
-        ${compact ? `<span class="vt-row-y">${rowRight}</span>` : ''}
-      </div>
-      <dl class="stats3">${stats.map(([k, v]) => `<div><dt class="t-label">${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
-      <div class="vt-prog"><div class="bar" role="progressbar" aria-label="Shares sold" aria-valuemin="0" aria-valuemax="${c.totalShares}" aria-valuenow="${c.sold}">${bar}</div><p class="t-sm ink-3">${caption}</p></div>
+      <div><h3 class="t-title vt-name">${esc(c.name)}</h3><p class="t-sm ink-3">${metaLine(c)}</p></div>
+      <div class="vt-big"><p class="t-kpi${pos ? ' pos' : ''}">${big}</p><p class="t-sm ink-3">${bigLabel}</p></div>
+      <dl class="vt-mini"><div><dt>Per share</dt><dd>${usd(c.sharePrice)} VND</dd></div><div><dt>Car value</dt><dd>${usd(valueOf(c))} VND</dd></div></dl>
+      <div class="vt-prog"><div class="bar" role="progressbar" aria-label="Shares sold" aria-valuemin="0" aria-valuemax="${c.totalShares}" aria-valuenow="${c.sold}">${bar}</div><p class="t-sm ink-3">${line}</p></div>
+      ${action}
     </div>
   </a>`;
 }
@@ -185,13 +219,13 @@ function carsSection(cars) {
   let f = ui.vtFilter || 'all';
   if (!counts[f]) f = 'all';
   const shown = f === 'funding' ? sorted.filter(isFunding) : f === 'earning' ? sorted.filter(isEarning) : f === 'sold' ? sorted.filter(isSold) : sorted;
-  const seg = [['all', 'All'], ['funding', 'Funding'], ['earning', 'Earning'], ['sold', 'Sold']]
+  const seg = [['all', 'All'], ['funding', 'Open to buy'], ['earning', 'Earning'], ['sold', 'Sold']]
     .filter(([k]) => k === 'all' || counts[k] > 0)
     .map(([k, label]) => `<button type="button" class="${f === k ? 'on' : ''}" aria-pressed="${f === k}" data-act="set" data-k="vtFilter" data-v="${k}">${label} ${counts[k]}</button>`)
     .join('');
   return `<div class="head vt-sec-head">
-      <div><h2 class="t-h2">Cars in the vault</h2><p class="t-sm ink-3">Buy a fraction of any car. Prices in VND.</p></div>
-      ${cars.length ? `<div class="seg" role="group" aria-label="Filter cars">${seg}</div>` : ''}
+      <div><h2 class="t-h1">Cars</h2><p class="t-body ink-2">Open a car to see its numbers and buy shares.</p></div>
+      ${cars.length > 1 ? `<div class="seg" role="group" aria-label="Filter cars">${seg}</div>` : ''}
     </div>
     ${shown.length
       ? `<div class="cars vt-cars">${shown.map(carCard).join('')}</div>`
@@ -227,15 +261,15 @@ function register(cars) {
       <td class="r">${m.term ? `${m.term} years` : '<span class="ink-3">–</span>'}</td>
     </tr>`;
   }).join('');
-  return `<section class="card pad vt-register">
-    <div class="card-h"><div><h2 class="t-h2">Fleet register</h2><p class="t-sm ink-3">Every car the vault holds, read from the contract. Amounts in VND.</p></div><a class="btn btn-sm" href="#/transparency">Reports</a></div>
-    <div class="tbl-box">
+  return `<details class="card vt-register">
+    <summary class="pad"><span><b class="t-title">All cars in one table</b><span class="t-sm ink-3"> · read from the contract, amounts in VND</span></span><span class="vt-chev" aria-hidden="true"></span></summary>
+    <div class="tbl-box vt-reg-body">
       <table class="t">
         <thead><tr><th>Car</th><th>City</th><th>Status</th><th class="r">Shares sold</th><th class="r">Car value</th><th class="r">Net yield</th><th class="r">${anySold ? 'Resale' : 'Resale (est.)'}</th><th class="r">Term</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
-  </section>`;
+  </details>`;
 }
 
 // ---------- role tools ----------
@@ -282,11 +316,15 @@ function roleTools(cars) {
 
 registerView('vault', () => {
   const cars = S.data.cars;
-  return `${head(cars)}
-    ${kpis(cars)}
-    <div class="vt-two">${rentChart(cars)}${splitCard()}</div>
-    ${carsSection(cars)}
-    ${register(cars)}
+  return `${hero(cars)}
+    ${steps()}
+    <section class="vt-cars-sec" aria-label="Cars">${carsSection(cars)}</section>
+    <section class="vt-record" aria-labelledby="vt-record-h">
+      <div class="head vt-sec-head"><div><h2 class="t-h1" id="vt-record-h">Track record</h2><p class="t-body ink-2">Read live from the contracts on Avalanche. <a href="#/transparency">Check reported vs. paid rent ${ICON.arrow}</a></p></div></div>
+      ${kpis(cars)}
+      <div class="vt-two">${rentChart(cars)}${splitCard()}</div>
+      ${register(cars)}
+    </section>
     ${roleTools(cars)}`;
 });
 

@@ -1,5 +1,5 @@
 import {
-  registerView, S, ui, esc, same, usd, num, fig, trim, parseUsd, parseShares, plural,
+  registerView, S, ui, esc, same, usd, toVnd, num, fig, trim, parseUsd, parseShares, plural,
   who, carById, photo, targetNet, rangePct, spin, off, ICON, exitOf, pill,
 } from '../core.js';
 
@@ -149,7 +149,7 @@ function sellCard() {
     </div>
     <div class="field">
       <label for="offer-price-${sel}">Price per share</label>
-      <div class="input-suffix"><input class="input" id="offer-price-${sel}" data-bind="offer" data-car="${sel}" data-k="price" value="${esc(f.price ?? '')}" placeholder="${usd(car.sharePrice)}" inputmode="decimal" autocomplete="off"><span>USDC · issued at ${usd(car.sharePrice)}</span></div>
+      <div class="input-suffix"><input class="input" id="offer-price-${sel}" data-bind="offer" data-car="${sel}" data-k="price" value="${esc(f.price ?? '')}" placeholder="${toVnd(car.sharePrice).toLocaleString('en-US')}" inputmode="decimal" autocomplete="off"><span>VND · issued at ${usd(car.sharePrice)}</span></div>
     </div>
     ${tooMany ? `<p class="t-sm risk">You hold ${plural(mine, 'share')} of ${esc(car.name)}.</p>` : ''}
     ${vs ? `<dl class="kv">

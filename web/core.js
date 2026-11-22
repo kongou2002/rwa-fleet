@@ -61,29 +61,48 @@ export const addrUrl = (a) => `${EXPLORER}/address/${a}`;
 export const plural = (n, word) => `${n} ${word}${Number(n) === 1 ? '' : 's'}`;
 
 /** USDC base units to a display string. Truncates, never rounds up. */
-export function usd(v, dp = 2) {
-  v = BigInt(v);
-  if (dp === 2 && v > 0n && v < 10000n) dp = 6; // below one cent: show it all
-  let [i, f = ''] = V.formatUnits(v, 6).split('.');
-  f = f.slice(0, dp).replace(/0+$/, '');
-  if (f.length === 1) f += '0';
-  i = i.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  return f ? `${i}.${f}` : i;
+/**
+ * Demo money. In the real product money moves in VND by bank transfer and the chain keeps the rules and the receipts.
+ * On this testnet a test token stands in for the VND a payment gateway would have received: 1 token unit = 25,000 VND.
+ */
+export const VND_PER_UNIT = 25000n;
+/** Token base units (6 dp) to whole VND. Truncates, never rounds up. */
+export const toVnd = (v) => (BigInt(v) * VND_PER_UNIT) / 1000000n;
+/** Token base units to a compact VND string without the unit: '700M', '7.875M', '2.15B', '141,750'. */
+export function usd(v) {
+  const d = toVnd(v);
+  const cut = (scale, suffix) => {
+    const whole = d / scale;
+    const frac = ((d % scale) * 1000n / scale).toString().padStart(3, '0').replace(/0+$/, '');
+    return `${whole.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}${frac ? `.${frac}` : ''}${suffix}`;
+  };
+  if (d >= 1000000000n) return cut(1000000000n, 'B');
+  if (d >= 1000000n) return cut(1000000n, 'M');
+  return d.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
-export const usdc = (v) => `${usd(v)} USDC`;
-/** USDC base units to a plain JS number of USDC (for charts and ratios). */
-export const num = (v) => Number(V.formatUnits(BigInt(v), 6));
+export const usdc = (v) => `${usd(v)} VND`;
+/** Token base units to a plain JS number of million VND (for charts and ratios). */
+export const num = (v) => Number(V.formatUnits(BigInt(v), 6)) * Number(VND_PER_UNIT) / 1e6;
 /** A figure with its unit, for KPI and stat cells. */
-export const fig = (v) => `${usd(v)}<span class="unit">USDC</span>`;
+export const fig = (v) => `${usd(v)}<span class="unit">VND</span>`;
 /** 11.66 -> '11.7', 12 -> '12'. */
 export const trim = (n, dp = 1) => String(Number(Number(n).toFixed(dp)));
 /** Percent of part in whole, no % sign. */
 export const pct = (part, whole, dp = 1) => (BigInt(whole) === 0n ? '0' : trim((Number(part) / Number(whole)) * 100, dp));
 
+/** A typed VND amount ('7,875,000', '7.875.000', '7875000', '7.875M', '0.7B') to token base units, or null. */
 export function parseUsd(str) {
-  const s = String(str ?? '').trim().replace(/,/g, '');
-  if (!/^\d*\.?\d{0,6}$/.test(s) || s === '' || s === '.') return null;
-  try { return V.parseUnits(s, 6); } catch (e) { return null; }
+  const s = String(str ?? '').trim().replace(/\s|vnd|đ|₫/gi, '');
+  let vnd = null;
+  const short = /^(\d+(?:[.,]\d{1,3})?)([mb])$/i.exec(s);
+  if (short) {
+    const [w, f = ''] = short[1].replace(',', '.').split('.');
+    vnd = (BigInt(w) * 1000n + BigInt(f.padEnd(3, '0'))) * (short[2].toLowerCase() === 'b' ? 1000000n : 1000n);
+  } else if (/^\d{1,3}([.,]\d{3})+$/.test(s) || /^\d+$/.test(s)) {
+    vnd = BigInt(s.replace(/[.,]/g, ''));
+  }
+  if (vnd === null || vnd <= 0n) return null;
+  return (vnd * 1000000n) / VND_PER_UNIT;
 }
 export function parseShares(str) {
   const s = String(str ?? '').trim();
@@ -211,7 +230,7 @@ export const off = (extra = false) => (S.busy || extra ? ' disabled' : '');
 export function faucetBtn(extra = '') {
   const me = S.data?.me;
   const at = me && me.lastFaucet > 0n ? Number(me.lastFaucet) + 300 : 0;
-  return `<button class="btn btn-sm ${extra}" type="button" data-act="faucet" data-faucet-at="${at}"${off()}>${S.busy === 'faucet' ? '<span class="spin" aria-hidden="true"></span>' : ICON.drop}<span data-label>Get 1,000 test USDC</span></button>`;
+  return `<button class="btn btn-sm ${extra}" type="button" data-act="faucet" data-faucet-at="${at}"${off()}>${S.busy === 'faucet' ? '<span class="spin" aria-hidden="true"></span>' : ICON.drop}<span data-label>Add 25M demo VND</span></button>`;
 }
 
 // ---------- toasts ----------
@@ -256,11 +275,11 @@ const ERRORS = {
   NothingToClaim: () => 'There is nothing to collect right now.',
   NotSeller: () => 'Only the seller can cancel this offer.',
   TransfersLocked: () => 'Shares can only change hands after the car is fully funded.',
-  FaucetCooldown: ([at]) => `The faucet gives 1,000 test USDC every 5 minutes. Try again at ${new Date(Number(at) * 1000).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}.`,
-  ERC20InsufficientBalance: ([, bal, need]) => `Not enough USDC. You have ${usd(bal)} and this needs ${usd(need)}. Use “Get test USDC” first.`,
-  ERC20InsufficientAllowance: () => 'The USDC approval is too low. Try again and confirm the approval step.',
+  FaucetCooldown: ([at]) => `The demo faucet adds 25M demo VND every 5 minutes. Try again at ${new Date(Number(at) * 1000).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}.`,
+  ERC20InsufficientBalance: ([, bal, need]) => `Not enough demo VND. You have ${usdc(bal)} and this needs ${usdc(need)}. Use “Add 25M demo VND” first.`,
+  ERC20InsufficientAllowance: () => 'The payment allowance is too low. Try again and confirm the allow step.',
   ERC1155InsufficientBalance: () => 'The seller no longer holds enough shares for this offer.',
-  SafeERC20FailedOperation: () => 'The USDC transfer failed. Check your USDC balance and approval.',
+  SafeERC20FailedOperation: () => 'The demo VND transfer failed. Check your demo VND balance and allowance.',
   ReentrancyGuardReentrantCall: () => 'The contract is busy with another call. Try again.',
   ERC1155MissingApprovalForAll: () => 'The resale contract is not allowed to take your shares yet. Try again and confirm the approval step.',
   AlreadySold: () => 'The sale of this car is already recorded. It can only be recorded once.',
@@ -451,9 +470,9 @@ export async function withApproval(cost, step, spender = cfg.FleetShares) {
     pub.readContract(usdcCall('balanceOf', [S.account])),
     pub.readContract(usdcCall('allowance', [S.account, spender])),
   ]);
-  if (bal < cost) throw new Error(`Not enough USDC. You have ${usd(bal)} and this needs ${usd(cost)}. Use “Get test USDC” first.`);
+  if (bal < cost) throw new Error(`Not enough demo VND. You have ${usdc(bal)} and this needs ${usdc(cost)}. Use “Add 25M demo VND” first.`);
   const steps = [];
-  if (allowance < cost) steps.push({ label: `Approve ${usdc(cost)}`, call: usdcCall('approve', [spender, cost]) });
+  if (allowance < cost) steps.push({ label: `Allow the payment of ${usdc(cost)}`, call: usdcCall('approve', [spender, cost]) });
   steps.push(step);
   return steps;
 }
@@ -508,7 +527,7 @@ export async function send(key, title, build, doneText) {
   } catch (e) {
     const why = explain(e, where);
     // a cancel in the wallet, or a balance check we made ourselves, is not a program error
-    if (!/^(You cancelled|Not enough USDC|You hold no shares)/.test(why)) console.error(e);
+    if (!/^(You cancelled|Not enough demo VND|You hold no shares)/.test(why)) console.error(e);
     t.update({ state: 'err', title: `${title}: not done`, body: why });
   } finally {
     S.busy = null;
@@ -524,7 +543,7 @@ export const ACTIONS = {
   disconnect,
   retry: () => refresh(),
   switchNet: () => ensureChain().catch((e) => toast('Could not switch network', explain(e), 'err')),
-  faucet: () => send('faucet', 'Get test USDC', async () => [{ label: 'Take 1,000 test USDC from the faucet', call: usdcCall('faucet') }], '1,000 test USDC added to your wallet.'),
+  faucet: () => send('faucet', 'Add demo VND', async () => [{ label: 'Add 25M demo VND from the test faucet', call: usdcCall('faucet') }], '25M demo VND added to your wallet.'),
   step(d) {
     const car = carById(d.car);
     if (!car) return;
@@ -558,7 +577,7 @@ export const ACTIONS = {
   },
   refund(d) {
     const car = carById(d.car);
-    send(`refund-${d.car}`, `Refund for ${car.name}`, async () => [{ label: 'Take your money back', call: fleetCall('refund', [car.id]) }], 'Your USDC is back in your wallet.');
+    send(`refund-${d.car}`, `Refund for ${car.name}`, async () => [{ label: 'Take your money back', call: fleetCall('refund', [car.id]) }], 'Your money is back in your wallet.');
   },
   cancelFunding(d) {
     const car = carById(d.car);
@@ -569,7 +588,7 @@ export const ACTIONS = {
     const f = ui.offer[d.car] || {};
     const n = parseShares(f.amount);
     const price = parseUsd(f.price);
-    if (n < 1 || !price) return toast('Sell shares', 'Enter a share count and a price per share.', 'err');
+    if (n < 1 || !price) return toast('Sell shares', 'Enter a share count and a price per share in VND.', 'err');
     send(`offer-${d.car}`, `Offer ${plural(n, 'share')} of ${car.name}`,
       async () => [{ label: `List ${plural(n, 'share')} at ${usdc(price)} each`, call: fleetCall('makeOffer', [car.id, n, price]) }],
       'Your offer is on the book. The shares stay with you until someone buys.');
@@ -589,7 +608,7 @@ export const ACTIONS = {
   payRent(d) {
     const car = carById(d.car);
     const amt = parseUsd(ui.rent[d.car]);
-    if (!amt) return toast('Pay rent', 'Enter the rent amount in USDC.', 'err');
+    if (!amt) return toast('Pay rent', 'Enter the rent amount in VND, for example 7,875,000.', 'err');
     send(`rent-${d.car}`, `Pay rent for ${car.name}`,
       () => withApproval(amt, { label: `Pay ${usdc(amt)} rent`, call: fleetCall('payRent', [car.id, amt]) }),
       `${usdc(amt - amt / 10n)} went to shareholders and ${usdc(amt / 10n)} to the manager.`);
@@ -603,7 +622,7 @@ export const ACTIONS = {
     const operator = (f.operator || cfg.operator).trim();
     if (!f.name.trim()) return toast('List a car', 'Give the car a name.', 'err');
     if (!V.isAddress(operator)) return toast('List a car', 'The operator address is not a valid address.', 'err');
-    if (shares < 1 || !price || !(days > 0)) return toast('List a car', 'Shares, price and funding days must all be greater than zero.', 'err');
+    if (shares < 1 || !price || !(days > 0)) return toast('List a car', 'Shares, price per share (VND) and funding days must all be greater than zero.', 'err');
     const docs = f.docs.trim();
     const docsHash = /^0x[0-9a-fA-F]{64}$/.test(docs) ? docs : V.keccak256(V.stringToHex(docs || f.name.trim()));
     send('list', `List ${f.name.trim()}`,
@@ -616,7 +635,7 @@ export const ACTIONS = {
     const car = carById(d.car);
     if (!car || !cfg.CarExit) return;
     const amt = parseUsd(ui.exit[d.car]);
-    if (!amt) return toast('Record the sale', 'Enter the resale amount in USDC.', 'err');
+    if (!amt) return toast('Record the sale', 'Enter the resale amount in VND, for example 385,000,000.', 'err');
     send(`exit-${d.car}`, `Record the sale of ${car.name}`,
       () => withApproval(amt, { label: `Pay in ${usdc(amt)} from the sale`, call: exitCall('settle', [car.id, amt]) }, cfg.CarExit),
       `Holders can now redeem each share for ${usdc(amt / BigInt(car.totalShares))}.`);
@@ -811,12 +830,11 @@ function renderWallet() {
   const role = S.data && same(S.account, S.data.manager) ? 'Manager' : S.data?.cars.some((c) => same(c.operator, S.account)) ? 'Operator' : 'Investor';
   const avax = me ? Number(V.formatEther(me.avax)).toFixed(3) : '…';
   let bal = me ? usd(me.usdc) : '…';
-  if (me && !bal.includes('.')) bal += '.00';
   setHTML(el, `<details id="wallet-menu" class="wmenu"${ui.walletOpen ? ' open' : ''}>
-    <summary id="wallet-chip" class="wallet" aria-label="Wallet menu: ${esc(bal)} USDC, ${short(S.account)}">${bal} USDC<span class="addr">${short(S.account)}</span></summary>
+    <summary id="wallet-chip" class="wallet" aria-label="Wallet menu: ${esc(bal)} VND, ${short(S.account)}">${bal} VND<span class="addr">${short(S.account)}</span></summary>
     <div class="pop">
       <div class="pop-row"><span>Wallet</span><span>${who(S.account)} ${pill('', role)}</span></div>
-      <div class="pop-row"><span>USDC</span><b>${me ? usd(me.usdc) : '…'}</b></div>
+      <div class="pop-row"><span>Demo VND</span><b>${me ? usdc(me.usdc) : '…'}</b></div>
       <div class="pop-row"><span>AVAX for gas</span><b>${avax}</b></div>
       ${faucetBtn('btn-w')}
       <a class="btn btn-sm btn-w" href="${AVAX_FAUCET}" target="_blank" rel="noopener">Get test AVAX for gas ${ICON.ext}</a>
@@ -838,10 +856,10 @@ function renderNotice() {
     setHTML(el, note(ICON.x, `<b>Your wallet is on another network (chain ${S.walletChain}).</b> FleetShares runs on Avalanche Fuji. Any action here switches your wallet first.`, '<button class="btn btn-sm" type="button" data-act="switchNet">Switch to Fuji</button>'));
   } else if (me && me.avax === 0n) {
     const noUsdc = me.usdc === 0n;
-    setHTML(el, note(ICON.drop, `<b>You need a little test AVAX for gas.</b> It is free from the Fuji faucet.${noUsdc ? ' Then take 1,000 test USDC, also free.' : ''}`,
+    setHTML(el, note(ICON.drop, `<b>You need a little test AVAX for gas.</b> It is free from the Fuji faucet.${noUsdc ? ' Then add 25M demo VND, also free.' : ''}`,
       `<span class="row"><a class="btn btn-sm" href="${AVAX_FAUCET}" target="_blank" rel="noopener">Get test AVAX ${ICON.ext}</a>${noUsdc ? faucetBtn() : ''}</span>`));
   } else if (me && me.usdc === 0n) {
-    setHTML(el, note(ICON.drop, '<b>You have no test USDC yet.</b> The faucet gives 1,000 every 5 minutes, free.', faucetBtn()));
+    setHTML(el, note(ICON.drop, '<b>You have no demo VND yet.</b> The test faucet adds 25M every 5 minutes, free.', faucetBtn()));
   } else setHTML(el, '');
 }
 
@@ -870,7 +888,7 @@ function tick() {
     if (!label) return;
     if (wait > 0) { el.disabled = true; label.textContent = `Faucet ready in ${timeLeft(wait)}`; } else {
       if (!S.busy) el.disabled = false;
-      label.textContent = 'Get 1,000 test USDC';
+      label.textContent = 'Add 25M demo VND';
     }
   });
   if (S.data) {

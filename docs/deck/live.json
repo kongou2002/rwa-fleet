@@ -1,0 +1,168 @@
+{
+ "block": 61447994,
+ "time_utc": "2026-11-22 00:05 UTC",
+ "rpc": "https://avalanche-fuji-c-chain-rpc.publicnode.com",
+ "cars": [
+  {
+   "id": 1,
+   "name": "Mazda CX-5 2.0",
+   "image": "https://commons.wikimedia.org/wiki/Special:FilePath/2022%20Mazda%20CX-5%202.0%20front.jpg?width=1200",
+   "total": 100,
+   "sold": 100,
+   "status": 2,
+   "price": 280.0,
+   "rent": 945.0,
+   "fee": 94.5,
+   "ledger": {
+    "reported": 1260.0,
+    "paid": 945.0,
+    "unpaid": 315.0
+   },
+   "exit": {
+    "proceeds": 0.0,
+    "paidOut": 0.0,
+    "totalShares": 0,
+    "redeemed": 0,
+    "soldAt": 0
+   }
+  },
+  {
+   "id": 2,
+   "name": "VinFast VF 8 Eco",
+   "image": "https://commons.wikimedia.org/wiki/Special:FilePath/VinFast%20VF%208%20IAA%202023%201X7A0681.jpg?width=1200",
+   "total": 160,
+   "sold": 98,
+   "status": 1,
+   "price": 250.0,
+   "rent": 0.0,
+   "fee": 0.0,
+   "ledger": {
+    "reported": 0.0,
+    "paid": 0.0,
+    "unpaid": 0.0
+   },
+   "exit": {
+    "proceeds": 0.0,
+    "paidOut": 0.0,
+    "totalShares": 0,
+    "redeemed": 0,
+    "soldAt": 0
+   }
+  },
+  {
+   "id": 3,
+   "name": "Toyota Vios 1.5 G",
+   "image": "https://commons.wikimedia.org/wiki/Special:FilePath/2023%20Toyota%20Vios%201.5%20G%20in%20Black,%20front%20left.jpg?width=1200",
+   "total": 120,
+   "sold": 120,
+   "status": 2,
+   "price": 150.0,
+   "rent": 405.0,
+   "fee": 40.5,
+   "ledger": {
+    "reported": 405.0,
+    "paid": 405.0,
+    "unpaid": 0.0
+   },
+   "exit": {
+    "proceeds": 10800.0,
+    "paidOut": 1800.0,
+    "totalShares": 120,
+    "redeemed": 20,
+    "soldAt": 1795304608
+   }
+  }
+ ],
+ "audits": 1,
+ "rentPaid": [
+  {
+   "block": 61446200,
+   "car": 1,
+   "gross": 315.0,
+   "tx": "0xaf5d3501904d84f35e9a1abbb2cb481140810be8ffb3a168bad1670140de2780"
+  },
+  {
+   "block": 61446204,
+   "car": 3,
+   "gross": 202.5,
+   "tx": "0xb8c152d5c8154e884269eb31d3e347c3ebd29a9d20395b4099c177a430e5598e"
+  },
+  {
+   "block": 61446224,
+   "car": 1,
+   "gross": 315.0,
+   "tx": "0xbed2bd92f8077cfbaef046e89532e3113aad7344a09af1d19bb6bdac55be6e93"
+  },
+  {
+   "block": 61446228,
+   "car": 3,
+   "gross": 202.5,
+   "tx": "0x157e9fc14f91b05ae44ee7d8edeeab080a939af824b0f2dbae3505e5050a39c4"
+  },
+  {
+   "block": 61447213,
+   "car": 1,
+   "gross": 315.0,
+   "tx": "0xc22cb50338fba686fde525c8c7af6424b93ef83c0d6cc6eb6d6e960799141225"
+  }
+ ],
+ "reports": [
+  {
+   "block": 61446194,
+   "car": 1,
+   "period": 1,
+   "rentals": 2,
+   "days": 15,
+   "income": 315.0,
+   "tx": "0xa187c4229be5ed4d0d505ba452457baaca3fa046f1ec1bbde25a09b51a2de740"
+  },
+  {
+   "block": 61446199,
+   "car": 3,
+   "period": 1,
+   "rentals": 2,
+   "days": 9,
+   "income": 202.5,
+   "tx": "0x91e8099b6ae720ce569cc7cedb2ecdcc282831f078a73e4d2bd64127fcf72f6a"
+  },
+  {
+   "block": 61446217,
+   "car": 1,
+   "period": 2,
+   "rentals": 2,
+   "days": 15,
+   "income": 315.0,
+   "tx": "0x878a5d39e090d4018e67fe3c174410107c8bf552b1f2982cf2be0d03d3227391"
+  },
+  {
+   "block": 61446224,
+   "car": 3,
+   "period": 2,
+   "rentals": 2,
+   "days": 9,
+   "income": 202.5,
+   "tx": "0x2afffbea2b65abdb3d97c323e8980c32f5d17702cc27c01dad30d1f183cc56a3"
+  },
+  {
+   "block": 61446238,
+   "car": 1,
+   "period": 3,
+   "rentals": 2,
+   "days": 15,
+   "income": 315.0,
+   "tx": "0x6c095efd7316f32f18e13da5b2933837f0177718cc7988ceb50ffde599b4c86b"
+  },
+  {
+   "block": 61447739,
+   "car": 1,
+   "period": 4,
+   "rentals": 2,
+   "days": 14,
+   "income": 315.0,
+   "tx": "0xcf65497d9936d03cb7c19ab6586f3148e1d3121b1f5418b1c60447b30a479b75"
+  }
+ ],
+ "fujiTxs": 37,
+ "contracts": 6,
+ "tests": 50
+}

@@ -1,155 +1,454 @@
-# FleetShares: slide outline
+# FleetShares: slide pitch (22/11/2026)
 
-Twelve slides, text ready to paste into Canva. Under each slide: what is on it, and where every number comes from. The pptx is built by `docs/deck/build.js`, which reads addresses and proof links from `docs/fuji.json` and the README, and reads the live figures from the chain when it runs. Figures below are from the build of 22 Nov 2026, Fuji block 61446766 (23:29 UTC on 21 Nov). The video's transactions after that will move the live figures; rebuild to refresh.
+15 slide, dựng trong `deck.html` (1920×1080, font IBM Plex Sans nhúng sẵn, có đủ dấu tiếng Việt). Mỗi slide là một hình; câu đầy đủ nằm ở ghi chú người nói.
 
-Look: white ground, near-black text, brand red `#c8102e` for the top rule and key figures only, hairline rules, Arial. Screens are from the live app at 1440×900 (`docs/deck/*.jpg`).
+Tiền trên slide là tiền đồng. Bản demo trên testnet mô phỏng tiền VND bằng một token thử theo tỷ giá demo của app, 1 đơn vị = 25.000 đ; cổng thanh toán chưa nối.
 
-## 1. Title
+Tên Avalanche và Fuji chỉ có trên slide 1 và slide cuối; các slide giữa gọi là "mạng riêng (L1)", "mạng chính", "testnet". Tên kỹ thuật (C-Chain, ICM, Teleporter) nằm trong ghi chú người nói.
 
-**Own a share of a rental car**
+Số liệu sống đọc từ Fuji lúc khối 61,447,994 (2026-11-22 00:05 UTC) qua https://avalanche-fuji-c-chain-rpc.publicnode.com. Ảnh chụp app lúc 2026-11-22 00:05 UTC, ví chỉ đọc 0x0812ebF118750B566858241b429C574Aec59a419.
 
-Buy shares of one car in USDC. The contract pays the rental company and splits every rent payment: 90% to holders, 10% fee.
+## 1. Tổng quan
 
-kongou2002.github.io/rwa-fleet · github.com/kongou2002/rwa-fleet
+Chữ trên slide:
 
-Visual: photo of the Mazda CX-5 2.0 from the app (`car.jpg`).
-Footer: Testnet prototype on Avalanche Fuji · Team Oicha · Car photos: Wikimedia Commons, CC BY-SA 4.0.
+> FleetShares
+> Mua một phần chiếc xe cho thuê,
+> nhận một phần tiền thuê
+> Mua xe theo cổ phần
+> Tiền thuê chia 90/10
+> Bán lại cổ phần
+> XÂY TRÊN AVALANCHE · CHẠY TRÊN TESTNET FUJI
+> Mazda CX-5 2.0
+> 100 phần × 7 triệu · 700 triệu
+> Đang cho thuê
+> Ảnh: ShangTW, CC BY-SA 4.0 · Bản demo trên testnet: tiền VND được mô phỏng bằng token thử; cổng thanh toán chưa nối.
+
+Ghi chú người nói:
+
+Xin chào, chúng tôi là FleetShares. Một chiếc xe cho thuê được chia thành cổ phần, ví dụ chiếc Mazda CX-5 700 triệu đồng chia làm 100 phần, mỗi phần 7 triệu. Người mua chuyển khoản tiền đồng, và mỗi lần công ty cho thuê trả tiền thuê, phần chia được ghi ngay: 90% cho người giữ cổ phần, 10% phí quản lý. Muốn rút ra thì bán cổ phần cho người khác. Xin nói trước: bản demo chạy trên Avalanche Fuji, testnet; tiền VND được mô phỏng bằng một token thử theo tỷ giá demo 1 đơn vị = 25.000 đồng, cổng thanh toán chưa nối; công ty cho thuê là Công ty A, tên giữ chỗ; tiền thuê do ví của nhóm trả thay công ty.
+
+Số liệu và nguồn:
 
-- 90 / 10: `FEE_BPS` in `src/FleetShares.sol`, shown in the app.
+- 90/10: phí FEE_BPS cố định trong src/FleetShares.sol; README, mục Who doesn't trust whom
+- 100 phần × 7 triệu: FleetShares.getCar(1) trên Fuji, khối 61.447.994 (2026-11-22 00:05 UTC): 100 × 280 đơn vị token thử × 25.000 đ (tỷ giá demo của app); README, Proof: listCar1 0x02523e17934d4eae2634c154ddfa963314ff61a89cdda54e2381eed568e6adf6
 
-## 2. Problem
+Liên kết trên slide:
 
-**A rental car earns 10–15% a year**
+- Ảnh: ShangTW: https://commons.wikimedia.org/wiki/File:2022_Mazda_CX-5_2.0_front.jpg
 
-- **10–15%**: gross rent a year on the car's price. Industry estimate; we have not measured it.
-- **USD 1.17 bn**: Vietnam car rental market, 2026 estimate (Mordor Intelligence).
+## 2. Vấn đề
 
-Only people who can buy a whole car get that income. Pooling money through a company means trusting it with the cash, the fee and the income report.
+Chữ trên slide:
 
-- 10–15%: the range in the judges' brief for this project. The app's own terms use 12–15% (`TERMS.gross` in `web/core.js`).
-- USD 1.17 bn: Mordor Intelligence, "Vietnam Car Rental Market" (mordorintelligence.com/industry-reports/vietnam-car-rental-market), read 22 Nov 2026. IMARC estimates lower: USD 376 m for 2025 (imarcgroup.com/vietnam-car-rental-market).
+> VẤN ĐỀ
+> Lãi xe cho thuê chỉ dành cho người mua cả chiếc
+> 10–15%
+> tiền thuê mỗi năm trên giá xe
+> ước tính của ngành
+> 700 triệu
+> Mua cả chiếc
+> Góp qua công ty
+> Phải tin sổ sách của họ
+> FleetShares
+> 10–15%: ước tính của ngành, nhóm chưa đo · Bản demo trên testnet: tiền VND được mô phỏng bằng token thử; cổng thanh toán chưa nối.
 
-## 3. Solution
+Ghi chú người nói:
 
-**A vault buys cars in shares**
+Một chiếc xe cho thuê ở Việt Nam đem về khoảng 10 đến 15% giá xe mỗi năm tiền thuê. Đây là ước tính của ngành, nhóm chưa tự đo. Nhưng chỉ người mua nổi cả chiếc mới có khoản đó: một chiếc CX-5 trong vault giá 700 triệu đồng. Cách còn lại là góp tiền qua một công ty, và khi đó phải tin công ty về tiền, về phí và về báo cáo thu nhập.
 
-Diagram, three boxes:
+Số liệu và nguồn:
 
-- Investors (anywhere, USDC): pay for shares when they buy; get 90% of rent and the resale.
-- FleetShares vault (manager, smart contract): lists cars; takes a fixed 10% of rent and nothing else.
-- Company A (rental company, Vietnam): buys and rents out the car, pays rent on chain, sells it after 4–5 years.
+- 10–15%: khoảng trong đề bài của ban giám khảo cho dự án này; app dùng 12–15% (TERMS.gross trong web/core.js). Ước tính, nhóm chưa đo.
+- 700 triệu: giá xe Mazda CX-5 2.0 = 100 phần × 280 đơn vị × 25.000 đ, FleetShares.getCar(1), khối 61.447.994 (2026-11-22 00:05 UTC)
 
-Arrows: buy shares → · ← 90% of rent + resale · car price → · ← rent, monthly.
-Dashed box: Independent auditor publishes a hash of each signed report on chain (AuditRegistry).
+## 3. Vòng đời một chiếc xe
 
-Everything the three parties need to check sits on chain: the purchase money, the fee, each rent payment and the income report.
+Chữ trên slide:
 
-Footer: Company A is a placeholder name for the rental operator. No operator or auditor has signed with us.
+> CÁCH HOẠT ĐỘNG
+> Vòng đời một chiếc xe
+> 1
+> Gọi vốn
+> Chuyển khoản
+> mua cổ phần
+> 2
+> Đủ vốn, mua xe
+> Tiền tới
+> Công ty A
+> 3
+> Cho thuê
+> 4–5 năm
+> 4
+> Chia tiền thuê
+> 90% người giữ
+> 10% phí
+> 5
+> Bán xe
+> Cuối kỳ thuê
+> 6
+> Hoàn vốn
+> Theo số
+> cổ phần
+> Không đủ vốn đúng hạn: hoàn 100%
+> Cả sáu bước đã chạy trên mạng thử
+> FleetShares
+> Công ty A: tên giữ chỗ cho công ty cho thuê xe, chưa ký với công ty nào · Bản demo trên testnet: tiền VND được mô phỏng bằng token thử; cổng thanh toán chưa nối.
 
-## 4. How the money moves
+Ghi chú người nói:
 
-Five steps: **Fund** (pay for shares up front, USDC waits in the contract) → **Sell-out** (last share sends the full price to Company A; deadline missed means full refund) → **Rent** (each payment split 90 / 10 as it arrives) → **Resale** (after 4–5 years, holders redeem pro rata, no fee: `CarExit`) → **Next car**.
+Vòng đời một chiếc xe có sáu bước. Một: gọi vốn, nhà đầu tư mua cổ phần và chuyển khoản tiền đồng ngay khi mua; quản lý không cầm tiền, tiền chỉ được giải ngân theo luật ghi trên chuỗi. Hai: cổ phần cuối cùng bán xong thì toàn bộ tiền mua xe chuyển cho Công ty A ngay trong giao dịch đó. Quá hạn mà chưa đủ vốn thì ai cũng huỷ được và mọi người lấy lại đủ tiền. Ba: Công ty A cho thuê xe 4 đến 5 năm. Bốn: mỗi lần trả tiền thuê, hợp đồng chia 90% cho người giữ cổ phần, 10% phí quản lý, phí cố định, không ai sửa được. Năm và sáu: hết kỳ thì bán xe, tiền bán chia theo số cổ phần, không thu phí. Trên Fuji cả sáu bước đã chạy: chiếc Toyota Vios đã ghi bán 270 triệu và 20 trên 120 cổ phần đã được hoàn vốn.
 
-Big figures: **90%** of rent to holders · **10%** fee, fixed in the code · **0%** fee on resale.
+Số liệu và nguồn:
 
-Footer: Step 5 is the plan: putting returned money into the next car is each investor's choice, not automatic in the contract.
+- 4–5 năm: TERMS.life trong web/core.js; README, Add-ons (CarExit)
+- 90% / 10%: FEE_BPS trong src/FleetShares.sol
+- hoàn 100%: cancelFunding + refund trong src/FleetShares.sol; README, Who doesn't trust whom
+- Cả sáu bước đã chạy: README Proof (listCar1, soldOutPaysOperator 0xb8879dee425910b16eab691de88fa667dad881b236c74d38eec646888985d813, payRent, claimRent); CarExit.exitOf(3) khối 61.447.994 (2026-11-22 00:05 UTC): bán 10.800 đơn vị = 270 triệu, 20/120 cổ phần đã hoàn
 
-- 4–5 years: `TERMS.life` in the app; README "Add-ons".
-- 0% on resale: `CarExit.redeem` pays `proceeds × shares / totalShares` (README "Add-ons").
+## 4. Ngân hàng giữ tiền, blockchain giữ bằng chứng
 
-## 5. Product: cars and buying
+Chữ trên slide:
 
-**Real cars. Pay for your shares when you buy.**
+> GIẢI PHÁP
+> Ngân hàng giữ tiền, blockchain giữ bằng chứng
+> NGÂN HÀNG
+> Tiền VND
+> Chuyển khoản, VietQR
+> Có người báo
+> tiền đã về
+> BLOCKCHAIN
+> Luật chia 90/10
+> Biên nhận
+> Sổ đối chiếu
+> FleetShares
+> Bản demo trên testnet: tiền VND được mô phỏng bằng token thử; cổng thanh toán chưa nối.
 
-Visual: the vault's three car cards (`cards.jpg`) and the buy panel of the car still funding (`buypanel.jpg`).
+Ghi chú người nói:
 
-VinFast VF 8 Eco: 160 shares × 250 USDC, 96 sold so far. If it does not sell out by the deadline, every buyer gets the money back.
+Ở Việt Nam tiền mã hoá không dùng để thanh toán, nên tiền đi bằng tiền đồng qua ngân hàng: nhà đầu tư chuyển khoản qua VietQR hoặc một cổng thanh toán có phép, Công ty A trả tiền thuê cũng bằng tiền đồng. Blockchain không giữ tiền. Nó giữ luật và bằng chứng: ai đã trả bao nhiêu, phần chia 90/10, khi nào tiền được giải ngân cho công ty, ai đã ký. Chuỗi không ép được một lệnh chuyển khoản; vẫn phải có cổng thanh toán hoặc người báo là tiền đã về, và đó là điểm cần tin. Trong bản demo, tiền đồng được mô phỏng bằng token thử trên Fuji, cổng thanh toán chưa nối.
 
-- Shares, price and shares sold: `FleetShares.getCar` on Fuji at build time.
+Số liệu và nguồn:
 
-## 6. Product: market and portfolio
+- 90/10: FEE_BPS trong src/FleetShares.sol
+- Tiền mã hoá không dùng để thanh toán: Ngân hàng Nhà nước: https://vnba.org.vn/vi/bitcoin-khong-phai-tien-phap-quy--khong-phai-la-phuong-tien-thanh-toan-hop-phap-tren-dat-nuoc-viet-nam-6822.htm
 
-**Sell your shares to another investor**
+## 5. Mua cổ phần
 
-Visual: the Market's open offers (`market.jpg`) and the portfolio of test holder 0x0812…a419 (`portfolio.jpg`). For this one shot the offer book is widened to the full row: at 1440 the app's offer table is wider than its column and clips the buy buttons.
+Chữ trên slide:
 
-- A holder posts shares at a price. They keep earning rent until sold.
-- The buyer pays in one transaction: USDC to the seller, shares to the buyer.
-- Rent earned before the sale stays with the seller.
+> MUA CỔ PHẦN
+> Chọn xe thật, trả tiền ngay khi mua
+> kongou2002.github.io/rwa-fleet
+> 6,25triệu
+> một cổ phần VinFast VF 8
+> 98/160
+> cổ phần đã bán
+> Không đủ vốn: hoàn tiền đủ
+> FleetShares
+> Ảnh xe: Alexander-93, CC BY-SA 4.0 · Bản demo trên testnet: tiền VND được mô phỏng bằng token thử; cổng thanh toán chưa nối.
 
-## 7. Transparency
+Ghi chú người nói:
 
-**What Company A reported, next to what it paid**
+Đây là app thật, đang chạy. Chiếc VinFast VF 8 Eco, xe 1 tỷ, đang gọi vốn: 160 cổ phần, mỗi cổ phần 6,25 triệu đồng, đã bán 98. Chọn số cổ phần, app tính phần sở hữu, tiền thuê dự kiến và phần tiền bán xe, rồi trả tiền. Tiền chỉ tới Công ty A khi bán hết; nếu tới hạn mà chưa đủ, mỗi người lấy lại đủ số đã trả.
 
-Diagram: Team1 L1, chain 510103 (`RentalLog`, each rental logged) → Avalanche ICM (Teleporter message, signed by the L1's validators) → Fuji C-Chain (`IncomeMirror`, accepts only that L1 and that contract).
+Số liệu và nguồn:
 
-| Funded car | Reported (L1) | Paid (Fuji) | Still due |
-|---|---|---|---|
-| Mazda CX-5 2.0 | 945 | 630 | **315 USDC** |
-| Toyota Vios 1.5 G | 405 | 405 | Paid in full |
+- 6,25 triệu, 98/160: FleetShares.getCar(2), khối 61.447.994 (2026-11-22 00:05 UTC) (250 đơn vị × 25.000 đ); ảnh chụp app lúc 2026-11-22 00:05 UTC
 
-Audit: the auditor's report hashes go to AuditRegistry and cannot be edited or deleted. None published yet.
+Liên kết trên slide:
 
-- Table: `IncomeMirror.ledger(carId)` for each funded car, Fuji block 61446766.
-- Audit count: `AuditRegistry.reportCount()` at build time.
-- Footer limit: the chain cannot see rentals the operator never logs.
+- Ảnh xe: Alexander-93: https://commons.wikimedia.org/wiki/File:VinFast_VF_8_IAA_2023_1X7A0681.jpg
 
-## 8. One car, start to finish (example)
+## 6. Nhận tiền thuê
 
-Visual: the worked example from the app's How it works page (`example.jpg`).
+Chữ trên slide:
 
-- Assumptions, not a forecast: 28,000 USDC car, 13.5% gross rent, 10% fee, 5 years, resale at 55%.
-- Holders get 17,010 rent + 15,400 resale = 32,410 back on 28,000: 1.16×, IRR 3.8% a year. Resale value moves it most: 15% rent and 60% resale gives 6.5%.
+> NHẬN TIỀN THUÊ
+> Tiền thuê về ví theo cổ phần
+> kongou2002.github.io/rwa-fleet
+> 90%
+> tiền thuê cho người giữ cổ phần
+> 5,67triệu
+> 40 cổ phần, hai tháng thuê
+> FleetShares
+> Ví người giữ thử 0x0812…a419 · Lần nhận: 0xd2a7…764d · Bản demo trên testnet: tiền VND được mô phỏng bằng token thử; cổng thanh toán chưa nối.
 
-- All figures: recomputed by `build.js` from `EX` in `web/views/how.js`, same formula as the app.
+Ghi chú người nói:
 
-## 9. Why on chain, why Avalanche, where the money comes from
+Mỗi lần Công ty A trả tiền thuê, hợp đồng ghi phần của từng cổ phần ngay lúc đó. Người giữ cổ phần bấm nhận là xong. Ví dụ trên Fuji: Công ty A trả 7,875 triệu tiền thuê một tháng cho chiếc CX-5, 787.500 đ là phí, 7,0875 triệu cho người giữ cổ phần; một người giữ 40 trên 100 cổ phần nhận 5,67 triệu cho hai tháng. Tiền thuê kiếm được trước khi bán cổ phần vẫn thuộc người bán.
 
-**Why on chain:** investors, the manager and the rental company do not have to trust each other. The contract holds purchase money, fixes the 10% fee and pays rent by share. Anyone can check every payment.
+Số liệu và nguồn:
 
-**Why Avalanche:** rentals are logged on our own Avalanche L1 (chain 510103): one cheap transaction each, and only allow-listed addresses can write. Our ICM relayer carries the signed totals to the C-Chain, where the money is. A rent payment used 141,050 gas: about 0.0011 AVAX at today's C-Chain base fee.
+- 90%: FEE_BPS trong src/FleetShares.sol
+- 5,67 triệu: README Proof: claimRent 0xd2a782fb2bb2049bdb5d28a4c5c8b9fcbf6107e863fc6b0de47263be4703764d: 226,80 đơn vị (= 40% × 283,50 × 2) × 25.000 đ; payRent 0xaf5d3501904d84f35e9a1abbb2cb481140810be8ffb3a168bad1670140de2780
 
-**Where money comes from:** rent Company A earns from renting the car out, and the car's resale. The manager earns only its 10% of rent. No token, no printed yield. On testnet, rent is test USDC paid by our own operator key.
+Liên kết trên slide:
 
-- 141,050 gas: receipt of the rent payment `tx.payRent` in `docs/fuji.json`. Base fee 7.5 nAVAX: `cast base-fee` on C-Chain mainnet, 22 Nov 2026.
+- 0xd2a7…764d: https://testnet.snowtrace.io/tx/0xd2a782fb2bb2049bdb5d28a4c5c8b9fcbf6107e863fc6b0de47263be4703764d
 
-## 10. Proof
+## 7. Bán lại
 
-**Live on Avalanche Fuji, with 50 tests**
+Chữ trên slide:
 
-Contracts: FleetShares 0xd82b…58F9, MockUSDC 0xb06F…C630, IncomeMirror 0x9D14…263d, CarExit 0xbc57…F96B, AuditRegistry 0xF2e4…E442 on Fuji (linked to Snowtrace); RentalLog 0xb06F…c630 on the Team1 L1 (plain hash: the L1 has no public explorer). Addresses from `docs/fuji.json`.
+> BÁN LẠI
+> Bán cổ phần cho người khác
+> kongou2002.github.io/rwa-fleet
+> 1giao dịch
+> tiền cho người bán, cổ phần cho người mua
+> 4lệnh
+> đang mở, 22 cổ phần
+> FleetShares
+> Sổ lệnh không giữ cổ phần của người bán · Bản demo trên testnet: tiền VND được mô phỏng bằng token thử; cổng thanh toán chưa nối.
 
-Transactions, from the README's "Proof" table: Mazda CX-5 2.0 listed as 100 × 280 USDC · last share sold, 28,000 USDC to the operator in the same transaction · 315 USDC rent split 31.50 fee / 283.50 holders · a 40-share holder collects 226.80 USDC · offer of 5 shares at 275 · period closed on the Team1 L1 (2 rentals, 15 days, 315 USDC; plain hash) · ICM message arrives on Fuji · a third month reported but not paid: reported 945, paid 630, unpaid 315.
+Ghi chú người nói:
 
-6 contracts on 2 chains · 50 Foundry tests on the money paths.
+Người giữ cổ phần đặt giá bán; cổ phần vẫn nhận tiền thuê tới khi có người mua. Người mua trả trong một giao dịch: tiền cho người bán, cổ phần cho người mua, hoặc không có gì xảy ra. Lúc chụp có 4 lệnh đang mở với 22 cổ phần. Giới hạn: sổ lệnh không giữ cổ phần, nên nếu người bán đã chuyển cổ phần đi thì lệnh đó không khớp được.
 
-- 50: `function test…` count in `test/*.sol` at build time (`forge test`: 50 pass).
+Số liệu và nguồn:
 
-## 11. What is real today, and what is not
+- 1 giao dịch: takeOffer trong src/FleetShares.sol; README, Who doesn't trust whom
+- 4 lệnh, 22 cổ phần: trang Market của app lúc 2026-11-22 00:05 UTC (đọc từ hợp đồng)
+- Lệnh bán 5 cổ phần: README Proof: makeOffer 0x1aaa07517aa266c4ef5aa6258c526046ef8a33baaa4671caa5c711efddaef625
 
-**Real on testnet:** 6 contracts on Fuji and an Avalanche L1, used by real testnet transactions · money rules enforced by code: escrow, refund, 90 / 10 split, share offers · income reports sent from our own L1 over ICM, compared with rent paid · 50 Foundry tests.
+## 8. Công ty báo bao nhiêu, trả bao nhiêu
 
-**Not yet:** no real car or rental company yet; Company A is a placeholder · test USDC; rent is paid by our own operator key · an operator that stops paying is not forced to: no bond yet · contracts not audited; no car resold yet; no audit report published yet · our team runs the L1, not a rental company; it has no public explorer yet.
+Chữ trên slide:
 
-**Vietnam law:** crypto is not legal tender in Vietnam, and selling shares of a car's income to the public is likely a securities offering. This is a prototype, not an offer or investment advice. A launch needs a licensed structure, with the rental company paid in VND.
+> MINH BẠCH
+> Công ty báo bao nhiêu, trả bao nhiêu
+> kongou2002.github.io/rwa-fleet
+> Kỳ 4: báo 7,875 triệu
+> Mazda CX-5, sang mạng chính
+> 7,875
+> triệu còn nợ
+> ai cũng thấy, chưa cần ai kêu
+> Đã trả
+> 23,625 triệu / 31,5 triệu
+> FleetShares
+> Kỳ 4: 0xcf65…9b75 · Trả nốt: — · Bản demo trên testnet: tiền VND được mô phỏng bằng token thử; cổng thanh toán chưa nối.
 
-## 12. Next
+Ghi chú người nói:
 
-**Next: one real car with one rental company**
+Đây là chỗ các bên không phải tin nhau. Công ty A ghi từng lượt thuê, tổng mỗi kỳ được gửi sang mạng chính và đặt cạnh số tiền thuê thật sự đã trả. Với chiếc CX-5, báo cáo kỳ 4 sang trước tiền thuê: báo tổng 31,5 triệu, đã trả 23,625 triệu, còn nợ 7,875 triệu, hiện ngay trên app và trên hợp đồng. Lúc đọc số liệu, khoản này chưa trả: đã trả 23,625 triệu trên 31,5 triệu đã báo. Chiếc Vios: báo 10,125 triệu, trả 10,125 triệu. Giới hạn: chuỗi không thấy lượt thuê mà công ty không ghi; hợp đồng không ép được công ty trả, chưa có tiền ký quỹ.
 
-- Pilot: one car with one licensed rental company in Vietnam, rent reported monthly.
-- Operator bond: collateral that is cut when reported rent stays unpaid past a deadline.
-- Legal structure: a vault company abroad, verified holders, VND on the operator's side.
-- Operator's L1: hand the L1's validator and allow-list to the rental company, and add a public explorer.
+Số liệu và nguồn:
 
-Ask: we are looking for a rental company for a one-car pilot, and legal advice on the structure.
+- Kỳ 4: báo 315: IncomeMirror, sự kiện IncomeReported, tx 0xcf65497d9936d03cb7c19ab6586f3148e1d3121b1f5418b1c60447b30a479b75 (khối 61.447.739)
+- 7,875 triệu còn nợ: README Proof: ledger(1) = báo 945, trả 630, còn 315 đơn vị (× 25.000 đ) (tx 0xcf65497d9936d03cb7c19ab6586f3148e1d3121b1f5418b1c60447b30a479b75); tiền thuê đã trả trước đó 945 từ sự kiện RentPaid
+- Đã trả 23,625 triệu / 31,5 triệu: IncomeMirror.ledger(1), khối 61.447.994 (2026-11-22 00:05 UTC)
+- Vios 10,125 triệu: IncomeMirror.ledger(3), khối 61.447.994 (2026-11-22 00:05 UTC)
 
-App kongou2002.github.io/rwa-fleet · Code github.com/kongou2002/rwa-fleet · Team Oicha
+Liên kết trên slide:
 
-## Rebuild
+- 0xcf65…9b75: https://testnet.snowtrace.io/tx/0xcf65497d9936d03cb7c19ab6586f3148e1d3121b1f5418b1c60447b30a479b75
+
+## 9. Hai mạng
+
+Chữ trên slide:
+
+> HAI MẠNG
+> Sổ cho thuê ở mạng riêng, đối chiếu ở mạng chính
+> Công ty A
+> Mạng riêng (L1)
+> Mạng chính
+> 1
+> Ghi từng lượt thuê
+> 2
+> Tổng mỗi kỳ, có chữ ký
+> 3
+> So với tiền thuê đã trả
+> 6
+> báo cáo kỳ
+> đã sang mạng chính
+> Chỉ ví được phép mới ghi
+> FleetShares
+> Mạng riêng hiện do nhóm chạy, một validator, chưa có trình duyệt khối công khai
+
+Ghi chú người nói:
+
+Vì sao hai mạng. Sổ cho thuê hằng ngày của Công ty A nằm trên một Avalanche L1 riêng (chain 510103): mỗi lượt thuê là một giao dịch rẻ, và chỉ những ví được bật trong danh sách cho phép mới ghi được. Hết kỳ, ai cũng gọi được report: hợp đồng RentalLog tự gửi tổng của nó sang C-Chain qua Avalanche ICM (Teleporter), có chữ ký của validator L1. Trên C-Chain, IncomeMirror chỉ nhận tin từ Teleporter, từ đúng L1 đó và đúng RentalLog đó, rồi đặt tổng cạnh tiền thuê đã ghi nhận trong FleetShares. Đến khối 61.447.994 (2026-11-22 00:05 UTC) đã có 6 báo cáo kỳ sang tới Fuji. Giới hạn: L1 hiện do nhóm chạy, một validator, chưa có trình duyệt khối công khai.
+
+Số liệu và nguồn:
+
+- 6 báo cáo: số sự kiện IncomeReported của IncomeMirror 0x9D1479479FCB0EFeFF7E8398558b326886be263d từ khối 61.445.000 tới khối 61.447.994 (2026-11-22 00:05 UTC)
+- Chỉ ví được phép: README, Two chains joined by Avalanche ICM (allow-list của L1 510103)
+
+## 10. Một chiếc xe từ đầu đến cuối (ví dụ)
+
+Chữ trên slide:
+
+> VÍ DỤ, KHÔNG PHẢI DỰ BÁO
+> Một chiếc xe từ đầu đến cuối
+> Vốn bỏ ra 700 triệu
+> Năm 1
+> Năm 2
+> Năm 3
+> Năm 4
+> 810,25 triệu
+> Năm 5
+> Tiền thuê
+> Tiền bán xe
+> Cộng dồn, triệu đồng
+> 810,25triệu
+> về lại trên 700 triệu bỏ ra
+> 1,16×
+> sau 5 năm
+> 3,8%
+> mỗi năm (IRR)
+> FleetShares
+> Giả định: xe 700 triệu · thuê 13,5%/năm · phí 10% · 5 năm · bán lại 55% giá · từ trang How it works
+
+Ghi chú người nói:
+
+Một ví dụ, không phải dự báo, đúng như trang How it works của app. Giả định: xe 700 triệu, tiền thuê 13,5% giá xe mỗi năm, phí 10%, cho thuê 5 năm, bán lại 55% giá. Người giữ cổ phần nhận 425,25 triệu tiền thuê cộng 385 triệu tiền bán xe, tổng 810,25 triệu trên 700 triệu bỏ ra: 1,16 lần, khoảng 3,8% mỗi năm. Giá bán lại ảnh hưởng nhiều nhất: tiền thuê 15% và bán lại 60% cho 6,5% mỗi năm.
+
+Số liệu và nguồn:
+
+- Giả định: const EX trong web/views/how.js: price 700 (triệu đồng), gross 0.135, fee 0.10, years 5, resale 0.55
+- 810,25 triệu · 1,16× · 3,8%: tính lại bằng đúng công thức flows/irr của web/views/how.js; khớp trang How it works (1.16× · 3.8%)
+- 6,5%: bảng Return per year (IRR) trên trang How it works: gross 15%, resale 60%
+
+## 11. Bằng chứng
+
+Chữ trên slide:
+
+> BẰNG CHỨNG
+> Đã chạy thật trên mạng thử
+> 50
+> bài kiểm thử, đều qua
+> 6
+> hợp đồng trên 2 mạng
+> 37
+> giao dịch trên mạng thử
+> 6
+> báo cáo thu nhập qua 2 mạng
+> 270triệu
+> bán xe Vios, chia theo cổ phần
+> Mở app
+> FleetShares
+> Đọc từ chuỗi lúc khối 61.447.994 (2026-11-22 00:05 UTC) · kongou2002.github.io/rwa-fleet/
+
+Ghi chú người nói:
+
+Số liệu đọc lúc khối 61.447.994 (2026-11-22 00:05 UTC). 50 bài kiểm thử Foundry trên các đường đi của tiền, chạy lại hôm nay, đều qua. 6 hợp đồng: FleetShares, MockUSDC, IncomeMirror, CarExit, AuditRegistry trên Fuji và RentalLog trên L1 của nhóm. 37 giao dịch đã chạm vào các hợp đồng của app trên Fuji. 6 báo cáo kỳ đã đi từ L1 sang Fuji. Chiếc Toyota Vios đã ghi bán 270 triệu qua CarExit, 20 cổ phần đã hoàn vốn. AuditRegistry có 1 báo cáo kiểm toán, do ví kiểm toán của nhóm công bố. Quét mã để mở app.
+
+Số liệu và nguồn:
+
+- 50: forge test trên nhánh ui-redesign, 22/11/2026: 50 passed, 0 failed (đếm function test trong test/*.sol)
+- 6: docs/fuji.json: 5 hợp đồng trên Fuji + RentalLog trên L1 510103
+- 37: số mã giao dịch khác nhau trong log của FleetShares, IncomeMirror, CarExit, AuditRegistry từ khối 61.445.000 tới khối 61.447.994 (2026-11-22 00:05 UTC)
+- 6: sự kiện IncomeReported, khối 61.447.994 (2026-11-22 00:05 UTC)
+- 270 triệu: CarExit.exitOf(3), khối 61.447.994 (2026-11-22 00:05 UTC): 10.800 đơn vị × 25.000 đ
+- QR: https://kongou2002.github.io/rwa-fleet/
+
+Liên kết trên slide:
+
+- Mở app: https://kongou2002.github.io/rwa-fleet/
+
+## 12. So sánh
+
+Chữ trên slide:
+
+> SO SÁNH
+> So với mua cả xe hay góp qua công ty
+> FleetShares
+> Mua cả xe
+> Góp qua công ty
+> Vốn nhỏ vẫn tham gia
+> Không phải tự lo xe
+> Thấy từng khoản tiền thuê
+> Phí cố định trong hợp đồng
+> Bán lại một phần
+> FleetShares
+> Dấu gạch: không áp dụng hoặc tuỳ công ty
+
+Ghi chú người nói:
+
+So với hai cách người ta đang làm. Mua cả xe: phải có đủ tiền một chiếc, tự lo xe hoặc tự tìm công ty thuê lại, bán thì bán cả chiếc; bù lại thấy hết tiền thuê của mình và không có phí quản lý. Góp qua công ty: vốn nhỏ vẫn góp được, không phải lo xe, nhưng tiền thuê, phí và báo cáo là chuyện của công ty, và rút ra thì tuỳ công ty. FleetShares: vốn nhỏ, không lo xe, từng khoản tiền thuê nằm trên chuỗi, phí 10% cố định trong mã, và bán lại được từng cổ phần.
+
+Số liệu và nguồn:
+
+- Phí 10% cố định: FEE_BPS constant, src/FleetShares.sol
+- Bán lại một phần: makeOffer / takeOffer, src/FleetShares.sol
+
+## 13. Luật Việt Nam và giới hạn
+
+Chữ trên slide:
+
+> LUẬT VIỆT NAM VÀ GIỚI HẠN
+> Bản mẫu trên mạng thử, chưa chào bán
+> LUẬT VIỆT NAM
+> Tiền đi bằng VND
+> Tiền mã hoá không để thanh toán
+> Có thể là chứng khoán
+> HÔM NAY CHƯA CÓ
+> Chưa có xe thật
+> Chưa nối cổng thanh toán
+> Nhóm giữ mạng riêng, ví kiểm toán
+> Chưa kiểm toán, chưa tư vấn luật
+> FleetShares
+> NHNN về tiền mã hoá · NQ 05/2025/NQ-CP · Luật Chứng khoán 2019 · Không phải lời chào bán hay lời khuyên đầu tư
+
+Ghi chú người nói:
+
+Về luật Việt Nam. Một: tiền mã hoá không phải phương tiện thanh toán hợp pháp ở Việt Nam (Ngân hàng Nhà nước); thí điểm tài sản mã hoá theo Nghị quyết 05/2025/NQ-CP yêu cầu chào bán và thanh toán bằng VND qua tổ chức được cấp phép. Hai: bán cổ phần thu nhập của xe ra công chúng nhiều khả năng là chào bán chứng khoán theo Luật Chứng khoán 2019. Đây là bản mẫu, không phải lời chào bán hay lời khuyên đầu tư. Vì vậy tiền đi bằng tiền đồng qua ngân hàng, và muốn ra thật phải có cấu trúc được cấp phép. Hôm nay chưa có: xe và công ty cho thuê thật; cổng thanh toán chưa nối, tiền đồng đang mô phỏng bằng token thử; mạng riêng và ví kiểm toán đều do nhóm giữ; chưa có tư vấn pháp lý; hợp đồng chưa được kiểm toán. Nếu công ty ngừng trả tiền thuê, hợp đồng không ép được, chưa có ký quỹ.
+
+Số liệu và nguồn:
+
+- Tiền mã hoá không phải phương tiện thanh toán: Ngân hàng Nhà nước: https://vnba.org.vn/vi/bitcoin-khong-phai-tien-phap-quy--khong-phai-la-phuong-tien-thanh-toan-hop-phap-tren-dat-nuoc-viet-nam-6822.htm
+- Thanh toán VND qua tổ chức được cấp phép: NQ 05/2025/NQ-CP: https://xaydungchinhsach.chinhphu.vn/toan-van-nghi-quyet-so-5-2025-nq-cp-ve-trien-khai-thi-diem-thi-truong-tai-san-ma-hoa-tai-viet-nam-119250909184045221.htm
+- Có thể là chứng khoán: Luật Chứng khoán số 54/2019/QH14; README, Limits
+- Giới hạn: README, Limits và Add-ons; docs/fuji.json (auditor = ví của nhóm)
+
+## 14. Lộ trình
+
+Chữ trên slide:
+
+> LỘ TRÌNH
+> Từ mạng thử tới một chiếc xe thật
+> BÂY GIỜ
+> Mạng thử
+> 3 xe mẫu · tiền mô phỏng
+> TIẾP THEO
+> 1 xe thật, 1 công ty
+> Nối VietQR · pháp lý · kiểm toán
+> SAU ĐÓ
+> Công ty tự chạy mạng riêng
+> Ký quỹ của công ty cho thuê
+> FleetShares
+> Chưa có công ty cho thuê hay đơn vị kiểm toán nào ký với nhóm
+
+Ghi chú người nói:
+
+Lộ trình ba bước. Bây giờ: testnet, ba xe mẫu, tiền đồng mô phỏng bằng token thử, đủ vòng đời từ gọi vốn tới bán xe. Tiếp theo: nối cổng thanh toán VietQR, một chiếc xe thật với một công ty cho thuê có giấy phép ở Việt Nam, báo cáo thu nhập hằng tháng; song song là tư vấn pháp lý cho cấu trúc và kiểm toán hợp đồng. Sau đó: giao validator và danh sách cho phép của mạng riêng cho công ty cho thuê, thêm trình duyệt khối công khai, và thêm khoản ký quỹ của công ty, bị trừ khi tiền thuê đã báo mà quá hạn chưa trả. Chúng tôi đang tìm một công ty cho thuê xe cho chiếc xe đầu tiên và tư vấn pháp lý.
+
+Số liệu và nguồn:
+
+- 3 xe mẫu: FleetShares.carCount(), khối 61.447.994 (2026-11-22 00:05 UTC)
+- Các bước tiếp theo: docs/SLIDES.md cũ, mục Next; README, Limits
+
+## 15. Cảm ơn
+
+Chữ trên slide:
+
+> FleetShares
+> Cảm ơn
+> Team Oicha
+> XÂY TRÊN AVALANCHE · CHẠY TRÊN TESTNET FUJI
+
+Ghi chú người nói:
+
+Cảm ơn ban giám khảo.
+
+## Dựng lại
 
 ```sh
-cd web && python3 -m http.server 8151 &          # serve the app
-PW=<playwright>/index.mjs node docs/deck/shots.mjs   # refresh the six screenshots (HOLDER=0x… to change the wallet shown)
-NODE_PATH=<dir with pptxgenjs> node docs/deck/build.js   # rebuild docs/FleetShares-pitch.pptx
+cd web && python3 -m http.server 8171 &
+python3 docs/deck/tools/read_chain.py . docs/deck/live.json      # số liệu sống (cần Foundry cast)
+PW=<playwright>/index.mjs node docs/deck/tools/shots.mjs docs/deck/shots   # ảnh chụp app, chỉ đọc
+uv run --with pillow python docs/deck/tools/build.py docs/deck .          # deck.html, notes.json, sources.json
+PW=... node docs/deck/tools/render.mjs $PWD/docs/deck/deck.html docs/deck/png && PW=... node docs/deck/tools/texts.mjs $PWD/docs/deck/deck.html docs/deck/texts.json docs/FleetShares-pitch.pdf
+uv run --with python-pptx --with pillow python docs/deck/tools/make_pptx.py docs/deck docs/FleetShares-pitch.pptx
 ```
+

@@ -1,40 +1,81 @@
-/* Market view (mk-) */
-.mk-intro { display: flex; flex-direction: column; gap: 8px; max-width: 640px; }
-.mk-grid { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
-/* the offer table needs the room: a quantity box and a buy button sit in its last column */
-.mk-book { flex: 1 1 720px; min-width: 0; }
-.mk-sell { flex: 0 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
-.mk-ch { align-items: center; }
-.mk-seg { align-self: flex-start; flex-wrap: wrap; }
-.mk-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.mk-of { font-weight: 400; }
-.mk-foot { margin-top: 16px; }
-.mk-take { display: inline-flex; align-items: center; gap: 6px; }
-.mk-qty { width: 56px; height: 32px; padding: 0 8px; font-size: 13px; text-align: right; }
-.mk-mine { display: grid; gap: 8px; padding-top: 16px; border-top: 1px solid var(--line); }
-.mk-mine ul { display: grid; }
-.mk-mine li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); }
-.mk-mine li:first-child { border-top: 0; padding-top: 0; }
-.mk-mine b { font-weight: 500; }
+/* Resell view (mk-) */
+.mk-head { display: grid; gap: 12px; margin: 8px 0 48px; }
+.mk-title { font: 500 64px/1 var(--display, "Inter Tight", Inter, sans-serif); letter-spacing: -0.04em; color: var(--ink); }
+.mk-lede { font: 400 20px/28px var(--sans); color: var(--ink-2); max-width: 48ch; }
+.mk-h2 { font: 500 28px/34px var(--display, "Inter Tight", Inter, sans-serif); letter-spacing: -0.03em; color: var(--ink); }
 
+.mk-grid { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 48px; align-items: start; }
+
+/* For sale */
+.mk-h { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; margin-bottom: 12px; }
+.mk-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.mk-chips .chip { height: 36px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); font: 500 14px/1 var(--sans); cursor: pointer; }
+.mk-chips .chip.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+.mk-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.mk-row { display: grid; grid-template-columns: minmax(0, 1fr) 130px 120px 236px; align-items: center; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.mk-car { display: flex; align-items: center; gap: 14px; min-width: 0; color: var(--ink); }
+.mk-car:hover { text-decoration: none; }
+.mk-car:hover b { text-decoration: underline; text-underline-offset: 3px; }
+.mk-thumb { width: 70px; height: 56px; flex: none; object-fit: cover; border-radius: 10px; background: var(--surface-2); aspect-ratio: auto; }
+.mk-thumb.ph svg.i { width: 20px; height: 20px; }
+.mk-name { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; min-width: 0; }
+.mk-name b { font: 600 16px/22px var(--sans); }
+.mk-name .mk-sub { flex-basis: 100%; }
+.mk-yours { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); font: 500 12px/1 var(--sans); }
+.mk-col { display: flex; flex-direction: column; min-width: 0; }
+.mk-fig { font: 500 16px/22px var(--sans); color: var(--ink); white-space: nowrap; }
+.mk-fig.pos { color: var(--yield); }
+.mk-sub { font: 400 13px/18px var(--sans); color: var(--ink-3); }
+.mk-sub.pos { color: var(--yield); }
+.mk-act { display: flex; justify-content: flex-end; }
+.mk-take { display: inline-flex; align-items: center; gap: 8px; }
+.mk-btn { height: 44px; padding: 0 20px; border-radius: 999px; font-size: 14px; }
+.mk-qty { width: 52px; height: 44px; padding: 0 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font: 500 14px/1 var(--sans); color: var(--ink); text-align: center; }
+.mk-qty:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
+.mk-mine .mk-thumb { opacity: .85; }
+.mk-empty { display: grid; justify-items: center; gap: 8px; padding: 48px 16px; color: var(--ink-3); border-bottom: 1px solid var(--line); text-align: center; font: 400 15px/22px var(--sans); }
+.mk-empty svg.i { width: 24px; height: 24px; }
+
+/* Sell card */
+.mk-sell { display: grid; gap: 18px; padding: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card, 20px); }
+.mk-field { display: grid; gap: 8px; min-width: 0; }
+.mk-lab { font: 500 13px/18px var(--sans); color: var(--ink-2); }
+.mk-opts { display: grid; gap: 8px; }
+.mk-opt { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 8px 14px 8px 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); text-align: left; cursor: pointer; font: inherit; }
+.mk-opt:hover { border-color: var(--ink-3); }
+.mk-opt.on { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+.mk-opt-img { width: 48px; height: 38px; flex: none; object-fit: cover; border-radius: 8px; background: var(--surface-2); aspect-ratio: auto; }
+.mk-opt-img.ph svg.i { width: 16px; height: 16px; }
+.mk-opt b { flex: 1; min-width: 0; font: 600 15px/20px var(--sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-opt span { font: 400 13px/18px var(--sans); color: var(--ink-3); white-space: nowrap; }
+.mk-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mk-in { width: 100%; height: 52px; padding: 0 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font: 500 16px/1 var(--sans); color: var(--ink); }
+.mk-in:focus { outline: 2px solid var(--ink); outline-offset: 1px; border-color: var(--ink); }
+.mk-hint { margin-top: -8px; font: 400 13px/18px var(--sans); color: var(--ink-3); }
+.mk-hint.mk-bad { color: var(--risk); }
+.mk-total { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-top: 18px; border-top: 1px solid var(--line); }
+.mk-total span { font: 400 15px/22px var(--sans); color: var(--ink-2); }
+.mk-total b { font: 500 28px/34px var(--display, "Inter Tight", Inter, sans-serif); letter-spacing: -0.03em; color: var(--ink); }
+.mk-cta { width: 100%; height: 56px; border-radius: 999px; font-size: 16px; }
+.mk-note { text-align: center; font: 400 13px/18px var(--sans); color: var(--ink-3); }
+.mk-note-l { font: 400 15px/22px var(--sans); color: var(--ink-2); }
+
+@media (max-width: 1080px) {
+  .mk-grid { grid-template-columns: 1fr; gap: 40px; }
+  .mk-sell { max-width: 520px; }
+}
 @media (max-width: 720px) {
-  .mk-book, .mk-sell { flex: 1 1 100%; }
-  .mk-ch { align-items: flex-start; }
-  .mk-ch .seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
-  .mk-qty { height: 44px; width: 64px; }
-
-  /* offers as stacked rows: car on top, figures as label/value pairs, buy controls full width */
-  .mk-tbl thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-  .mk-tbl, .mk-tbl tbody, .mk-tbl tr, .mk-tbl td { display: block; }
-  .mk-tbl tr { padding: 12px 0; border-bottom: 1px solid var(--line); }
-  .mk-tbl tr:first-child { padding-top: 0; }
-  .mk-tbl tr:last-child { border-bottom: 0; }
-  .mk-tbl td, .mk-tbl tr:last-child td { padding: 4px 0; border: 0; white-space: normal; }
-  .mk-tbl td:first-child { padding-bottom: 8px; }
-  .mk-tbl td[data-l] { display: flex; justify-content: space-between; gap: 16px; font-size: 14px; }
-  .mk-tbl td[data-l]::before { content: attr(data-l); color: var(--ink-3); font: 400 14px/20px var(--sans); }
-  .mk-tbl td.mk-act { padding-top: 8px; }
-  .mk-tbl .mk-take { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 8px; width: 100%; }
-  .mk-tbl .mk-qty { width: 100%; }
-  .mk-tbl td.mk-act > .btn { width: 100%; }
+  .mk-head { margin: 0 0 32px; gap: 8px; }
+  .mk-title { font-size: 40px; }
+  .mk-lede { font-size: 16px; line-height: 24px; }
+  .mk-h2 { font-size: 24px; line-height: 30px; }
+  .mk-chips { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; scrollbar-width: none; }
+  .mk-chips .chip { flex: none; }
+  /* car on top, price and rent side by side, buy controls full width */
+  .mk-row { grid-template-columns: 1fr 1fr; gap: 12px 16px; padding: 16px 0; }
+  .mk-car { grid-column: 1 / -1; }
+  .mk-act { grid-column: 1 / -1; }
+  .mk-act > .btn, .mk-take { width: 100%; }
+  .mk-take .mk-btn { flex: 1; }
+  .mk-sell { padding: 20px; max-width: none; }
 }

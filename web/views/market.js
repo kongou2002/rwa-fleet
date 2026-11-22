@@ -1,130 +1,115 @@
 import {
-  registerView, S, ui, esc, same, usd, toVnd, num, fig, trim, parseUsd, parseShares, plural,
-  who, carById, photo, targetNet, rangePct, spin, off, ICON, exitOf, pill,
+  registerView, S, ui, esc, same, usd, toVnd, num, trim, parseUsd, parseShares, plural,
+  carById, metaOf, photo, targetNet, spin, off, ICON, exitOf, ago,
 } from '../core.js';
 
 const idOf = (c) => c.id.toString();
+const vnd = (v) => `₫${usd(v)}`;
+/** A number of million VND as '₫71k' or '₫1.25M'. */
+const vndM = (m) => (m >= 1 ? `₫${trim(m, 2)}M` : `₫${Math.round(m * 1000)}k`);
 
-// Signed percent of offer price against issue price, e.g. '−1.8%' / '+4.3%' / '0%'.
-function vsIssue(price, car) {
-  const issue = num(car.sharePrice);
-  const d = ((num(price) - issue) / issue) * 100;
-  const r = Math.round(d * 10) / 10;
-  if (r === 0) return { text: '0%', cls: 'ink-2', word: 'Same as issue price', d: 0 };
-  const text = `${r < 0 ? '−' : '+'}${trim(Math.abs(r))}%`;
-  return r < 0
-    ? { text, cls: 'pos', word: `${text} discount`, d: r }
-    : { text, cls: 'ink-2', word: `${text} premium`, d: r };
-}
-
-// Target net yield range scaled to what a buyer pays at this price.
-function yieldAt(price, car) {
+/** Expected net rent per share per month at the target yield midpoint, in million VND. */
+function monthlyPerShare(car) {
   const [lo, hi] = targetNet(car);
-  const k = num(car.sharePrice) / num(price);
-  return rangePct(lo * k, hi * k);
+  return (num(car.sharePrice) * ((lo + hi) / 2)) / 100 / 12;
 }
 
-function offersCard() {
+/** When the offer was posted, from the event feed when it has it. */
+function listedAgo(oid) {
+  const ev = (S.events || []).find((e) => e.name === 'OfferMade' && String(e.args?.offerId) === oid);
+  return ev?.time ? `listed ${ago(ev.time)}` : 'listed by you';
+}
+
+function forSale() {
   const open = S.data.offers.filter((o) => o.amount > 0);
   const carIds = [...new Set(open.map((o) => o.carId.toString()))];
   const filter = carIds.includes(String(ui.mkCar)) ? String(ui.mkCar) : 'all';
   const shown = filter === 'all' ? open : open.filter((o) => o.carId.toString() === filter);
-  const totalShares = open.reduce((s, o) => s + o.fillable, 0);
 
-  // Cheapest takeable offer relative to its car's issue price gets the primary button.
+  // The cheapest takeable offer (against its car's issue price) gets the black button.
   let best = null, bestRatio = Infinity;
   for (const o of shown) {
     if (same(o.seller, S.account) || o.fillable < 1) continue;
-    const car = carById(o.carId);
-    const ratio = num(o.pricePerShare) / num(car.sharePrice);
+    const ratio = num(o.pricePerShare) / num(carById(o.carId).sharePrice);
     if (ratio < bestRatio) { bestRatio = ratio; best = o.id; }
   }
+  // Buyable rows first, cheapest first; own listings last.
+  shown.sort((a, b) => {
+    const rank = (o) => (same(o.seller, S.account) ? 2 : o.fillable < 1 ? 1 : 0);
+    return rank(a) - rank(b) || num(a.pricePerShare) / num(carById(a.carId).sharePrice) - num(b.pricePerShare) / num(carById(b.carId).sharePrice);
+  });
 
-  const seg = carIds.length ? `<div class="seg" role="group" aria-label="Filter by car">
-      <button type="button" class="${filter === 'all' ? 'on' : ''}" aria-pressed="${filter === 'all'}" data-act="set" data-k="mkCar" data-v="all">All</button>
-      ${carIds.map((id) => `<button type="button" class="${filter === id ? 'on' : ''}" aria-pressed="${filter === id}" data-act="set" data-k="mkCar" data-v="${esc(id)}">${esc(carById(id)?.name ?? `Car ${id}`)}</button>`).join('')}
+  const chips = carIds.length > 1 ? `<div class="mk-chips" role="group" aria-label="Filter by car">
+      <button type="button" class="chip${filter === 'all' ? ' on' : ''}" aria-pressed="${filter === 'all'}" data-act="set" data-k="mkCar" data-v="all">All</button>
+      ${carIds.map((id) => `<button type="button" class="chip${filter === id ? ' on' : ''}" aria-pressed="${filter === id}" data-act="set" data-k="mkCar" data-v="${esc(id)}">${esc(carById(id)?.name ?? `Car ${id}`)}</button>`).join('')}
     </div>` : '';
 
   const rows = shown.map((o) => {
     const oid = o.id.toString();
     const car = carById(o.carId);
-    const vs = vsIssue(o.pricePerShare, car);
-    const ex = exitOf(car); // sold: these shares are a claim on the resale payout, not on future rent
+    const ex = exitOf(car); // sold: the shares are a claim on the sale money, not on future rent
     const mine = same(o.seller, S.account);
-    let cell;
+    const city = metaOf(car).city;
+    const below = o.pricePerShare < car.sharePrice;
+
+    let act;
     if (mine) {
-      cell = `<button class="btn btn-sm" type="button" data-act="cancelOffer" data-offer="${oid}"${off()}>${spin(`unoffer-${oid}`)}Cancel offer</button>`;
+      act = `<button class="btn mk-btn" type="button" data-act="cancelOffer" data-offer="${oid}"${off()}>${spin(`unoffer-${oid}`)}Remove</button>`;
     } else if (o.fillable < 1) {
-      cell = '<span class="t-sm ink-3">Seller has no shares left</span>';
+      act = '<span class="t-sm ink-3">Seller has none left</span>';
     } else if (!S.account) {
-      cell = '<button class="btn btn-sm" type="button" data-act="connect">Connect to buy</button>';
+      act = `<button class="btn mk-btn" type="button" data-act="connect">Log in to buy</button>`;
     } else {
       const qty = ui.take[oid] ?? String(o.fillable);
       const n = Math.min(parseShares(qty), o.fillable);
-      cell = `<span class="mk-take">
-          <input class="input mk-qty" id="take-${oid}" data-bind="take" data-offer="${oid}" value="${esc(qty)}" inputmode="numeric" autocomplete="off" aria-label="Shares to buy from offer ${oid}, up to ${o.fillable}">
-          <button class="btn btn-sm${o.id === best ? ' btn-p' : ''}" type="button" data-act="takeOffer" data-offer="${oid}"${off(n < 1)}>${spin(`take-${oid}`)}Buy for ${usd(BigInt(n) * o.pricePerShare)}</button>
+      act = `<span class="mk-take">
+          ${o.fillable > 1 ? `<input class="mk-qty" id="take-${oid}" data-bind="take" data-offer="${oid}" value="${esc(qty)}" inputmode="numeric" autocomplete="off" aria-label="Shares to buy, up to ${o.fillable}" title="Shares to buy">` : ''}
+          <button class="btn mk-btn${o.id === best ? ' btn-p' : ''}" type="button" data-act="takeOffer" data-offer="${oid}"${off(n < 1)}>${spin(`take-${oid}`)}Buy ${vnd(BigInt(n) * o.pricePerShare)}</button>
         </span>`;
     }
-    return `<tr>
-      <td><a class="carcell" href="#/car/${idOf(car)}">${photo(car, 'thumb', '')}${esc(car.name)}</a>${ex ? ` ${pill('', 'Sold')}` : ''}</td>
-      <td class="t-addr ink-2" data-l="Seller">${who(o.seller)}</td>
-      <td class="num" data-l="Shares">${o.fillable}${o.fillable < o.amount ? ` <span class="ink-3 mk-of">of ${o.amount}</span>` : ''}</td>
-      <td class="num" data-l="Price">${usd(o.pricePerShare)}</td>
-      <td class="r ${vs.cls}" data-l="vs. issue">${vs.text}</td>
-      ${ex
-        ? `<td class="r ink-2" data-l="Payout" title="The car is sold: each share redeems for its part of the sale">${usd(ex.proceeds / BigInt(ex.totalShares))} payout</td>`
-        : `<td class="num pos" data-l="Buyer yield">${yieldAt(o.pricePerShare, car)}</td>`}
-      <td class="r mk-act">${cell}</td>
-    </tr>`;
+
+    const earn = ex
+      ? `<span class="mk-fig">${vnd(ex.proceeds / BigInt(ex.totalShares))}</span><span class="mk-sub">payout per share</span>`
+      : `<span class="mk-fig pos">~${vndM(monthlyPerShare(car))}/mo</span><span class="mk-sub">per share</span>`;
+
+    return `<li class="mk-row${mine ? ' mk-mine' : ''}">
+      <a class="mk-car" href="#/car/${idOf(car)}">
+        ${photo(car, 'mk-thumb', '')}
+        <span class="mk-name"><b>${esc(car.name)}</b>${mine ? '<span class="mk-yours">Yours</span>' : ''}${ex ? '<span class="mk-yours">Sold</span>' : ''}
+          <span class="mk-sub">${plural(o.fillable < o.amount && !mine ? o.fillable : o.amount, 'share')} · ${mine ? esc(listedAgo(oid)) : esc(city || 'on the road')}</span></span>
+      </a>
+      <span class="mk-col"><span class="mk-fig">${vnd(o.pricePerShare)}</span><span class="mk-sub${below ? ' pos' : ''}">${below ? 'below issue price' : 'per share'}</span></span>
+      <span class="mk-col">${earn}</span>
+      <span class="mk-act">${act}</span>
+    </li>`;
   }).join('');
 
-  const body = open.length
-    ? `<div class="tbl-box">
-        <table class="t mk-tbl">
-          <thead><tr><th>Car</th><th>Seller</th><th class="r">Shares</th><th class="r">Price</th><th class="r">vs. issue</th><th class="r">Buyer yield</th><th class="r"><span class="mk-sr">Action</span></th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
-      <p class="t-sm ink-3 mk-foot">Buyer yield is the car's target net rent yield, scaled by issue price over offer price.</p>`
-    : `<div class="empty">${ICON.car}<p class="t-sm ink-3">No shares are for sale right now. Holders of a funded car can list theirs here.</p></div>`;
+  const body = shown.length
+    ? `<ul class="mk-list">${rows}</ul>`
+    : `<div class="mk-empty">${ICON.car}<p>Nothing for sale right now.</p></div>`;
 
-  return `<section class="card pad mk-book">
-    <div class="card-h mk-ch">
-      <div><h2 class="t-title">Open offers</h2><p class="t-sm ink-3">${plural(open.length, 'offer')} · ${plural(totalShares, 'share')}</p></div>
-      ${seg}
-    </div>
+  return `<section class="mk-book">
+    <div class="mk-h"><h2 class="mk-h2">For sale</h2>${chips}</div>
     ${body}
   </section>`;
 }
 
 function sellCard() {
-  const head = `<div><h2 class="t-title">Sell shares</h2><p class="t-sm ink-3">Listed shares keep earning rent until sold</p></div>`;
+  const head = '<h2 class="mk-h2">Sell your shares</h2>';
   if (!S.account) {
-    return `<section class="card pad mk-sell">${head}
-      <p class="t-sm ink-2">Connect a wallet to list shares you hold.</p>
-      <button class="btn btn-p btn-w" type="button" data-act="connect">${ICON.wallet}Connect wallet</button>
+    return `<section class="mk-sell">${head}
+      <p class="mk-note-l">Log in to list shares you own.</p>
+      <button class="btn btn-p mk-cta" type="button" data-act="connect">Log in</button>
     </section>`;
   }
   const me = S.data.me;
-  if (!me) return `<section class="card pad mk-sell">${head}<p class="skel">Loading your shares</p></section>`;
+  if (!me) return `<section class="mk-sell">${head}<p class="skel">Loading your shares</p></section>`;
 
   const held = S.data.cars.filter((c) => c.statusName === 'Active' && (me.shares[c.id] ?? 0n) > 0n);
-  const mineOpen = S.data.offers.filter((o) => o.amount > 0 && same(o.seller, S.account));
-  const myList = mineOpen.length ? `<div class="mk-mine">
-      <h3 class="t-label">Your open offers</h3>
-      <ul>${mineOpen.map((o) => {
-        const oid = o.id.toString();
-        return `<li><span class="t-sm"><b>${plural(o.amount, 'share')}</b> · ${esc(carById(o.carId)?.name ?? '')} · ${usd(o.pricePerShare)} each</span>
-          <button class="btn btn-sm" type="button" data-act="cancelOffer" data-offer="${oid}"${off()}>${spin(`unoffer-${oid}`)}Cancel</button></li>`;
-      }).join('')}</ul>
-    </div>` : '';
-
   if (!held.length) {
-    return `<section class="card pad mk-sell">${head}
-      <p class="t-sm ink-2">Shares become tradable once a car is fully funded and starts earning rent. You hold none of those yet.</p>
-      <a class="btn btn-w" href="#/">Browse cars in the vault</a>
-      ${myList}
+    return `<section class="mk-sell">${head}
+      <p class="mk-note-l">You can sell once a car you own is on the road.</p>
+      <a class="btn mk-cta" href="#/">Browse cars</a>
     </section>`;
   }
 
@@ -137,39 +122,43 @@ function sellCard() {
   const price = parseUsd(f.price);
   const okPrice = price !== null && price > 0n;
   const tooMany = n > mine;
-  const vs = okPrice ? vsIssue(price, car) : null;
+  const total = n && okPrice && !tooMany ? BigInt(n) * price : null;
 
-  return `<section class="card pad mk-sell">${head}
-    <div class="seg mk-seg" role="group" aria-label="Car to sell">
-      ${held.map((c) => `<button type="button" class="${idOf(c) === sel ? 'on' : ''}" aria-pressed="${idOf(c) === sel}" data-act="set" data-k="mkSell" data-v="${idOf(c)}">${esc(c.name)} · ${Number(me.shares[c.id])}</button>`).join('')}
+  const carOpt = (c) => {
+    const on = idOf(c) === sel;
+    return `<button type="button" class="mk-opt${on ? ' on' : ''}" aria-pressed="${on}" data-act="set" data-k="mkSell" data-v="${idOf(c)}">
+        ${photo(c, 'mk-opt-img', '')}<b>${esc(c.name)}</b><span>${Number(me.shares[c.id])} owned</span>
+      </button>`;
+  };
+
+  return `<section class="mk-sell">${head}
+    <div class="mk-field">
+      <span class="mk-lab" id="mk-car-l">Car</span>
+      <div class="mk-opts" role="group" aria-labelledby="mk-car-l">${held.map(carOpt).join('')}</div>
     </div>
-    <div class="field">
-      <label for="offer-amt-${sel}">Shares</label>
-      <div class="input-suffix"><input class="input" id="offer-amt-${sel}" data-bind="offer" data-car="${sel}" data-k="amount" value="${esc(f.amount ?? '')}" placeholder="${Math.min(5, mine)}" inputmode="numeric" autocomplete="off"><span>of ${mine}</span></div>
+    <div class="mk-pair">
+      <div class="mk-field">
+        <label class="mk-lab" for="offer-amt-${sel}">Shares</label>
+        <input class="mk-in" id="offer-amt-${sel}" data-bind="offer" data-car="${sel}" data-k="amount" value="${esc(f.amount ?? '')}" placeholder="${Math.min(5, mine)}" inputmode="numeric" autocomplete="off">
+      </div>
+      <div class="mk-field">
+        <label class="mk-lab" for="offer-price-${sel}">Price each</label>
+        <input class="mk-in" id="offer-price-${sel}" data-bind="offer" data-car="${sel}" data-k="price" value="${esc(f.price ?? '')}" placeholder="${toVnd(car.sharePrice).toLocaleString('en-US')}" inputmode="decimal" autocomplete="off">
+      </div>
     </div>
-    <div class="field">
-      <label for="offer-price-${sel}">Price per share</label>
-      <div class="input-suffix"><input class="input" id="offer-price-${sel}" data-bind="offer" data-car="${sel}" data-k="price" value="${esc(f.price ?? '')}" placeholder="${toVnd(car.sharePrice).toLocaleString('en-US')}" inputmode="decimal" autocomplete="off"><span>VND · issued at ${usd(car.sharePrice)}</span></div>
-    </div>
-    ${tooMany ? `<p class="t-sm risk">You hold ${plural(mine, 'share')} of ${esc(car.name)}.</p>` : ''}
-    ${vs ? `<dl class="kv">
-      <div><dt>vs. issue price</dt><dd class="${vs.d < 0 ? 'pos' : ''}">${vs.word}</dd></div>
-      <div><dt>Target yield at this price</dt><dd class="pos">${yieldAt(price, car)}</dd></div>
-    </dl>` : ''}
-    <div class="total"><span class="t-sm ink-3">You receive if all sell</span><span class="t-fig">${n && okPrice && !tooMany ? fig(BigInt(n) * price) : '–'}</span></div>
-    <button class="btn btn-p btn-lg btn-w" type="button" data-act="makeOffer" data-car="${sel}"${off(n < 1 || tooMany || !okPrice)}>${spin(`offer-${sel}`)}Post offer</button>
-    ${myList}
+    <p class="mk-hint${tooMany ? ' mk-bad' : ''}">${tooMany ? `You own ${plural(mine, 'share')}.` : `Issued at ${vnd(car.sharePrice)}.`}</p>
+    <div class="mk-total"><span>You get</span><b>${total === null ? '–' : `₫${toVnd(total).toLocaleString('en-US')}`}</b></div>
+    <button class="btn btn-p mk-cta" type="button" data-act="makeOffer" data-car="${sel}"${off(n < 1 || tooMany || !okPrice)}>${spin(`offer-${sel}`)}List for sale</button>
+    <p class="mk-note">Your shares keep earning until they sell.</p>
   </section>`;
 }
 
 registerView('market', () => `
-  <div class="head">
-    <div class="mk-intro">
-      <h1 class="t-display">Market</h1>
-      <p class="t-body ink-2">Buy and sell shares of funded cars. The seller is paid directly, and future rent follows the shares.</p>
-    </div>
+  <div class="mk-head">
+    <h1 class="mk-title">Resell</h1>
+    <p class="mk-lede">Shares of cars on the road. Buy from owners, or sell yours.</p>
   </div>
   <div class="mk-grid">
-    ${offersCard()}
+    ${forSale()}
     ${sellCard()}
   </div>`);

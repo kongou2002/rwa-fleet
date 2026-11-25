@@ -3,7 +3,7 @@ import {
   registerView, S, ui, cfg, esc, usd, toVnd, same, ICON,
   metaOf, holdersOf, targetNet, stageOf,
   photo, spin, off, allEvents, TERMS,
-} from '../core.js?v=20261125d';
+} from '../core.js?v=20261125e';
 
 const idStr = (c) => c.id.toString();
 const ORDER = { funding: 0, expired: 1, earning: 2, sold: 3, cancelled: 4 };

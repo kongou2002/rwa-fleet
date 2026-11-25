@@ -97,3 +97,23 @@ Re-recorded on the new UI, same roles. Before the take the operator logged two C
 | holder · collect rent | [`0x793d870f…`](https://testnet.snowtrace.io/tx/0x793d870f6b7738c8b5f7221bc7d5aef2e38e6bb40c49b5aa0097470e8889a79c) |
 | holder · redeem | [`0xfc51bbe1…`](https://testnet.snowtrace.io/tx/0xfc51bbe1683ade99f916e7b9fd0584b6633e88f72a803e7e8f0b554674da9f2f) |
 | holder · redeem | [`0x930de547…`](https://testnet.snowtrace.io/tx/0x930de547aa190ace18b42136f445cd302f6f950c1b69b7099c2212480ca9cae5) |
+
+## More sample cars (25 Nov 2026)
+
+Ten more cars were listed on Fuji to make the marketplace look like a real one: 13 cars in 7 cities in total. They are real listings on the same FleetShares contract, so every card opens and every buy button works. The test investors Alice, Bob and Carol bought shares in them. Three cars sold out, and the operator paid them rent.
+
+| Car id | Car | State | Listing tx |
+|---|---|---|---|
+| 4 | Hyundai Accent 1.4 AT | sold out, rent paid | [listCar](https://testnet.snowtrace.io/tx/0xc3fc84f4dd5c014643ad6addef076010cf58d1499d47ce25a781824340273856) |
+| 5 | Kia Seltos 1.5 Premium | selling shares | [listCar](https://testnet.snowtrace.io/tx/0xd685d2ea6000ff7432c16c5652c43305d4859ca917b9142269cebc65880fa0a5) |
+| 6 | Mitsubishi Xpander 1.5 AT | sold out, rent paid | [listCar](https://testnet.snowtrace.io/tx/0x032c94f24b0fe894e5ee2e6dc26b5f25fdfdfa7d007b84ec88caef13be91c987) |
+| 7 | Honda City RS | selling shares | [listCar](https://testnet.snowtrace.io/tx/0xf0e967aa72f594bfabbcca5ecbdc3d3ad8128b13c47eece21a061d518aba6967) |
+| 8 | VinFast VF 5 Plus (Hanoi) | selling shares | [listCar](https://testnet.snowtrace.io/tx/0x49122da8a9472d29b86aebdd96a0df5807ac81edd90808108a0c7d55d4f8caa5) |
+| 9 | Ford Ranger XLS 2.0 | selling shares | [listCar](https://testnet.snowtrace.io/tx/0x43eec104d00364463d18b4e755f6f5a7bebe88bb1c12655a8b5bfb963bf9394c) |
+| 10 | Hyundai Creta 1.5 Premium | selling shares | [listCar](https://testnet.snowtrace.io/tx/0xa2d74c3d30c365d530b7041c53fc8baf15cb0accc7b6bce5b298a11aa08e5424) |
+| 11 | Toyota Corolla Cross 1.8 HEV | sold out, rent paid | [listCar](https://testnet.snowtrace.io/tx/0x759937d9581223b5acf59e565e13e0281ec12f44b233a0f3cca619d7e9e05e7d) |
+| 12 | Kia Carnival 2.2D Luxury | selling shares | [listCar](https://testnet.snowtrace.io/tx/0xd57e62aab35f4d4ed9d02d99fdeb1cea1f488f2a5b64e1c8975c028802b15bd5) |
+| 13 | VinFast VF 5 Plus (HCMC) | selling shares | [listCar](https://testnet.snowtrace.io/tx/0x4a17cbe127719becb1735f75a3cbaa465a6f1e932a3b2e675fd14140d1080b08) |
+
+Rent payments: [accent #1](https://testnet.snowtrace.io/tx/0xc9c60d4f87bb3c826ea719fec76fdf6dd1468135eac84e156811e3bd247bd11c), [accent #2](https://testnet.snowtrace.io/tx/0x05909bf069dd7ad08765c05eb6acb2916ea9bbd595037367517f1b10959ad8e3), [xpander #1](https://testnet.snowtrace.io/tx/0x1ecd37a3a46de2e8d5f243876f4b438502d625bf28d62299e4bd9e02edf96551), [xpander #2](https://testnet.snowtrace.io/tx/0x8269851f3fdb7130727e4901108d5dcab60556f6bc561d3a3dcd78ff00bef0e0), [ccross #1](https://testnet.snowtrace.io/tx/0xa159335dbf9781d6ebc40a540b6fecb42369d84c7662004cd1007f2f478ee404).
+City and type for each car are off-chain, in `CAR_META` in `web/core.js`.

@@ -1,6 +1,6 @@
 // FleetShares core: state, helpers, wallet, transactions, router, render loop, data loading.
 // Plain ES module, no build step. Views import from here and register themselves with registerView().
-import * as chain from './chain.js?v=20261125d';
+import * as chain from './chain.js?v=20261125e';
 
 export { chain };
 
@@ -45,6 +45,16 @@ export const CAR_META = {
   1: { city: 'Hanoi', type: 'SUV', term: 5, resale: 55 },
   2: { city: 'Ho Chi Minh City', type: 'Electric SUV', term: 5, gross: [13, 15], resale: 50 },
   3: { city: 'Da Nang', type: 'Sedan', term: 4, resale: 60 },
+  4: { city: 'Hai Phong', type: 'Sedan', term: 4, resale: 58 },
+  5: { city: 'Can Tho', type: 'SUV', term: 5, resale: 55 },
+  6: { city: 'Nha Trang', type: 'MPV', term: 5, gross: [13, 16], resale: 52 },
+  7: { city: 'Hue', type: 'Sedan', term: 4, resale: 60 },
+  8: { city: 'Hanoi', type: 'Electric hatchback', term: 5, gross: [13, 15], resale: 48 },
+  9: { city: 'Da Nang', type: 'Pickup', term: 5, resale: 58 },
+  10: { city: 'Ho Chi Minh City', type: 'SUV', term: 5, resale: 55 },
+  11: { city: 'Hai Phong', type: 'Hybrid SUV', term: 5, resale: 57 },
+  12: { city: 'Nha Trang', type: 'MPV', term: 5, gross: [14, 17], resale: 52 },
+  13: { city: 'Ho Chi Minh City', type: 'Electric hatchback', term: 5, gross: [13, 15], resale: 48 },
 };
 // Chart series colours, fixed order by car id (car 1 -> SERIES[0]).
 export const SERIES = ['#c8102e', '#2a78d6', '#eda100'];

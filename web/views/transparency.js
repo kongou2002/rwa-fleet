@@ -4,7 +4,7 @@
 import {
   registerView, S, ui, cfg, TERMS, FEED, esc, usd, short, txUrl, addrUrl, ago, dateStr, same,
   ICON, carName, photo, pill, spin, off, allEvents, stageOf, metaOf,
-} from '../core.js?v=20261125d';
+} from '../core.js?v=20261125e';
 
 const FEED_ROWS = 12;
 

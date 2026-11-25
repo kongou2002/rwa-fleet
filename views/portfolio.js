@@ -1,7 +1,7 @@
 import {
   registerView, ACTIONS, S, ui, esc, same, txUrl, plural, usd, num, trim, pct, ago,
   carById, stageOf, photo, spin, off, allEvents, ICON, render,
-} from '../core.js?v=20261125c';
+} from '../core.js?v=20261125d';
 
 // "Sell" in My cars: preselect the car in the Resell form, then go there.
 ACTIONS.pfSell = (d) => {

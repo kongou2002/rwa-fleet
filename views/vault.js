@@ -44,7 +44,10 @@ const HERO_ICON = {
   coin: svgI('<circle cx="12" cy="12" r="8.5" class="fill-g"/><text x="12" y="16.2" text-anchor="middle" class="coin-t">₫</text>'),
   up: svgI('<path d="M12 19V5M6 11l6-6 6 6"/>'),
 };
-const LOGO = '<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="10" fill="none" stroke="#fff" stroke-width="3.6"/><path d="M16 16V6a10 10 0 0 1 10 10z" fill="#fff"/></svg>';
+// Hero mark: thick white ring with a white wedge that sweeps like a meter (animated in CSS).
+const LOGO = '<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13.2" fill="none" stroke="#fff" stroke-width="5.4"/><circle class="vt-sweep" cx="16" cy="16" r="5.4" fill="none" stroke="#fff" stroke-width="10.8" pathLength="100" transform="rotate(-90 16 16)"/></svg>';
+// The logo is a slab: a stack of darker layers behind the face gives it thickness when it turns.
+const SLAB = Array.from({ length: 12 }, (_, i) => `<i style="--z:${i + 1}"></i>`).join('');
 
 function hero(cars) {
   const open = cars.filter((c) => stageOf(c).key === 'funding');
@@ -69,7 +72,8 @@ function hero(cars) {
       <div class="vt-grid"></div>
       <div class="vt-glow"></div>
       <div class="vt-orbit vt-orbit-b"></div>
-      <div class="vt-logo">${LOGO}</div>
+      <div class="vt-logo"><div class="vt-cube">${SLAB}<div class="vt-face">${LOGO}</div></div></div>
+      <span class="vt-coin" style="--c:0">₫</span><span class="vt-coin" style="--c:1">₫</span>
       <div class="vt-orbit vt-orbit-f"></div>
       ${['car', 'key', 'doc', 'coin'].map((k, i) => `<div class="vt-sat" style="--d:${i}"><div class="vt-sat-y"><div class="vt-tile">${HERO_ICON[k]}</div></div></div>`).join('')}
       <div class="vt-float vt-float-trip"><span class="vt-ft-ico red">${HERO_ICON.car}</span><span><small>Trip completed</small><b>${trip}</b></span></div>

@@ -1,7 +1,7 @@
 import {
   registerView, S, ui, esc, same, usd, toVnd, num, trim, parseUsd, parseShares, plural,
   carById, metaOf, photo, targetNet, spin, off, ICON, exitOf, ago,
-} from '../core.js?v=20261125b';
+} from '../core.js?v=20261125c';
 
 const idOf = (c) => c.id.toString();
 const vnd = (v) => `₫${usd(v)}`;

@@ -48,7 +48,7 @@ body:has(.vt-hero) { overflow-x: clip; }
 .vt-face svg { position: relative; width: 60%; height: 60%; filter: drop-shadow(0 2px 3px rgba(90, 0, 14, .3)); }
 .vt-sweep { stroke-dasharray: 2 100; animation: vt-sweep 5s ease-in-out infinite; }
 @keyframes vt-rock { 0%, 100% { transform: rotateY(-24deg) rotateX(12deg); } 50% { transform: rotateY(16deg) rotateX(7deg); } }
-@keyframes vt-sweep { 0%, 100% { stroke-dasharray: 1.5 100; } 50% { stroke-dasharray: 11 100; } }
+@keyframes vt-sweep { 0%, 100% { stroke-dasharray: 1.5 100; } 50% { stroke-dasharray: 25 100; } }
 /* ₫ coins that spin up out of the logo and fade. */
 .vt-coin { position: absolute; left: 51%; top: 30%; width: 26px; height: 26px; margin-left: -13px; border-radius: 50%; z-index: 2;
   display: grid; place-items: center; font: 600 13px/1 var(--font-text, Inter), sans-serif; color: #fff;
@@ -68,7 +68,7 @@ body:has(.vt-hero) { overflow-x: clip; }
 .vt-sat { position: absolute; left: calc((100% - var(--ow)) / 2); width: var(--ow); top: 46%; aspect-ratio: 1; transform: translateY(-50%) rotate(var(--tilt)) scaleY(var(--k)); pointer-events: none; z-index: 3;
   animation: vt-orbit 28s linear infinite; animation-delay: calc(var(--d) * -7s); }
 .vt-sat-y { position: absolute; left: 0; right: 0; top: 50%; height: 0; transform: rotate(var(--a)); }
-.vt-tile { position: absolute; left: 100%; top: 0; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 16px; background: #fff; display: grid; place-items: center;
+.vt-tile { position: absolute; left: 100%; top: 0; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 18px; background: linear-gradient(160deg, #ffffff 0%, #fff6f7 100%); border: 1px solid rgba(255, 255, 255, .9); display: grid; place-items: center;
   box-shadow: 0 10px 24px rgba(160, 10, 34, .12), 0 1px 2px rgba(10, 10, 10, .06);
   transform: rotate(calc(-1 * var(--a))) scaleY(calc(1 / var(--k))) rotate(calc(-1 * var(--tilt))) scale(var(--s)); opacity: calc(.55 + .45 * var(--s)); }
 @keyframes vt-orbit {
@@ -93,6 +93,9 @@ body:has(.vt-hero) { overflow-x: clip; }
 .vt-ft-ico.red { background: var(--brand-soft); }
 .vt-ft-ico.green { background: var(--yield-soft); }
 .vt-ft-ico .vt-ico { width: 22px; height: 22px; }
+/* Lit colour icons in the orbit tiles and the trip card. */
+.vt-i3 { width: 72%; height: 72%; filter: drop-shadow(0 2px 2px rgba(60, 10, 20, .18)); }
+.vt-ft-ico .vt-i3 { width: 30px; height: 30px; }
 .vt-ft-ico.green .vt-ico { stroke: var(--yield); stroke-width: 2; }
 
 @media (prefers-reduced-motion: reduce) {

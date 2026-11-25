@@ -1,5 +1,5 @@
 // How it works: four steps, a few questions, one call to action.
-import { registerView, S, TERMS, esc, photo, usd, toVnd, carById } from '../core.js';
+import { registerView, S, TERMS, esc, photo, usd, toVnd, carById } from '../core.js?v=20261125b';
 
 // Worked example, kept for the pitch deck tool (docs/deck/tools/build.py reads `const EX` from this file).
 // Amounts in million VND (a 700M VND car).

@@ -3,7 +3,7 @@ import {
   registerView, S, ui, cfg, esc, usd, usdc, toVnd, trim, plural, same, ICON, who, txUrl, addrUrl, ago,
   parseShares, parseUsd, carById, metaOf, valueOf, holdersOf, targetNet,
   stageOf, photo, buyAmount, spin, off, faucetBtn, TERMS, exitOf,
-} from '../core.js';
+} from '../core.js?v=20261125b';
 
 // Earning and sold cars were both funded and rented out; a sold car also has a CarExit record.
 const onRoad = (st) => st.key === 'earning' || st.key === 'sold';

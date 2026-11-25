@@ -1,6 +1,6 @@
 /* Cars / Home view (vt-) */
 .vt-page { display: flex; flex-direction: column; }
-.vt-h { font: 500 96px/0.98 var(--display); letter-spacing: -0.045em; color: var(--ink); }
+.vt-h { font: 400 90px/0.98 var(--display); letter-spacing: -0.05em; color: var(--ink); }
 .vt-h2 { font: 500 56px/1.05 var(--display); letter-spacing: -0.04em; }
 .vt-h3 { font: 500 28px/1.2 var(--display); letter-spacing: -0.02em; }
 .vt-lead { font: 400 22px/1.4 var(--sans); color: var(--ink-2); letter-spacing: -0.01em; }
@@ -24,9 +24,9 @@ body:has(.vt-hero) { overflow-x: clip; }
 /* Soft pink field with no edges: deepest behind the logo, fading to the page white on every side. */
 .vt-art::before { content: ""; position: absolute; inset: 0; z-index: -2; pointer-events: none;
   background: radial-gradient(ellipse 34% 34% at 52% 48%, rgba(240, 110, 128, .22), rgba(240, 110, 128, 0) 100%); }
-.vt-grid { position: absolute; left: 0; right: 0; bottom: -4%; height: 55%; transform: perspective(420px) rotateX(58deg); transform-origin: 50% 100%;
-  background-image: linear-gradient(rgba(224, 16, 47, .10) 1px, transparent 1px), linear-gradient(90deg, rgba(224, 16, 47, .10) 1px, transparent 1px);
-  background-size: 56px 56px; -webkit-mask-image: radial-gradient(ellipse 42% 80% at 50% 20%, #000 20%, transparent 70%); mask-image: radial-gradient(ellipse 42% 80% at 50% 20%, #000 20%, transparent 70%); }
+.vt-grid { position: absolute; left: 0; right: 0; bottom: -2%; height: 64%; transform: perspective(520px) rotateX(60deg); transform-origin: 50% 100%;
+  background-image: linear-gradient(rgba(224, 16, 47, .2) 2px, transparent 2px), linear-gradient(90deg, rgba(224, 16, 47, .17) 1px, transparent 1px);
+  background-size: 56px 56px; -webkit-mask-image: radial-gradient(ellipse 62% 95% at 50% 10%, #000 45%, transparent 90%); mask-image: radial-gradient(ellipse 62% 95% at 50% 10%, #000 45%, transparent 90%); }
 .vt-grid { z-index: -1; }
 .vt-glow { position: absolute; left: 50%; top: 74%; width: 52%; height: 18%; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(closest-side, rgba(224, 16, 47, .34), transparent); filter: blur(10px); }
 /* Orbit: tilted ellipse (--tilt), height --k of its width. Drawn twice: back half under the logo, front half over it. */
@@ -36,7 +36,7 @@ body:has(.vt-hero) { overflow-x: clip; }
 .vt-orbit-b { z-index: 1; clip-path: inset(0 0 50% 0); }
 .vt-orbit-f { z-index: 3; clip-path: inset(50% 0 0 0); border-color: rgba(224, 16, 47, .6); }
 /* 3D logo: a red slab (face + 12 darker layers behind it) that rocks slowly so its edge shows. */
-.vt-logo { position: absolute; left: 50%; top: 46%; width: 22%; aspect-ratio: 1; transform: translate(-50%, -50%); perspective: 800px; z-index: 2; }
+.vt-logo { position: absolute; left: 50%; top: 46%; width: 25%; aspect-ratio: 1; transform: translate(-50%, -50%); perspective: 800px; z-index: 2; }
 .vt-cube { position: absolute; inset: 0; transform-style: preserve-3d; animation: vt-rock 8s ease-in-out infinite; }
 .vt-cube > i { position: absolute; inset: 0; border-radius: 24%; transform: translateZ(calc(var(--z) * -1.5px));
   background: linear-gradient(160deg, #c20d29, #7d0819); }
@@ -68,7 +68,7 @@ body:has(.vt-hero) { overflow-x: clip; }
 .vt-sat { position: absolute; left: calc((100% - var(--ow)) / 2); width: var(--ow); top: 46%; aspect-ratio: 1; transform: translateY(-50%) rotate(var(--tilt)) scaleY(var(--k)); pointer-events: none; z-index: 3;
   animation: vt-orbit 28s linear infinite; animation-delay: calc(var(--d) * -7s); }
 .vt-sat-y { position: absolute; left: 0; right: 0; top: 50%; height: 0; transform: rotate(var(--a)); }
-.vt-tile { position: absolute; left: 100%; top: 0; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 18px; background: linear-gradient(160deg, #ffffff 0%, #fff6f7 100%); border: 1px solid rgba(255, 255, 255, .9); display: grid; place-items: center;
+.vt-tile { position: absolute; left: 100%; top: 0; width: 66px; height: 66px; margin: -33px 0 0 -33px; border-radius: 19px; background: linear-gradient(160deg, #ffffff 0%, #fff6f7 100%); border: 1px solid rgba(255, 255, 255, .9); display: grid; place-items: center;
   box-shadow: 0 10px 24px rgba(160, 10, 34, .12), 0 1px 2px rgba(10, 10, 10, .06);
   transform: rotate(calc(-1 * var(--a))) scaleY(calc(1 / var(--k))) rotate(calc(-1 * var(--tilt))) scale(var(--s)); opacity: calc(.55 + .45 * var(--s)); }
 @keyframes vt-orbit {

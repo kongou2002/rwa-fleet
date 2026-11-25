@@ -1,6 +1,6 @@
 // FleetShares core: state, helpers, wallet, transactions, router, render loop, data loading.
 // Plain ES module, no build step. Views import from here and register themselves with registerView().
-import * as chain from './chain.js?v=20261125b';
+import * as chain from './chain.js?v=20261125c';
 
 export { chain };
 
